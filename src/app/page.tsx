@@ -527,18 +527,18 @@ export default function HomePage() {
                       <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2 flex-1">
                         {getProductDesc(product)}
                       </p>
-                      <div className="flex items-center justify-between mt-auto gap-1">
-                        <span className="text-primary font-bold text-xs sm:text-sm md:text-base">
+                      <div className="flex items-center justify-between mt-auto gap-1 min-w-0 overflow-hidden">
+                        <span className="text-primary font-bold text-xs sm:text-sm md:text-base whitespace-nowrap">
                           {product.price.toLocaleString()} {t.currency}
                         </span>
                         <Button
                           size="sm"
                           onClick={() => handleAddToCart(product)}
                           disabled={!product.inStock}
-                          className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3"
+                          className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink min-w-0 overflow-hidden"
                         >
-                          <ShoppingBag className="h-3 w-3" />
-                          {product.inStock ? t.addToCart : t.outOfStock}
+                          <ShoppingBag className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate max-w-[60px] sm:max-w-[80px] md:max-w-[100px]">{product.inStock ? t.addToCart : t.outOfStock}</span>
                         </Button>
                       </div>
                     </CardContent>
@@ -989,7 +989,7 @@ export default function HomePage() {
                         <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground line-clamp-1 sm:line-clamp-2 flex-1">
                           {getProductDesc(product)}
                         </p>
-                        <div className="flex items-center justify-between mt-1 sm:mt-1.5 gap-1">
+                        <div className="flex items-center justify-between mt-1 sm:mt-1.5 gap-1 min-w-0 overflow-hidden">
                           <span className="text-primary font-bold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
                             {product.price.toLocaleString()} {t.currency}
                           </span>
@@ -997,11 +997,11 @@ export default function HomePage() {
                             size="sm"
                             onClick={() => handleAddToCart(product)}
                             disabled={!product.inStock}
-                            className="gap-0.5 text-[9px] sm:text-[10px] md:text-xs h-6 sm:h-7 md:h-8 px-1.5 sm:px-2 md:px-3"
+                            className="gap-0.5 text-[9px] sm:text-[10px] md:text-xs h-6 sm:h-7 md:h-8 px-1.5 sm:px-2 md:px-3 shrink min-w-0 overflow-hidden"
                           >
-                            <ShoppingBag className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                            <span className="hidden sm:inline">{product.inStock ? t.addToCart : t.outOfStock}</span>
-                            <span className="sm:hidden">+</span>
+                            <ShoppingBag className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                            <span className="hidden md:inline truncate max-w-[50px] lg:max-w-[70px]">{product.inStock ? t.addToCart : t.outOfStock}</span>
+                            <span className="md:hidden">+</span>
                           </Button>
                         </div>
                       </CardContent>
