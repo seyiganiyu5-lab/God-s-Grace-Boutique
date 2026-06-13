@@ -1,0 +1,882 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShoppingBag, Menu, X, Globe, Star, Trash2, Plus, Minus,
+  Phone, MessageCircle, MapPin, CreditCard, ChevronRight,
+  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCartStore, CartItem } from '@/store/cart';
+import { useLangStore } from '@/store/lang';
+import { translations, Language } from '@/lib/i18n';
+import { toast } from 'sonner';
+
+interface Product {
+  id: string;
+  name: string;
+  nameFr: string;
+  description: string;
+  descriptionFr: string;
+  price: number;
+  image: string;
+  categoryId: string;
+  inStock: boolean;
+  featured: boolean;
+  category: { id: string; name: string; nameFr: string; slug: string };
+}
+
+interface Category {
+  id: string;
+  name: string;
+  nameFr: string;
+  slug: string;
+  image: string | null;
+}
+
+interface Testimony {
+  id: string;
+  name: string;
+  message: string;
+  rating: number;
+  approved: boolean;
+}
+
+export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  const { items, addItem, removeItem, updateQuantity, clearCart, totalPrice } = useCartStore();
+  const { lang, toggleLang } = useLangStore();
+  const t = translations[lang];
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [productsRes, categoriesRes, testimoniesRes] = await Promise.all([
+        fetch('/api/products'),
+        fetch('/api/categories'),
+        fetch('/api/testimonies'),
+      ]);
+      const productsData = await productsRes.json();
+      const categoriesData = await categoriesRes.json();
+      const testimoniesData = await testimoniesRes.json();
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setTestimonies(testimoniesData.filter((t: Testimony) => t.approved));
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const filteredProducts = selectedCategory === 'all'
+    ? products
+    : products.filter((p) => p.categoryId === selectedCategory);
+
+  const getCategoryName = (cat: Category) => lang === 'fr' ? cat.nameFr : cat.name;
+  const getProductName = (p: Product) => lang === 'fr' ? p.nameFr : p.name;
+  const getProductDesc = (p: Product) => lang === 'fr' ? p.descriptionFr : p.description;
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      nameFr: product.nameFr,
+      price: product.price,
+      image: product.image,
+    });
+    toast.success(lang === 'fr' ? 'Ajouté au panier !' : 'Added to cart!', {
+      description: getProductName(product),
+    });
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (items.length === 0) {
+      toast.error(lang === 'fr' ? 'Votre panier est vide' : 'Your cart is empty');
+      return;
+    }
+    const phoneNumber = '233575354633';
+    let message = lang === 'fr' 
+      ? '🛍️ *Nouvelle Commande - God\'s Grace Boutique*\n\n'
+      : '🛍️ *New Order - God\'s Grace Boutique*\n\n';
+    
+    items.forEach((item, index) => {
+      const name = lang === 'fr' ? item.nameFr : item.name;
+      message += `${index + 1}. ${name} x${item.quantity} - ${item.price * item.quantity} FCFA\n`;
+    });
+    
+    message += `\n💰 *${t.cartTotal}: ${totalPrice()} FCFA*`;
+    message += `\n\n💳 ${t.paymentInfo}:`;
+    message += `\n- Wave: 0575354633`;
+    message += `\n- MTN Money: 0575354633`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+  };
+
+  const handleTestimonySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const message = formData.get('message') as string;
+    const rating = parseInt(formData.get('rating') as string) || 5;
+
+    try {
+      const res = await fetch('/api/testimonies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, message, rating }),
+      });
+      if (res.ok) {
+        toast.success(lang === 'fr' ? 'Témoignage soumis pour approbation !' : 'Testimony submitted for approval!');
+        (e.target as HTMLFormElement).reset();
+      }
+    } catch {
+      toast.error(t.error);
+    }
+  };
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
+  };
+
+  const navLinks = [
+    { id: 'home', label: t.home },
+    { id: 'about', label: t.about },
+    { id: 'products', label: t.products },
+    { id: 'testimony', label: t.testimony },
+    { id: 'contact', label: t.contact },
+  ];
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            {/* Logo */}
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('home')}>
+              <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
+              <div className="hidden sm:block">
+                <h1 className="text-sm md:text-base font-bold text-primary leading-tight">God&apos;s Grace</h1>
+                <p className="text-xs text-muted-foreground">Boutique</p>
+              </div>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => scrollTo(link.id)}
+                  className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-2">
+              {/* Language Toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleLang}
+                className="gap-1.5 text-xs font-semibold"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {lang === 'en' ? 'FR' : 'EN'}
+              </Button>
+
+              {/* Cart */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="relative gap-1.5">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span className="hidden sm:inline text-xs">{t.cart}</span>
+                    {hasMounted && items.length > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground">
+                        {items.reduce((s, i) => s + i.quantity, 0)}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:w-[400px] flex flex-col">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <ShoppingBag className="h-5 w-5 text-primary" />
+                      {t.cartTitle}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex-1 overflow-y-auto py-4">
+                    {items.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+                        <ShoppingBagIcon className="h-16 w-16 opacity-30" />
+                        <p>{t.cartEmpty}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <Card key={item.id} className="overflow-hidden">
+                            <div className="flex gap-3 p-3">
+                              <img src={item.image} alt={lang === 'fr' ? item.nameFr : item.name} className="w-20 h-20 object-cover rounded-lg" />
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm truncate">{lang === 'fr' ? item.nameFr : item.name}</h4>
+                                <p className="text-primary font-bold text-sm mt-1">{item.price.toLocaleString()} {t.currency}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto text-destructive" onClick={() => removeItem(item.id)}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {items.length > 0 && (
+                    <div className="border-t pt-4 space-y-3">
+                      <div className="flex items-center justify-between text-lg font-bold">
+                        <span>{t.cartTotal}:</span>
+                        <span className="text-primary">{totalPrice().toLocaleString()} {t.currency}</span>
+                      </div>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          <span>{t.paymentWave}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          <span>{t.paymentMtn}</span>
+                        </div>
+                      </div>
+                      <Button onClick={handleWhatsAppOrder} className="w-full bg-green-600 hover:bg-green-700 text-white gap-2 text-base py-5">
+                        <MessageCircle className="h-5 w-5" />
+                        {t.whatsappOrder}
+                      </Button>
+                      <Button variant="outline" onClick={clearCart} className="w-full text-destructive hover:text-destructive">
+                        {t.cartEmpty}
+                      </Button>
+                    </div>
+                  )}
+                </SheetContent>
+              </Sheet>
+
+              {/* Mobile Menu */}
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-background border-b border-border overflow-hidden"
+            >
+              <div className="px-4 py-3 space-y-1">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    onClick={() => scrollTo(link.id)}
+                    className="block w-full text-left px-4 py-3 text-sm font-medium text-foreground/70 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      {/* Hero Section */}
+      <section id="home" className="relative min-h-screen flex items-center pt-20">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/hero.png" alt="God's Grace Boutique" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-2xl"
+          >
+            <Badge className="mb-4 bg-primary/90 text-primary-foreground px-4 py-1.5 text-sm">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {lang === 'fr' ? 'Nouvelle Collection' : 'New Collection'}
+            </Badge>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 leading-tight">
+              {t.heroTitle}
+            </h1>
+            <p className="text-xl md:text-2xl text-white/80 mb-2 font-light italic">
+              {t.heroSubtitle}
+            </p>
+            <p className="text-base md:text-lg text-white/60 mb-8 max-w-lg">
+              {t.heroDescription}
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={() => scrollTo('products')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base gap-2">
+                {t.shopNow}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button onClick={() => scrollTo('contact')} variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20 px-8 py-6 text-base">
+                {t.contact}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="py-20 md:py-28 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative">
+                <img src="/images/about.png" alt="About God's Grace Boutique" className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]" />
+                <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground rounded-2xl p-6 shadow-xl hidden md:block">
+                  <Heart className="h-8 w-8" />
+                  <p className="text-sm font-medium mt-2">
+                    {lang === 'fr' ? 'Avec Amour' : 'Made with Love'}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="space-y-6"
+            >
+              <div>
+                <Badge variant="secondary" className="mb-4">{t.about}</Badge>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.aboutTitle}</h2>
+              </div>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                {t.aboutDescription}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
+                <Card className="bg-primary/5 border-primary/10">
+                  <CardContent className="p-5">
+                    <h3 className="font-bold text-lg mb-2 text-primary">{t.aboutMission}</h3>
+                    <p className="text-sm text-muted-foreground">{t.aboutMissionText}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-primary/5 border-primary/10">
+                  <CardContent className="p-5">
+                    <h3 className="font-bold text-lg mb-2 text-primary">{t.aboutValues}</h3>
+                    <p className="text-sm text-muted-foreground">{t.aboutValuesText}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Products Section */}
+      <section id="products" className="py-20 md:py-28 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <Badge variant="secondary" className="mb-4">{t.products}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              {lang === 'fr' ? 'Notre Collection' : 'Our Collection'}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {lang === 'fr' 
+                ? 'Découvrez notre sélection de mode et accessoires de qualité'
+                : 'Discover our selection of quality fashion and accessories'}
+            </p>
+          </motion.div>
+
+          {/* Category Filter */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            <Button
+              variant={selectedCategory === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory('all')}
+              className="gap-1.5"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              {t.allCategories}
+            </Button>
+            {categories.map((cat) => (
+              <Button
+                key={cat.id}
+                variant={selectedCategory === cat.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                {getCategoryName(cat)}
+              </Button>
+            ))}
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05, duration: 0.4 }}
+              >
+                <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 h-full flex flex-col">
+                  <div className="relative overflow-hidden aspect-square">
+                    <img
+                      src={product.image}
+                      alt={getProductName(product)}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      {product.featured && (
+                        <Badge className="bg-primary text-primary-foreground text-[10px]">
+                          <Star className="h-2.5 w-2.5 mr-0.5" />
+                          {lang === 'fr' ? 'Vedette' : 'Featured'}
+                        </Badge>
+                      )}
+                      {!product.inStock && (
+                        <Badge variant="destructive" className="text-[10px]">
+                          {t.outOfStock}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-white/90 text-foreground shadow-sm text-xs font-bold">
+                        {getCategoryName(product.category)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
+                    <h3 className="font-semibold text-sm md:text-base mb-1 line-clamp-1">
+                      {getProductName(product)}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+                      {getProductDesc(product)}
+                    </p>
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className="text-primary font-bold text-sm md:text-base">
+                        {product.price.toLocaleString()} {t.currency}
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddToCart(product)}
+                        disabled={!product.inStock}
+                        className="gap-1 text-xs h-8"
+                      >
+                        <ShoppingBag className="h-3 w-3" />
+                        {product.inStock ? t.addToCart : t.outOfStock}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              <ShoppingBagIcon className="h-16 w-16 mx-auto mb-4 opacity-30" />
+              <p className="text-lg">
+                {lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Testimony Section */}
+      <section id="testimony" className="py-20 md:py-28 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <Badge variant="secondary" className="mb-4">{t.testimony}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.testimonyTitle}</h2>
+            <p className="text-muted-foreground">{t.testimonySubtitle}</p>
+          </motion.div>
+
+          {/* Testimonies Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {testimonies.map((testimony, index) => (
+              <motion.div
+                key={testimony.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+              >
+                <Card className="h-full hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-1 mb-3">
+                      {Array.from({ length: testimony.rating }).map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                      ))}
+                      {Array.from({ length: 5 - testimony.rating }).map((_, i) => (
+                        <Star key={`empty-${i}`} className="h-4 w-4 text-muted" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 italic leading-relaxed">
+                      &ldquo;{testimony.message}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold text-sm">{testimony.name.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{testimony.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          <Star className="h-3 w-3 fill-primary text-primary inline mr-1" />
+                          {testimony.rating}/5
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Submit Testimony */}
+          <Card className="max-w-xl mx-auto">
+            <CardContent className="p-6">
+              <h3 className="font-bold text-lg mb-4 text-center">
+                {lang === 'fr' ? 'Partagez Votre Expérience' : 'Share Your Experience'}
+              </h3>
+              <form onSubmit={handleTestimonySubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="testimony-name">
+                    {lang === 'fr' ? 'Votre Nom' : 'Your Name'}
+                  </Label>
+                  <Input id="testimony-name" name="name" required placeholder={lang === 'fr' ? 'Entrez votre nom' : 'Enter your name'} />
+                </div>
+                <div>
+                  <Label htmlFor="testimony-message">
+                    {lang === 'fr' ? 'Votre Message' : 'Your Message'}
+                  </Label>
+                  <Textarea id="testimony-message" name="message" required placeholder={lang === 'fr' ? 'Partagez votre expérience...' : 'Share your experience...'} rows={3} />
+                </div>
+                <div>
+                  <Label htmlFor="testimony-rating">
+                    {lang === 'fr' ? 'Note' : 'Rating'}
+                  </Label>
+                  <Select name="rating" defaultValue="5">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">⭐⭐⭐⭐⭐ (5/5)</SelectItem>
+                      <SelectItem value="4">⭐⭐⭐⭐ (4/5)</SelectItem>
+                      <SelectItem value="3">⭐⭐⭐ (3/5)</SelectItem>
+                      <SelectItem value="2">⭐⭐ (2/5)</SelectItem>
+                      <SelectItem value="1">⭐ (1/5)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full gap-2">
+                  <Send className="h-4 w-4" />
+                  {lang === 'fr' ? 'Soumettre' : 'Submit'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20 md:py-28 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <Badge variant="secondary" className="mb-4">{t.contact}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.contactTitle}</h2>
+            <p className="text-muted-foreground">{t.contactSubtitle}</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="text-center hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Phone className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-bold mb-2">{t.contactPhone}</h3>
+                <a href="tel:+233575354633" className="text-primary font-medium hover:underline">0575354633</a>
+                <div className="mt-3">
+                  <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1.5">
+                    <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-bold mb-2">{t.contactPayment}</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-6 w-6 bg-blue-500 rounded text-white text-[10px] font-bold flex items-center justify-center">W</div>
+                    <span>{t.contactWave}: 0575354633</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-6 w-6 bg-yellow-500 rounded text-white text-[10px] font-bold flex items-center justify-center">M</div>
+                    <span>{t.contactMtn}: 0575354633</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-bold mb-2">{t.contactAddress}</h3>
+                <p className="text-sm text-muted-foreground">{t.contactAddressText}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* WhatsApp Order CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center"
+          >
+            <Card className="max-w-2xl mx-auto bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+              <CardContent className="p-8">
+                <MessageCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold mb-2">
+                  {lang === 'fr' ? 'Commandez Facilement!' : 'Order Easily!'}
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  {lang === 'fr' 
+                    ? 'Ajoutez vos articles au panier et cliquez sur le bouton WhatsApp pour commander'
+                    : 'Add items to your cart and click the WhatsApp button to place your order'}
+                </p>
+                <Button
+                  onClick={handleWhatsAppOrder}
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 text-white gap-2 px-8 py-6 text-base"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {t.whatsappOrder}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-foreground text-background mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+            {/* Brand */}
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 rounded-full object-cover border-2 border-primary" />
+                <div>
+                  <h3 className="font-bold text-lg">God&apos;s Grace</h3>
+                  <p className="text-xs text-background/60">Boutique</p>
+                </div>
+              </div>
+              <p className="text-sm text-background/60 italic mb-4">{t.footerTagline}</p>
+              <p className="text-sm text-background/60">{t.footerMadeWith}</p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerQuickLinks}</h3>
+              <div className="space-y-2">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    onClick={() => scrollTo(link.id)}
+                    className="block text-sm text-background/60 hover:text-primary transition-colors"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerCategories}</h3>
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                      scrollTo('products');
+                    }}
+                    className="block text-sm text-background/60 hover:text-primary transition-colors"
+                  >
+                    {getCategoryName(cat)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerContact}</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-background/60">
+                  <Phone className="h-4 w-4 text-primary" />
+                  <span>0575354633</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-background/60">
+                  <MessageCircle className="h-4 w-4 text-green-500" />
+                  <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    WhatsApp
+                  </a>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-background/60">
+                  <CreditCard className="h-4 w-4 text-blue-400" />
+                  <span>Wave & MTN Money</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-background/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-background/40">
+              © {new Date().getFullYear()} God&apos;s Grace Boutique. {t.footerRights}
+            </p>
+            <div className="flex items-center gap-4">
+              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+                <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+                <a href="tel:+233575354633">
+                  <Phone className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Scroll to Top */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed bottom-6 right-6 z-40"
+          >
+            <Button
+              size="icon"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="rounded-full shadow-lg h-12 w-12 bg-primary hover:bg-primary/90"
+            >
+              <ArrowUp className="h-5 w-5" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating WhatsApp Button (Mobile) */}
+      <div className="fixed bottom-6 left-6 z-40 md:hidden">
+        <Button
+          onClick={handleWhatsAppOrder}
+          className="rounded-full shadow-lg h-14 w-14 bg-green-600 hover:bg-green-700 text-white p-0"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      </div>
+    </div>
+  );
+}
