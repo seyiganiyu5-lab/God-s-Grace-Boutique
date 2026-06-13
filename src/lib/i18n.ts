@@ -76,8 +76,8 @@ export const translations = {
     
     // Payment
     paymentInfo: "Payment Information",
-    paymentWave: "Wave: +225 75354633",
-    paymentMtn: "MTN Money: +225 75354633",
+    paymentWave: "Wave: 0575354633",
+    paymentMtn: "MTN Money: 0575354633",
   },
   fr: {
     // Navigation
@@ -156,8 +156,8 @@ export const translations = {
     
     // Payment
     paymentInfo: "Informations de Paiement",
-    paymentWave: "Wave : +225 75354633",
-    paymentMtn: "MTN Money : +225 75354633",
+    paymentWave: "Wave : 0575354633",
+    paymentMtn: "MTN Money : 0575354633",
   }
 } as const;
 
