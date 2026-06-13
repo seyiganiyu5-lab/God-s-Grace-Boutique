@@ -66,8 +66,6 @@ export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [logoClickCount, setLogoClickCount] = useState(0);
-  const [logoClickTimer, setLogoClickTimer] = useState<NodeJS.Timeout | null>(null);
 
   const { items, addItem, removeItem, updateQuantity, clearCart, totalPrice } = useCartStore();
   const { lang, toggleLang } = useLangStore();
@@ -176,23 +174,6 @@ export default function HomePage() {
     }
   };
 
-  // Secret admin access: triple-click on logo within 1.5 seconds
-  const handleLogoClick = () => {
-    const newCount = logoClickCount + 1;
-    setLogoClickCount(newCount);
-
-    if (logoClickTimer) clearTimeout(logoClickTimer);
-
-    if (newCount >= 5) {
-      setLogoClickCount(0);
-      setShowAdmin(true);
-      return;
-    }
-
-    const timer = setTimeout(() => setLogoClickCount(0), 1500);
-    setLogoClickTimer(timer);
-  };
-
   // Secret admin access: keyboard shortcut Ctrl+Shift+Alt+A
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -241,7 +222,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
-            <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('home')}>
               <img src="/images/logo.png" alt="God's Grace Boutique" className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover" />
               <div className="block sm:block">
                 <h1 className="text-base sm:text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
