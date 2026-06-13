@@ -21,6 +21,8 @@ import { useLangStore } from '@/store/lang';
 import { translations, Language } from '@/lib/i18n';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { WaveLogo } from '@/components/wave-logo';
+import { MtnMomoLogo } from '@/components/mtn-momo-logo';
 
 const AdminDashboard = dynamic(() => import('@/components/admin-dashboard'), {
   ssr: false,
@@ -373,11 +375,11 @@ export default function HomePage() {
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t.paymentInfo}</p>
                           <div className="flex gap-3">
                             <div className="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl px-3 py-2.5 border border-blue-100 dark:border-blue-900/50">
-                              <div className="h-7 w-7 bg-blue-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">W</div>
+                              <WaveLogo size={28} className="flex-shrink-0" />
                               <div className="min-w-0"><p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Wave</p><p className="text-xs font-bold truncate">+225 0575354633</p></div>
                             </div>
                             <div className="flex-1 flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl px-3 py-2.5 border border-yellow-100 dark:border-yellow-900/50">
-                              <div className="h-7 w-7 bg-yellow-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">M</div>
+                              <MtnMomoLogo size={28} className="flex-shrink-0" />
                               <div className="min-w-0"><p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">MTN Money</p><p className="text-xs font-bold truncate">+225 0575354633</p></div>
                             </div>
                           </div>
@@ -726,14 +728,14 @@ export default function HomePage() {
                         </p>
                         <div className="flex gap-3">
                           <div className="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl px-3 py-2.5 border border-blue-100 dark:border-blue-900/50">
-                            <div className="h-7 w-7 bg-blue-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">W</div>
+                            <WaveLogo size={28} className="flex-shrink-0" />
                             <div className="min-w-0">
                               <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Wave</p>
                               <p className="text-xs font-bold truncate">+225 0575354633</p>
                             </div>
                           </div>
                           <div className="flex-1 flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl px-3 py-2.5 border border-yellow-100 dark:border-yellow-900/50">
-                            <div className="h-7 w-7 bg-yellow-500 rounded-lg text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">M</div>
+                            <MtnMomoLogo size={28} className="flex-shrink-0" />
                             <div className="min-w-0">
                               <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">MTN Money</p>
                               <p className="text-xs font-bold truncate">+225 0575354633</p>
@@ -1212,13 +1214,13 @@ export default function HomePage() {
                   <CreditCard className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="font-bold mb-2 font-elegant">{t.contactPayment}</h3>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-center gap-2">
-                    <div className="h-6 w-6 bg-blue-500 rounded text-white text-[10px] font-bold flex items-center justify-center">W</div>
+                    <WaveLogo size={24} />
                     <span>{t.contactWave}: +225 0575354633</span>
                   </div>
                   <div className="flex items-center justify-center gap-2">
-                    <div className="h-6 w-6 bg-yellow-500 rounded text-white text-[10px] font-bold flex items-center justify-center">M</div>
+                    <MtnMomoLogo size={24} />
                     <span>{t.contactMtn}: +225 0575354633</span>
                   </div>
                 </div>
@@ -1335,8 +1337,9 @@ export default function HomePage() {
                   </a>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-background/60">
-                  <CreditCard className="h-4 w-4 text-blue-400" />
-                  <span>Wave & MTN Money</span>
+                  <WaveLogo size={16} />
+                  <MtnMomoLogo size={16} />
+                  <span>Wave & MTN MoMo</span>
                 </div>
               </div>
             </div>
