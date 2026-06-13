@@ -205,11 +205,13 @@ export default function HomePage() {
     const onMouseDown = (e: MouseEvent) => {
       isDown = true;
       container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+      container.style.webkitUserSelect = 'none';
       startX = e.pageX - container.offsetLeft;
       scrollLeft = container.scrollLeft;
     };
-    const onMouseLeave = () => { isDown = false; container.style.cursor = 'grab'; };
-    const onMouseUp = () => { isDown = false; container.style.cursor = 'grab'; };
+    const onMouseLeave = () => { isDown = false; container.style.cursor = 'grab'; container.style.userSelect = ''; container.style.webkitUserSelect = ''; };
+    const onMouseUp = () => { isDown = false; container.style.cursor = 'grab'; container.style.userSelect = ''; container.style.webkitUserSelect = ''; };
     const onMouseMove = (e: MouseEvent) => {
       if (!isDown) return;
       e.preventDefault();
@@ -935,11 +937,13 @@ export default function HomePage() {
               {/* Scroll Container */}
               <div
                 id="featured-scroll"
-                className="flex overflow-x-auto gap-3 sm:gap-4 md:gap-5 pb-2 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
+                className="flex overflow-x-auto gap-3 sm:gap-4 md:gap-5 pb-2 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 select-none"
                 style={{
                   scrollbarWidth: 'thin',
                   WebkitOverflowScrolling: 'touch',
                   cursor: 'grab',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
                 }}
               >
                 {products.filter(p => p.featured).map((product, index) => (
@@ -956,7 +960,8 @@ export default function HomePage() {
                         <img
                           src={product.image}
                           alt={getProductName(product)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          draggable={false}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
                         />
                         <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
                           <Badge className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0 sm:py-0.5">
