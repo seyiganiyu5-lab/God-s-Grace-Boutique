@@ -533,8 +533,117 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Products Section */}
-      <section id="products" className="py-12 sm:py-16 md:py-28 bg-muted/30">
+      {/* Featured Collection - Horizontal Scroll */}
+      <section id="collection" className="py-12 sm:py-16 md:py-28 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <Badge variant="secondary" className="mb-4">
+              <Sparkles className="h-3 w-3 mr-1" />
+              {lang === 'fr' ? 'En Vedette' : 'Featured'}
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">
+              {lang === 'fr' ? 'Notre Collection' : 'Our Collection'}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {lang === 'fr'
+                ? 'Découvrez nos pièces les plus tendance'
+                : 'Discover our trending pieces'}
+            </p>
+          </motion.div>
+
+          {/* Horizontal Scrolling Products */}
+          {products.filter(p => p.featured).length > 0 ? (
+            <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 snap-x snap-mandatory scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
+              {products.filter(p => p.featured).map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="flex-none w-[260px] sm:w-[280px] md:w-[300px] snap-start"
+                >
+                  <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 h-full flex flex-col">
+                    <div className="relative overflow-hidden aspect-[3/4]">
+                      <img
+                        src={product.image}
+                        alt={getProductName(product)}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                          <Star className="h-2.5 w-2.5 mr-0.5" />
+                          {lang === 'fr' ? 'Vedette' : 'Featured'}
+                        </Badge>
+                        {!product.inStock && (
+                          <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
+                            {t.outOfStock}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-white/90 text-foreground shadow-sm text-[10px] font-bold px-2 py-0.5">
+                          {getCategoryName(product.category)}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">
+                        {getProductName(product)}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+                        {getProductDesc(product)}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto">
+                        <span className="text-primary font-bold text-sm">
+                          {product.price.toLocaleString()} {t.currency}
+                        </span>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddToCart(product)}
+                          disabled={!product.inStock}
+                          className="gap-1 text-xs h-8 px-3"
+                        >
+                          <ShoppingBag className="h-3 w-3" />
+                          {product.inStock ? t.addToCart : t.outOfStock}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground">
+              <ShoppingBagIcon className="h-16 w-16 mx-auto mb-4 opacity-30" />
+              <p className="text-lg">
+                {lang === 'fr' ? 'Aucun produit en vedette' : 'No featured products yet'}
+              </p>
+            </div>
+          )}
+
+          {/* View All Button */}
+          <div className="text-center mt-8">
+            <Button
+              onClick={() => scrollTo('products')}
+              size="lg"
+              variant="outline"
+              className="gap-2 px-8 py-5 text-sm border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+            >
+              {lang === 'fr' ? 'Voir Tous les Produits' : 'View All Products'}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* All Products Section */}
+      <section id="products" className="py-12 sm:py-16 md:py-28 bg-background">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -544,12 +653,12 @@ export default function HomePage() {
           >
             <Badge variant="secondary" className="mb-4">{t.products}</Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">
-              {lang === 'fr' ? 'Notre Collection' : 'Our Collection'}
+              {lang === 'fr' ? 'Tous les Produits' : 'All Products'}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {lang === 'fr' 
-                ? 'Découvrez notre sélection de mode et accessoires de qualité'
-                : 'Discover our selection of quality fashion and accessories'}
+              {lang === 'fr'
+                ? 'Parcourez notre sélection complète de mode et accessoires'
+                : 'Browse our complete selection of fashion and accessories'}
             </p>
           </motion.div>
 
