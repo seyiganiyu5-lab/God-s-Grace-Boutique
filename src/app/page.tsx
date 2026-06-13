@@ -203,8 +203,8 @@ export default function HomePage() {
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('home')}>
               <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
               <div className="hidden sm:block">
-                <h1 className="text-sm md:text-base font-bold text-primary leading-tight">God&apos;s Grace</h1>
-                <p className="text-xs text-muted-foreground">Boutique</p>
+                <h1 className="text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
+                <p className="text-[10px] md:text-xs text-muted-foreground tracking-[0.2em] uppercase">Boutique</p>
               </div>
             </div>
 
@@ -366,10 +366,10 @@ export default function HomePage() {
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
               {lang === 'fr' ? 'Nouvelle Collection' : 'New Collection'}
             </Badge>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 leading-tight font-elegant">
               {t.heroTitle}
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 mb-2 font-light italic">
+            <p className="text-2xl md:text-3xl text-white/80 mb-2 font-handwriting">
               {t.heroSubtitle}
             </p>
             <p className="text-base md:text-lg text-white/60 mb-8 max-w-lg">
@@ -402,7 +402,7 @@ export default function HomePage() {
                 <img src="/images/about.png" alt="About God's Grace Boutique" className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]" />
                 <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground rounded-2xl p-6 shadow-xl hidden md:block">
                   <Heart className="h-8 w-8" />
-                  <p className="text-sm font-medium mt-2">
+                  <p className="text-sm font-medium mt-2 font-handwriting">
                     {lang === 'fr' ? 'Avec Amour' : 'Made with Love'}
                   </p>
                 </div>
@@ -417,7 +417,7 @@ export default function HomePage() {
             >
               <div>
                 <Badge variant="secondary" className="mb-4">{t.about}</Badge>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.aboutTitle}</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.aboutTitle}</h2>
               </div>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                 {t.aboutDescription}
@@ -425,13 +425,13 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                 <Card className="bg-primary/5 border-primary/10">
                   <CardContent className="p-5">
-                    <h3 className="font-bold text-lg mb-2 text-primary">{t.aboutMission}</h3>
+                    <h3 className="font-bold text-lg mb-2 text-primary font-elegant">{t.aboutMission}</h3>
                     <p className="text-sm text-muted-foreground">{t.aboutMissionText}</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-primary/5 border-primary/10">
                   <CardContent className="p-5">
-                    <h3 className="font-bold text-lg mb-2 text-primary">{t.aboutValues}</h3>
+                    <h3 className="font-bold text-lg mb-2 text-primary font-elegant">{t.aboutValues}</h3>
                     <p className="text-sm text-muted-foreground">{t.aboutValuesText}</p>
                   </CardContent>
                 </Card>
@@ -451,7 +451,7 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <Badge variant="secondary" className="mb-4">{t.products}</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">
               {lang === 'fr' ? 'Notre Collection' : 'Our Collection'}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -568,7 +568,7 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <Badge variant="secondary" className="mb-4">{t.testimony}</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.testimonyTitle}</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.testimonyTitle}</h2>
             <p className="text-muted-foreground">{t.testimonySubtitle}</p>
           </motion.div>
 
@@ -616,7 +616,7 @@ export default function HomePage() {
           {/* Submit Testimony */}
           <Card className="max-w-xl mx-auto">
             <CardContent className="p-6">
-              <h3 className="font-bold text-lg mb-4 text-center">
+              <h3 className="font-bold text-lg mb-4 text-center font-elegant">
                 {lang === 'fr' ? 'Partagez Votre Expérience' : 'Share Your Experience'}
               </h3>
               <form onSubmit={handleTestimonySubmit} className="space-y-4">
@@ -669,7 +669,7 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <Badge variant="secondary" className="mb-4">{t.contact}</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.contactTitle}</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.contactTitle}</h2>
             <p className="text-muted-foreground">{t.contactSubtitle}</p>
           </motion.div>
 
@@ -679,7 +679,7 @@ export default function HomePage() {
                 <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Phone className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="font-bold mb-2">{t.contactPhone}</h3>
+                <h3 className="font-bold mb-2 font-elegant">{t.contactPhone}</h3>
                 <a href="tel:+233575354633" className="text-primary font-medium hover:underline">0575354633</a>
                 <div className="mt-3">
                   <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1.5">
@@ -697,7 +697,7 @@ export default function HomePage() {
                 <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <CreditCard className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="font-bold mb-2">{t.contactPayment}</h3>
+                <h3 className="font-bold mb-2 font-elegant">{t.contactPayment}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-6 w-6 bg-blue-500 rounded text-white text-[10px] font-bold flex items-center justify-center">W</div>
@@ -716,7 +716,7 @@ export default function HomePage() {
                 <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-7 w-7 text-primary" />
                 </div>
-                <h3 className="font-bold mb-2">{t.contactAddress}</h3>
+                <h3 className="font-bold mb-2 font-elegant">{t.contactAddress}</h3>
                 <p className="text-sm text-muted-foreground">{t.contactAddressText}</p>
               </CardContent>
             </Card>
@@ -732,7 +732,7 @@ export default function HomePage() {
             <Card className="max-w-2xl mx-auto bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
               <CardContent className="p-8">
                 <MessageCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold mb-2">
+                <h3 className="text-2xl font-bold mb-2 font-elegant">
                   {lang === 'fr' ? 'Commandez Facilement!' : 'Order Easily!'}
                 </h3>
                 <p className="text-muted-foreground mb-6">
@@ -763,17 +763,17 @@ export default function HomePage() {
               <div className="flex items-center gap-3 mb-4">
                 <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 rounded-full object-cover border-2 border-primary" />
                 <div>
-                  <h3 className="font-bold text-lg">God&apos;s Grace</h3>
+                  <h3 className="font-handwriting text-xl md:text-2xl text-background">God&apos;s Grace</h3>
                   <p className="text-xs text-background/60">Boutique</p>
                 </div>
               </div>
-              <p className="text-sm text-background/60 italic mb-4">{t.footerTagline}</p>
+              <p className="text-sm text-background/60 mb-4 font-handwriting text-base">{t.footerTagline}</p>
               <p className="text-sm text-background/60">{t.footerMadeWith}</p>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerQuickLinks}</h3>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerQuickLinks}</h3>
               <div className="space-y-2">
                 {navLinks.map((link) => (
                   <button
@@ -789,7 +789,7 @@ export default function HomePage() {
 
             {/* Categories */}
             <div>
-              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerCategories}</h3>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerCategories}</h3>
               <div className="space-y-2">
                 {categories.map((cat) => (
                   <button
@@ -808,7 +808,7 @@ export default function HomePage() {
 
             {/* Contact */}
             <div>
-              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">{t.footerContact}</h3>
+              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerContact}</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-background/60">
                   <Phone className="h-4 w-4 text-primary" />

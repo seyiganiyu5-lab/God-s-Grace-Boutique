@@ -390,7 +390,7 @@ export default function AdminDashboard() {
             <span className="text-primary-foreground font-bold text-lg">G</span>
           </div>
           <div>
-            <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">God&apos;s Grace</h1>
+            <h1 className="font-handwriting text-primary-foreground text-xl leading-tight">God&apos;s Grace</h1>
             <p className="text-xs text-muted-foreground">Boutique Admin</p>
           </div>
         </div>
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
               <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
                 <Menu className="size-5" />
               </Button>
-              <h2 className="font-semibold text-lg capitalize">{activeSection}</h2>
+              <h2 className="font-semibold text-lg capitalize font-elegant">{activeSection}</h2>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-xs">
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Recent Orders</CardTitle>
+                        <CardTitle className="text-base font-elegant">Recent Orders</CardTitle>
                         <CardDescription>Latest 5 orders</CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
                     </Card>
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Testimonies</CardTitle>
+                        <CardTitle className="text-base font-elegant">Testimonies</CardTitle>
                         <CardDescription>Approval status</CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -582,7 +582,7 @@ export default function AdminDashboard() {
                   {/* Category Breakdown */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Products by Category</CardTitle>
+                      <CardTitle className="text-base font-elegant">Products by Category</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {categories.length === 0 ? (
