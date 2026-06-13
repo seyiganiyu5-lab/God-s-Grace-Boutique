@@ -422,12 +422,12 @@ export default function HomePage() {
             </div>
 
             {/* Category Filter */}
-            <div className="flex overflow-x-auto gap-2 mb-8 sm:mb-10 pb-2 scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
+            <div className="flex flex-wrap gap-2 mb-8 sm:mb-10 justify-center">
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory('all')}
-                className="gap-1.5"
+                className="gap-1.5 text-[11px] sm:text-xs"
               >
                 <Filter className="h-3.5 w-3.5" />
                 {t.allCategories}
@@ -438,6 +438,7 @@ export default function HomePage() {
                   variant={selectedCategory === cat.id ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedCategory(cat.id)}
+                  className="text-[11px] sm:text-xs"
                 >
                   {getCategoryName(cat)}
                 </Button>
