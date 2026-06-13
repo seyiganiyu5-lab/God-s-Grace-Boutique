@@ -56,6 +56,9 @@ import {
   Lock,
   User,
   AlertCircle,
+  Upload,
+  X as XIcon,
+  Loader2,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -214,6 +217,47 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   const [categoryForm, setCategoryForm] = useState({
     name: '', nameFr: '', slug: '', image: '',
   })
+
+  // Upload state
+  const [productUploading, setProductUploading] = useState(false)
+  const [categoryUploading, setCategoryUploading] = useState(false)
+
+  // Image upload handler
+  const handleImageUpload = async (file: File, target: 'product' | 'category') => {
+    if (!file) return
+    const setUploading = target === 'product' ? setProductUploading : setCategoryUploading
+    const setForm = target === 'product' ? setProductForm : setCategoryForm
+
+    // Validate
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Only images are allowed.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Max 5MB.')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        setForm((prev: any) => ({ ...prev, image: data.url }))
+        toast.success('Image uploaded successfully')
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Upload failed')
+      }
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   // ─── Data Fetching ───────────────────────────────────────────────────────
 
@@ -1503,8 +1547,52 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               <Input id="prod-price" type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="0" min="0" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prod-image">Image URL *</Label>
-              <Input id="prod-image" value={productForm.image} onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+              <Label>Product Image *</Label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-start gap-2 h-10 relative overflow-hidden"
+                    disabled={productUploading}
+                    onClick={() => document.getElementById('prod-file-input')?.click()}
+                  >
+                    {productUploading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="h-4 w-4" /> Choose Image from Device</>
+                    )}
+                  </Button>
+                  <input
+                    id="prod-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file, 'product')
+                      e.target.value = ''
+                    }}
+                  />
+                </div>
+                <div className="relative">
+                  <Input
+                    value={productForm.image}
+                    onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))}
+                    placeholder="Or paste image URL..."
+                    className="pr-8"
+                  />
+                  {productForm.image && (
+                    <button
+                      type="button"
+                      onClick={() => setProductForm(f => ({ ...f, image: '' }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="prod-category">Category *</Label>
@@ -1531,9 +1619,14 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             </div>
           </div>
           {productForm.image && (
-            <div className="border rounded-xl p-3 bg-muted/30">
-              <p className="text-xs text-muted-foreground mb-2">Image Preview</p>
-              <img src={productForm.image} alt="Preview" className="size-24 rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            <div className="border rounded-xl p-4 bg-muted/30">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">Image Preview</p>
+                <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive" onClick={() => setProductForm(f => ({ ...f, image: '' }))}>
+                  <XIcon className="h-3 w-3 mr-1" /> Remove
+                </Button>
+              </div>
+              <img src={productForm.image} alt="Preview" className="h-32 w-auto rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
           )}
           <DialogFooter>
@@ -1564,8 +1657,55 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               <Input id="cat-slug" value={categoryForm.slug} onChange={e => setCategoryForm(f => ({ ...f, slug: e.target.value }))} placeholder="category-slug" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-image">Image URL</Label>
-              <Input id="cat-image" value={categoryForm.image} onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+              <Label>Category Image</Label>
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start gap-2 h-10"
+                  disabled={categoryUploading}
+                  onClick={() => document.getElementById('cat-file-input')?.click()}
+                >
+                  {categoryUploading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
+                  ) : (
+                    <><Upload className="h-4 w-4" /> Choose Image from Device</>
+                  )}
+                </Button>
+                <input
+                  id="cat-file-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (file) handleImageUpload(file, 'category')
+                    e.target.value = ''
+                  }}
+                />
+                <div className="relative">
+                  <Input
+                    value={categoryForm.image}
+                    onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))}
+                    placeholder="Or paste image URL..."
+                    className="pr-8"
+                  />
+                  {categoryForm.image && (
+                    <button
+                      type="button"
+                      onClick={() => setCategoryForm(f => ({ ...f, image: '' }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              {categoryForm.image && (
+                <div className="mt-2 rounded-lg overflow-hidden border bg-muted/30 p-2">
+                  <img src={categoryForm.image} alt="Preview" className="h-24 w-auto rounded-lg object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
