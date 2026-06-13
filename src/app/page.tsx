@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Menu, X, Globe, Star, Trash2, Plus, Minus,
   Phone, MessageCircle, MapPin, CreditCard, ChevronRight,
-  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp
+  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp, Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
