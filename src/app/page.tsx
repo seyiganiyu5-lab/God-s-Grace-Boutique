@@ -1048,103 +1048,128 @@ export default function HomePage() {
       </section>
 
       {/* Testimony Section */}
-      <section id="testimony" className="py-12 sm:py-16 md:py-28 bg-background">
+      <section id="testimony" className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-primary/[0.03] via-background to-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-10 sm:mb-14"
           >
-            <Badge variant="secondary" className="mb-4">{t.testimony}</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.testimonyTitle}</h2>
-            <p className="text-muted-foreground">{t.testimonySubtitle}</p>
+            <Badge variant="secondary" className="mb-3 sm:mb-4">{t.testimony}</Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 font-elegant">{t.testimonyTitle}</h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">{t.testimonySubtitle}</p>
           </motion.div>
 
           {/* Testimonies Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {testimonies.map((testimony, index) => (
-              <motion.div
-                key={testimony.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-              >
-                <Card className="h-full hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-1 mb-3">
-                      {Array.from({ length: testimony.rating }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                      ))}
-                      {Array.from({ length: 5 - testimony.rating }).map((_, i) => (
-                        <Star key={`empty-${i}`} className="h-4 w-4 text-muted" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4 italic leading-relaxed">
-                      &ldquo;{testimony.message}&rdquo;
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-primary font-bold text-sm">{testimony.name.charAt(0)}</span>
+          {testimonies.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-10 sm:mb-14">
+              {testimonies.map((testimony, index) => (
+                <motion.div
+                  key={testimony.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 border-border/40 bg-background/80 backdrop-blur-sm group">
+                    <CardContent className="p-5 sm:p-6 relative">
+                      {/* Decorative Quote */}
+                      <div className="absolute top-3 right-4 text-primary/10 text-5xl sm:text-6xl font-serif leading-none select-none">&ldquo;</div>
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 mb-3">
+                        {Array.from({ length: testimony.rating }).map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-primary text-primary" />
+                        ))}
+                        {Array.from({ length: 5 - testimony.rating }).map((_, i) => (
+                          <Star key={`empty-${i}`} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/30" />
+                        ))}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{testimony.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          <Star className="h-3 w-3 fill-primary text-primary inline mr-1" />
-                          {testimony.rating}/5
-                        </p>
+                      {/* Message */}
+                      <p className="text-sm text-foreground/80 mb-4 leading-relaxed relative z-10 line-clamp-4">
+                        {testimony.message}
+                      </p>
+                      {/* Author */}
+                      <div className="flex items-center gap-3 pt-3 border-t border-border/40">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+                          <span className="text-primary-foreground font-bold text-xs sm:text-sm">{testimony.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">{testimony.name}</p>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: testimony.rating }).map((_, i) => (
+                              <Star key={`small-${i}`} className="h-2.5 w-2.5 fill-primary text-primary" />
+                            ))}
+                          </div>
+                        </div>
+                        <Heart className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors" />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Submit Testimony */}
-          <Card className="max-w-xl mx-auto">
-            <CardContent className="p-6">
-              <h3 className="font-bold text-lg mb-4 text-center font-elegant">
-                {lang === 'fr' ? 'Partagez Votre Expérience' : 'Share Your Experience'}
-              </h3>
-              <form onSubmit={handleTestimonySubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="testimony-name">
-                    {lang === 'fr' ? 'Votre Nom' : 'Your Name'}
-                  </Label>
-                  <Input id="testimony-name" name="name" required placeholder={lang === 'fr' ? 'Entrez votre nom' : 'Enter your name'} />
-                </div>
-                <div>
-                  <Label htmlFor="testimony-message">
-                    {lang === 'fr' ? 'Votre Message' : 'Your Message'}
-                  </Label>
-                  <Textarea id="testimony-message" name="message" required placeholder={lang === 'fr' ? 'Partagez votre expérience...' : 'Share your experience...'} rows={3} />
-                </div>
-                <div>
-                  <Label htmlFor="testimony-rating">
-                    {lang === 'fr' ? 'Note' : 'Rating'}
-                  </Label>
-                  <Select name="rating" defaultValue="5">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">⭐⭐⭐⭐⭐ (5/5)</SelectItem>
-                      <SelectItem value="4">⭐⭐⭐⭐ (4/5)</SelectItem>
-                      <SelectItem value="3">⭐⭐⭐ (3/5)</SelectItem>
-                      <SelectItem value="2">⭐⭐ (2/5)</SelectItem>
-                      <SelectItem value="1">⭐ (1/5)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full gap-2">
-                  <Send className="h-4 w-4" />
-                  {lang === 'fr' ? 'Soumettre' : 'Submit'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-lg mx-auto"
+          >
+            <Card className="border-primary/20 shadow-lg shadow-primary/5 overflow-hidden">
+              {/* Form Header */}
+              <div className="bg-gradient-to-r from-primary to-primary/80 px-5 sm:px-6 py-4 text-center">
+                <Sparkles className="h-5 w-5 text-primary-foreground/80 mx-auto mb-1.5" />
+                <h3 className="font-bold text-base sm:text-lg text-primary-foreground font-elegant">
+                  {lang === 'fr' ? 'Partagez Votre Expérience' : 'Share Your Experience'}
+                </h3>
+                <p className="text-primary-foreground/70 text-xs mt-0.5">
+                  {lang === 'fr' ? 'Nous aimons entendre vos histoires' : 'We\'d love to hear your story'}
+                </p>
+              </div>
+              {/* Form Body */}
+              <CardContent className="p-5 sm:p-6">
+                <form onSubmit={handleTestimonySubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="testimony-name" className="text-xs font-medium text-muted-foreground mb-1.5">
+                      {lang === 'fr' ? 'Votre Nom' : 'Your Name'}
+                    </Label>
+                    <Input id="testimony-name" name="name" required placeholder={lang === 'fr' ? 'Entrez votre nom' : 'Enter your name'} className="rounded-lg border-border/60 focus:border-primary/50" />
+                  </div>
+                  <div>
+                    <Label htmlFor="testimony-message" className="text-xs font-medium text-muted-foreground mb-1.5">
+                      {lang === 'fr' ? 'Votre Message' : 'Your Message'}
+                    </Label>
+                    <Textarea id="testimony-message" name="message" required placeholder={lang === 'fr' ? 'Partagez votre expérience...' : 'Share your experience...'} rows={3} className="rounded-lg border-border/60 focus:border-primary/50 resize-none" />
+                  </div>
+                  <div>
+                    <Label htmlFor="testimony-rating" className="text-xs font-medium text-muted-foreground mb-1.5">
+                      {lang === 'fr' ? 'Note' : 'Rating'}
+                    </Label>
+                    <Select name="rating" defaultValue="5">
+                      <SelectTrigger className="rounded-lg border-border/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">⭐⭐⭐⭐⭐ (5/5)</SelectItem>
+                        <SelectItem value="4">⭐⭐⭐⭐ (4/5)</SelectItem>
+                        <SelectItem value="3">⭐⭐⭐ (3/5)</SelectItem>
+                        <SelectItem value="2">⭐⭐ (2/5)</SelectItem>
+                        <SelectItem value="1">⭐ (1/5)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full gap-2 rounded-lg h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md shadow-primary/20 transition-all duration-300">
+                    <Send className="h-4 w-4" />
+                    {lang === 'fr' ? 'Soumettre' : 'Submit'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </section>
 
