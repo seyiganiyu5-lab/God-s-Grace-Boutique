@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { useLangStore } from '@/store/lang'
+import { translations } from '@/lib/i18n'
 
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -49,6 +51,11 @@ import {
   Sparkles,
   Heart,
   Clock,
+  Globe,
+  LogOut,
+  Lock,
+  User,
+  AlertCircle,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -113,12 +120,78 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authChecking, setAuthChecking] = useState(true)
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' })
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
+
+  // Language
+  const { lang, toggleLang } = useLangStore()
+  const t = translations[lang]
+
   // Data state
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [testimonies, setTestimonies] = useState<Testimony[]>([])
   const [loading, setLoading] = useState(true)
+
+  // ─── Auth Check ─────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/verify')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAuthenticated(data.authenticated === true)
+        } else {
+          setIsAuthenticated(false)
+        }
+      } catch {
+        setIsAuthenticated(false)
+      } finally {
+        setAuthChecking(false)
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginLoading(true)
+    setLoginError('')
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm),
+      })
+      if (res.ok) {
+        setIsAuthenticated(true)
+        toast.success(lang === 'fr' ? 'Connexion réussie!' : 'Login successful!')
+      } else {
+        const data = await res.json()
+        setLoginError(data.error || (lang === 'fr' ? 'Identifiants invalides' : 'Invalid credentials'))
+      }
+    } catch {
+      setLoginError(lang === 'fr' ? 'Erreur de connexion' : 'Connection error')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      setIsAuthenticated(false)
+      toast.success(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out successfully')
+    } catch {
+      toast.error(lang === 'fr' ? 'Erreur de déconnexion' : 'Logout failed')
+    }
+  }
 
   // Dialog state
   const [productDialogOpen, setProductDialogOpen] = useState(false)
@@ -455,14 +528,21 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
       <Separator />
 
-      {/* Back to Store */}
-      <div className="p-3">
+      {/* Back to Store + Logout */}
+      <div className="p-3 space-y-1">
         <button
           onClick={onBackToStore}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors w-full"
         >
           <ArrowLeft className="size-4" />
-          <span>Back to Store</span>
+          <span>{lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}</span>
+        </button>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
+        >
+          <LogOut className="size-4" />
+          <span>{lang === 'fr' ? 'Déconnexion' : 'Logout'}</span>
         </button>
       </div>
 
@@ -476,14 +556,139 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   // ─── Section Title Helper ────────────────────────────────────────────────
 
   const sectionTitles: Record<ActiveSection, { title: string; subtitle: string; icon: React.ReactNode }> = {
-    dashboard: { title: 'Dashboard', subtitle: 'Welcome back! Here\'s your store overview.', icon: <LayoutDashboard className="size-5" /> },
-    products: { title: 'Products', subtitle: 'Manage your product catalog', icon: <Package className="size-5" /> },
-    categories: { title: 'Categories', subtitle: 'Organize your products', icon: <FolderOpen className="size-5" /> },
-    orders: { title: 'Orders', subtitle: 'Track and manage customer orders', icon: <ShoppingCart className="size-5" /> },
-    testimonies: { title: 'Testimonies', subtitle: 'Review customer feedback', icon: <MessageSquareHeart className="size-5" /> },
+    dashboard: { title: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', subtitle: lang === 'fr' ? "Vue d'ensemble de votre boutique" : "Welcome back! Here's your store overview.", icon: <LayoutDashboard className="size-5" /> },
+    products: { title: lang === 'fr' ? 'Produits' : 'Products', subtitle: lang === 'fr' ? 'Gérer votre catalogue' : 'Manage your product catalog', icon: <Package className="size-5" /> },
+    categories: { title: lang === 'fr' ? 'Catégories' : 'Categories', subtitle: lang === 'fr' ? 'Organiser vos produits' : 'Organize your products', icon: <FolderOpen className="size-5" /> },
+    orders: { title: lang === 'fr' ? 'Commandes' : 'Orders', subtitle: lang === 'fr' ? 'Suivre et gérer les commandes' : 'Track and manage customer orders', icon: <ShoppingCart className="size-5" /> },
+    testimonies: { title: lang === 'fr' ? 'Témoignages' : 'Testimonies', subtitle: lang === 'fr' ? 'Examiner les avis clients' : 'Review customer feedback', icon: <MessageSquareHeart className="size-5" /> },
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────
+  // ─── Auth Checking State ──────────────────────────────────────────────
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="text-center">
+            <p className="text-sm font-medium">{lang === 'fr' ? 'Vérification...' : 'Verifying...'}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Login Page ───────────────────────────────────────────────────────
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Login Card */}
+          <Card className="overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-center text-primary-foreground">
+              <div className="size-16 rounded-2xl bg-primary-foreground/20 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Lock className="size-8 text-primary-foreground" />
+              </div>
+              <h1 className="font-handwriting text-2xl mb-1">God&apos;s Grace</h1>
+              <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? 'Administration Boutique' : 'Boutique Administration'}</p>
+            </div>
+
+            {/* Form */}
+            <CardContent className="p-6">
+              <form onSubmit={handleLogin} className="space-y-4">
+                {loginError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                    <AlertCircle className="size-4 shrink-0" />
+                    <span>{loginError}</span>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">{lang === 'fr' ? 'Nom d\'utilisateur' : 'Username'}</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      id="username"
+                      type="text"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm(f => ({ ...f, username: e.target.value }))}
+                      placeholder={lang === 'fr' ? 'Entrez votre nom d\'utilisateur' : 'Enter your username'}
+                      className="pl-9"
+                      required
+                      autoComplete="username"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">{lang === 'fr' ? 'Mot de passe' : 'Password'}</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
+                      placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
+                      className="pl-9"
+                      required
+                      autoComplete="current-password"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full shadow-md shadow-primary/20"
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      <span>{lang === 'fr' ? 'Connexion...' : 'Signing in...'}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Lock className="size-4" />
+                      <span>{lang === 'fr' ? 'Se connecter' : 'Sign In'}</span>
+                    </div>
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={onBackToStore}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
+                >
+                  <ArrowLeft className="size-3" />
+                  {lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Language Toggle Below Login */}
+          <div className="mt-4 text-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleLang}
+              className="gap-1.5 text-xs text-muted-foreground"
+            >
+              <Globe className="size-3.5" />
+              {lang === 'en' ? 'Français' : 'English'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Render Dashboard ──────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -523,13 +728,23 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-xs gap-1 hidden sm:flex">
-                <Package className="size-3" /> {products.length} Products
+                <Package className="size-3" /> {products.length} {lang === 'fr' ? 'Produits' : 'Products'}
               </Badge>
               {pendingOrders > 0 && (
                 <Badge className="text-xs gap-1">
-                  <Clock className="size-3" /> {pendingOrders} Pending
+                  <Clock className="size-3" /> {pendingOrders} {lang === 'fr' ? 'En attente' : 'Pending'}
                 </Badge>
               )}
+              {/* Language Toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleLang}
+                className="gap-1.5 text-xs font-semibold h-8"
+              >
+                <Globe className="size-3.5" />
+                {lang === 'en' ? 'FR' : 'EN'}
+              </Button>
             </div>
           </div>
         </header>

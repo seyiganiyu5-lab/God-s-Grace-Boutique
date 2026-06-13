@@ -153,3 +153,29 @@ Integrated the admin dashboard into the main page at `/` so users can toggle bet
 - `bun run lint` passes with no errors
 - Both `/` and `/admin` routes return HTTP 200
 - Dev server logs show no errors
+---
+Task ID: 2
+Agent: Main Agent
+Task: Secure admin dashboard with login, remove visible admin button, add language toggle
+
+Work Log:
+- Removed Shield icon and visible "Admin Dashboard" button from navbar completely
+- Added secret admin access: click logo 5 times within 1.5 seconds OR keyboard shortcut Ctrl+Shift+Alt+A
+- Created auth utility (/src/lib/auth.ts) with bcrypt password hashing and JWT token management
+- Created login API route (/api/auth/login) - validates credentials, sets httpOnly JWT cookie
+- Created verify API route (/api/auth/verify) - checks JWT token validity
+- Created logout API route (/api/auth/logout) - clears session cookie
+- Added elegant login page with purple gradient header, username/password fields, error messages
+- Added language toggle (EN/FR) to admin dashboard: top bar + login page
+- Added Logout button to admin sidebar
+- Made all admin text bilingual (section titles, sidebar labels, form labels, etc.)
+- Verified: logo 5-click secret access works, login with correct credentials works, wrong credentials rejected, logout works, language toggle works, Back to Store works
+- Credentials: Username: Busayo30, Password: aliyat71016 (stored as bcrypt hash)
+- JWT tokens stored in httpOnly cookies with 8-hour expiry
+
+Stage Summary:
+- Admin is completely hidden from regular users - no visible button anywhere
+- Secret access: click logo 5 times quickly OR Ctrl+Shift+Alt+A
+- Full login page with secure authentication (bcrypt + JWT + httpOnly cookies)
+- Admin dashboard now fully bilingual (EN/FR)
+- Logout button in sidebar, language toggle in top bar
