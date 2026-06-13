@@ -186,6 +186,42 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Drag-to-scroll for featured carousel
+  useEffect(() => {
+    const container = document.getElementById('featured-scroll');
+    if (!container) return;
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      container.style.cursor = 'grabbing';
+      startX = e.pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    };
+    const onMouseLeave = () => { isDown = false; container.style.cursor = 'grab'; };
+    const onMouseUp = () => { isDown = false; container.style.cursor = 'grab'; };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      container.scrollLeft = scrollLeft - walk;
+    };
+
+    container.addEventListener('mousedown', onMouseDown);
+    container.addEventListener('mouseleave', onMouseLeave);
+    container.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('mousemove', onMouseMove);
+    return () => {
+      container.removeEventListener('mousedown', onMouseDown);
+      container.removeEventListener('mouseleave', onMouseLeave);
+      container.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('mousemove', onMouseMove);
+    };
+  }, [isLoaded]);
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     setMobileMenuOpen(false);
@@ -558,65 +594,113 @@ export default function HomePage() {
 
           {/* Horizontal Scrolling Products */}
           {products.filter(p => p.featured).length > 0 ? (
-            <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 snap-x snap-mandatory scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
-              {products.filter(p => p.featured).map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className="flex-none w-[260px] sm:w-[280px] md:w-[300px] snap-start"
-                >
-                  <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 h-full flex flex-col">
-                    <div className="relative overflow-hidden aspect-[3/4]">
-                      <img
-                        src={product.image}
-                        alt={getProductName(product)}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
-                          <Star className="h-2.5 w-2.5 mr-0.5" />
-                          {lang === 'fr' ? 'Vedette' : 'Featured'}
-                        </Badge>
-                        {!product.inStock && (
-                          <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
-                            {t.outOfStock}
+            <div className="relative group/carousel">
+              {/* Left Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('featured-scroll');
+                  container?.scrollBy({ left: -320, behavior: 'smooth' });
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border border-border/50 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground -translate-x-1"
+                aria-label="Scroll left"
+              >
+                <ChevronRight className="h-5 w-5 rotate-180" />
+              </button>
+              {/* Right Arrow */}
+              <button
+                onClick={() => {
+                  const container = document.getElementById('featured-scroll');
+                  container?.scrollBy({ left: 320, behavior: 'smooth' });
+                }}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border border-border/50 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground translate-x-1"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+              {/* Scroll Container */}
+              <div
+                id="featured-scroll"
+                className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 snap-x snap-mandatory -mx-3 px-3 sm:mx-0 sm:px-0"
+                style={{
+                  scrollbarWidth: 'thin',
+                  WebkitOverflowScrolling: 'touch',
+                  cursor: 'grab',
+                }}
+              >
+                {products.filter(p => p.featured).map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, x: 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                    className="flex-none w-[75vw] sm:w-[280px] md:w-[300px] snap-start"
+                  >
+                    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 h-full flex flex-col">
+                      <div className="relative overflow-hidden aspect-[3/4]">
+                        <img
+                          src={product.image}
+                          alt={getProductName(product)}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                            <Star className="h-2.5 w-2.5 mr-0.5" />
+                            {lang === 'fr' ? 'Vedette' : 'Featured'}
                           </Badge>
-                        )}
+                          {!product.inStock && (
+                            <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
+                              {t.outOfStock}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-white/90 text-foreground shadow-sm text-[10px] font-bold px-2 py-0.5">
+                            {getCategoryName(product.category)}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-white/90 text-foreground shadow-sm text-[10px] font-bold px-2 py-0.5">
-                          {getCategoryName(product.category)}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-1">
-                        {getProductName(product)}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
-                        {getProductDesc(product)}
-                      </p>
-                      <div className="flex items-center justify-between mt-auto">
-                        <span className="text-primary font-bold text-sm">
-                          {product.price.toLocaleString()} {t.currency}
-                        </span>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddToCart(product)}
-                          disabled={!product.inStock}
-                          className="gap-1 text-xs h-8 px-3"
-                        >
-                          <ShoppingBag className="h-3 w-3" />
-                          {product.inStock ? t.addToCart : t.outOfStock}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+                        <h3 className="font-semibold text-sm mb-1 line-clamp-1">
+                          {getProductName(product)}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+                          {getProductDesc(product)}
+                        </p>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className="text-primary font-bold text-sm">
+                            {product.price.toLocaleString()} {t.currency}
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddToCart(product)}
+                            disabled={!product.inStock}
+                            className="gap-1 text-xs h-8 px-3"
+                          >
+                            <ShoppingBag className="h-3 w-3" />
+                            {product.inStock ? t.addToCart : t.outOfStock}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+              {/* Scroll Hint Dots */}
+              <div className="flex justify-center gap-1.5 mt-3">
+                {products.filter(p => p.featured).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const container = document.getElementById('featured-scroll');
+                      const scrollAmount = i * 320;
+                      container?.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+                    }}
+                    className="h-2 w-2 rounded-full bg-primary/30 hover:bg-primary transition-colors"
+                    aria-label={`Go to item ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-16 text-muted-foreground">
