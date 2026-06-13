@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { WaveLogo } from '@/components/wave-logo';
 import { MtnMomoLogo } from '@/components/mtn-momo-logo';
+import { TikTokIcon } from '@/components/tiktok-icon';
 
 const AdminDashboard = dynamic(() => import('@/components/admin-dashboard'), {
   ssr: false,
@@ -1189,7 +1190,7 @@ export default function HomePage() {
             <p className="text-muted-foreground">{t.contactSubtitle}</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
             <Card className="text-center hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -1234,6 +1235,22 @@ export default function HomePage() {
                 </div>
                 <h3 className="font-bold mb-2 font-elegant">{t.contactAddress}</h3>
                 <p className="text-sm text-muted-foreground">{t.contactAddressText}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="h-14 w-14 rounded-full bg-[#010101]/10 flex items-center justify-center mx-auto mb-4">
+                  <TikTokIcon size={28} className="text-[#010101]" />
+                </div>
+                <h3 className="font-bold mb-2 font-elegant">TikTok</h3>
+                <p className="text-sm text-muted-foreground mb-3">@rofiatganiyu683</p>
+                <Button asChild size="sm" className="bg-[#010101] hover:bg-[#010101]/80 text-white gap-1.5">
+                  <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer">
+                    <TikTokIcon size={14} />
+                    {lang === 'fr' ? 'Suivre' : 'Follow'}
+                  </a>
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -1341,6 +1358,12 @@ export default function HomePage() {
                   <MtnMomoLogo size={16} />
                   <span>Wave & MTN MoMo</span>
                 </div>
+                <div className="flex items-center gap-2 text-sm text-background/60">
+                  <TikTokIcon size={16} className="text-background/60" />
+                  <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                    TikTok
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -1353,6 +1376,11 @@ export default function HomePage() {
               <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
                 <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+                <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer">
+                  <TikTokIcon size={16} />
                 </a>
               </Button>
               <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
