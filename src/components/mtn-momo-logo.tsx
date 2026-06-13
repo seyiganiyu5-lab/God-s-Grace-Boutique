@@ -7,7 +7,6 @@ interface MtnMomoLogoProps {
 
 export function MtnMomoLogo({ className = '', size = 28 }: MtnMomoLogoProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/mtn-momo-logo.png"
       alt="MTN MoMo"

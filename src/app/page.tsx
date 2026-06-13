@@ -59,15 +59,19 @@ interface Testimony {
   approved: boolean;
 }
 
+// Module-level cache so data survives component unmount/remount when toggling admin
+let _pageDataCache: { products: Product[]; categories: Category[]; testimonies: Testimony[] } | null = null;
+
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  // Initialize from cache if available (avoids blank flash when returning from admin)
+  const [products, setProducts] = useState<Product[]>(_pageDataCache?.products ?? []);
+  const [categories, setCategories] = useState<Category[]>(_pageDataCache?.categories ?? []);
+  const [testimonies, setTestimonies] = useState<Testimony[]>(_pageDataCache?.testimonies ?? []);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [productSearch, setProductSearch] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(() => !!_pageDataCache);
   const [hasMounted, setHasMounted] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showProductsPage, setShowProductsPage] = useState(false);
@@ -86,9 +90,12 @@ export default function HomePage() {
       const productsData = await productsRes.json();
       const categoriesData = await categoriesRes.json();
       const testimoniesData = await testimoniesRes.json();
+      const approvedTestimonies = testimoniesData.filter((t: Testimony) => t.approved);
       setProducts(productsData);
       setCategories(categoriesData);
-      setTestimonies(testimoniesData.filter((t: Testimony) => t.approved));
+      setTestimonies(approvedTestimonies);
+      // Save to module-level cache for instant restore when returning from admin
+      _pageDataCache = { products: productsData, categories: categoriesData, testimonies: approvedTestimonies };
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -270,7 +277,7 @@ export default function HomePage() {
   }
 
   if (showAdmin) {
-    return <AdminDashboard onBackToStore={() => setShowAdmin(false)} />;
+    return <AdminDashboard onBackToStore={() => { setShowAdmin(false); window.scrollTo({ top: 0 }); }} />;
   }
 
   // ─── Separate All Products Page ──────────────────────────────────────────
