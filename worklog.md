@@ -117,3 +117,39 @@ Stage Summary:
 - **Section Headers**: Icon + title + subtitle pattern with consistent styling
 - **Empty States**: Large icon cards with muted backgrounds instead of simple text
 - All lint checks pass, no console errors, dev server running cleanly
+
+---
+Task ID: 2
+Agent: main
+Task: Integrate Admin Dashboard into Main Page
+---
+
+## Summary
+Integrated the admin dashboard into the main page at `/` so users can toggle between the store view and admin view within the same page, resolving the 404 issue when the preview environment only allows the `/` route.
+
+## Changes Made
+
+### 1. Created `/home/z/my-project/src/components/admin-dashboard.tsx`
+- Extracted the entire admin dashboard component from `/admin/page.tsx`
+- Added `AdminDashboardProps` interface with `onBackToStore: () => void` prop
+- Changed "Back to Store" from `<a href="/">` to `<button onClick={onBackToStore}>` to enable programmatic navigation
+- Component is `'use client'` directive compatible
+
+### 2. Modified `/home/z/my-project/src/app/page.tsx`
+- Added `Shield` icon import from lucide-react
+- Added `dynamic` import from `next/dynamic` for the AdminDashboard component (SSR disabled)
+- Added `showAdmin` state (boolean, default false)
+- Added a subtle Shield icon button in the navbar's "Right Actions" section (before the language toggle)
+- When `showAdmin` is true, renders `<AdminDashboard onBackToStore={() => setShowAdmin(false)} />` as full-screen content
+- When `showAdmin` is false, renders the normal store view (navbar, hero, about, products, testimony, contact, footer)
+- No existing store functionality was broken
+
+### 3. Updated `/home/z/my-project/src/app/admin/page.tsx`
+- Replaced the entire 1462-line inline implementation with a simple wrapper
+- Now imports and renders `AdminDashboard` with `onBackToStore={() => window.location.href = '/'}`
+- Keeps the `/admin` route working as a standalone page
+
+## Testing
+- `bun run lint` passes with no errors
+- Both `/` and `/admin` routes return HTTP 200
+- Dev server logs show no errors

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Menu, X, Globe, Star, Trash2, Plus, Minus,
   Phone, MessageCircle, MapPin, CreditCard, ChevronRight,
-  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp
+  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +21,11 @@ import { useCartStore, CartItem } from '@/store/cart';
 import { useLangStore } from '@/store/lang';
 import { translations, Language } from '@/lib/i18n';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const AdminDashboard = dynamic(() => import('@/components/admin-dashboard'), {
+  ssr: false,
+});
 
 interface Product {
   id: string;
@@ -60,6 +66,7 @@ export default function HomePage() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const { items, addItem, removeItem, updateQuantity, clearCart, totalPrice } = useCartStore();
   const { lang, toggleLang } = useLangStore();
@@ -193,6 +200,10 @@ export default function HomePage() {
     );
   }
 
+  if (showAdmin) {
+    return <AdminDashboard onBackToStore={() => setShowAdmin(false)} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Navbar */}
@@ -223,6 +234,17 @@ export default function HomePage() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2">
+              {/* Admin Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowAdmin(true)}
+                className="text-muted-foreground hover:text-primary"
+                title="Admin Dashboard"
+              >
+                <Shield className="h-4 w-4" />
+              </Button>
+
               {/* Language Toggle */}
               <Button
                 variant="outline"
