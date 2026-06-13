@@ -135,7 +135,7 @@ export default function HomePage() {
       toast.error(lang === 'fr' ? 'Votre panier est vide' : 'Your cart is empty');
       return;
     }
-    const phoneNumber = '233575354633';
+    const phoneNumber = '22575354633';
     let message = lang === 'fr' 
       ? '🛍️ *Nouvelle Commande - God\'s Grace Boutique*\n\n'
       : '🛍️ *New Order - God\'s Grace Boutique*\n\n';
@@ -147,8 +147,8 @@ export default function HomePage() {
     
     message += `\n💰 *${t.cartTotal}: ${totalPrice()} FCFA*`;
     message += `\n\n💳 ${t.paymentInfo}:`;
-    message += `\n- Wave: 0575354633`;
-    message += `\n- MTN Money: 0575354633`;
+    message += `\n- Wave: +225 75354633`;
+    message += `\n- MTN Money: +225 75354633`;
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
@@ -721,10 +721,10 @@ export default function HomePage() {
                   <Phone className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="font-bold mb-2 font-elegant">{t.contactPhone}</h3>
-                <a href="tel:+233575354633" className="text-primary font-medium hover:underline">0575354633</a>
+                <a href="tel:+22575354633" className="text-primary font-medium hover:underline">+225 75354633</a>
                 <div className="mt-3">
                   <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1.5">
-                    <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer">
+                    <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
                     </a>
@@ -742,11 +742,11 @@ export default function HomePage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-6 w-6 bg-blue-500 rounded text-white text-[10px] font-bold flex items-center justify-center">W</div>
-                    <span>{t.contactWave}: 0575354633</span>
+                    <span>{t.contactWave}: +225 75354633</span>
                   </div>
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-6 w-6 bg-yellow-500 rounded text-white text-[10px] font-bold flex items-center justify-center">M</div>
-                    <span>{t.contactMtn}: 0575354633</span>
+                    <span>{t.contactMtn}: +225 75354633</span>
                   </div>
                 </div>
               </CardContent>
@@ -853,11 +853,11 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm text-background/60">
                   <Phone className="h-4 w-4 text-primary" />
-                  <span>0575354633</span>
+                  <span>+225 75354633</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-background/60">
                   <MessageCircle className="h-4 w-4 text-green-500" />
-                  <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                     WhatsApp
                   </a>
                 </div>
@@ -875,12 +875,12 @@ export default function HomePage() {
             </p>
             <div className="flex items-center gap-4">
               <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
-                <a href="https://wa.me/233575354633" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-4 w-4" />
                 </a>
               </Button>
               <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
-                <a href="tel:+233575354633">
+                <a href="tel:+22575354633">
                   <Phone className="h-4 w-4" />
                 </a>
               </Button>
