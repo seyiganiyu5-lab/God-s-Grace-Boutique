@@ -152,6 +152,20 @@
   background: oklch(0.396 0.143 355);
 }
 
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for sticky navbar */
+.safe-top {
+  top: env(safe-area-inset-top, 0);
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;

@@ -196,15 +196,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+      <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border/50 safe-top">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('home')}>
-              <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
-              <div className="hidden sm:block">
-                <h1 className="text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
-                <p className="text-[10px] md:text-xs text-muted-foreground tracking-[0.2em] uppercase">Boutique</p>
+              <img src="/images/logo.png" alt="God's Grace Boutique" className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover" />
+              <div className="block sm:block">
+                <h1 className="text-base sm:text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
+                <p className="text-[8px] sm:text-[10px] md:text-xs text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase">Boutique</p>
               </div>
             </div>
 
@@ -350,37 +350,37 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="relative min-h-screen flex items-center pt-20">
+      <section id="home" className="relative min-h-[85vh] sm:min-h-screen flex items-center">
         <div className="absolute inset-0 z-0">
           <img src="/images/hero.png" alt="God's Grace Boutique" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/35" />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="max-w-2xl"
           >
-            <Badge className="mb-4 bg-primary/90 text-primary-foreground px-4 py-1.5 text-sm">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            <Badge className="mb-3 sm:mb-4 bg-primary/90 text-primary-foreground px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
               {lang === 'fr' ? 'Nouvelle Collection' : 'New Collection'}
             </Badge>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 leading-tight font-elegant">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight font-elegant">
               {t.heroTitle}
             </h1>
-            <p className="text-2xl md:text-3xl text-white/80 mb-2 font-handwriting">
+            <p className="text-xl sm:text-2xl md:text-3xl text-white/80 mb-2 font-handwriting">
               {t.heroSubtitle}
             </p>
-            <p className="text-base md:text-lg text-white/60 mb-8 max-w-lg">
+            <p className="text-sm sm:text-base md:text-lg text-white/60 mb-6 sm:mb-8 max-w-lg">
               {t.heroDescription}
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={() => scrollTo('products')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base gap-2">
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              <Button onClick={() => scrollTo('products')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base gap-2">
                 {t.shopNow}
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button onClick={() => scrollTo('contact')} variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20 px-8 py-6 text-base">
+              <Button onClick={() => scrollTo('contact')} variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20 px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base">
                 {t.contact}
               </Button>
             </div>
@@ -389,9 +389,9 @@ export default function HomePage() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 md:py-28 bg-background">
+      <section id="about" className="py-12 sm:py-16 md:py-28 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -400,8 +400,8 @@ export default function HomePage() {
             >
               <div className="relative">
                 <img src="/images/about.png" alt="About God's Grace Boutique" className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]" />
-                <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground rounded-2xl p-6 shadow-xl hidden md:block">
-                  <Heart className="h-8 w-8" />
+                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-primary text-primary-foreground rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8" />
                   <p className="text-sm font-medium mt-2 font-handwriting">
                     {lang === 'fr' ? 'Avec Amour' : 'Made with Love'}
                   </p>
@@ -417,7 +417,7 @@ export default function HomePage() {
             >
               <div>
                 <Badge variant="secondary" className="mb-4">{t.about}</Badge>
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.aboutTitle}</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 font-elegant">{t.aboutTitle}</h2>
               </div>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                 {t.aboutDescription}
@@ -442,8 +442,8 @@ export default function HomePage() {
       </section>
 
       {/* Products Section */}
-      <section id="products" className="py-20 md:py-28 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="products" className="py-12 sm:py-16 md:py-28 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -462,7 +462,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
+          <div className="flex overflow-x-auto gap-2 mb-8 sm:mb-10 pb-2 scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center">
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
               size="sm"
@@ -485,7 +485,7 @@ export default function HomePage() {
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
             {filteredProducts.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -501,41 +501,41 @@ export default function HomePage() {
                       alt={getProductName(product)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                    <div className="absolute top-1 left-1 sm:top-2 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
                       {product.featured && (
-                        <Badge className="bg-primary text-primary-foreground text-[10px]">
-                          <Star className="h-2.5 w-2.5 mr-0.5" />
+                        <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[10px] px-1 sm:px-2 py-0 sm:py-0.5">
+                          <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5" />
                           {lang === 'fr' ? 'Vedette' : 'Featured'}
                         </Badge>
                       )}
                       {!product.inStock && (
-                        <Badge variant="destructive" className="text-[10px]">
+                        <Badge variant="destructive" className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0 sm:py-0.5">
                           {t.outOfStock}
                         </Badge>
                       )}
                     </div>
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-white/90 text-foreground shadow-sm text-xs font-bold">
+                    <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+                      <Badge className="bg-white/90 text-foreground shadow-sm text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0 sm:py-0.5 hidden sm:inline-flex">
                         {getCategoryName(product.category)}
                       </Badge>
                     </div>
                   </div>
-                  <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
-                    <h3 className="font-semibold text-sm md:text-base mb-1 line-clamp-1">
+                  <CardContent className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col">
+                    <h3 className="font-semibold text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 line-clamp-1">
                       {getProductName(product)}
                     </h3>
-                    <p className="text-xs text-muted-foreground mb-3 line-clamp-2 flex-1">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2 flex-1">
                       {getProductDesc(product)}
                     </p>
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-primary font-bold text-sm md:text-base">
+                    <div className="flex items-center justify-between mt-auto gap-1">
+                      <span className="text-primary font-bold text-xs sm:text-sm md:text-base">
                         {product.price.toLocaleString()} {t.currency}
                       </span>
                       <Button
                         size="sm"
                         onClick={() => handleAddToCart(product)}
                         disabled={!product.inStock}
-                        className="gap-1 text-xs h-8"
+                        className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3"
                       >
                         <ShoppingBag className="h-3 w-3" />
                         {product.inStock ? t.addToCart : t.outOfStock}
@@ -559,7 +559,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimony Section */}
-      <section id="testimony" className="py-20 md:py-28 bg-background">
+      <section id="testimony" className="py-12 sm:py-16 md:py-28 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -660,7 +660,7 @@ export default function HomePage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 md:py-28 bg-muted/30">
+      <section id="contact" className="py-12 sm:py-16 md:py-28 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -673,7 +673,7 @@ export default function HomePage() {
             <p className="text-muted-foreground">{t.contactSubtitle}</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
             <Card className="text-center hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -757,7 +757,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-foreground text-background mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-12">
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-3 mb-4">
@@ -855,12 +855,12 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed bottom-6 right-6 z-40"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40"
           >
             <Button
               size="icon"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="rounded-full shadow-lg h-12 w-12 bg-primary hover:bg-primary/90"
+              className="rounded-full shadow-lg h-10 w-10 sm:h-12 sm:w-12 bg-primary hover:bg-primary/90"
             >
               <ArrowUp className="h-5 w-5" />
             </Button>
@@ -869,10 +869,10 @@ export default function HomePage() {
       </AnimatePresence>
 
       {/* Floating WhatsApp Button (Mobile) */}
-      <div className="fixed bottom-6 left-6 z-40 md:hidden">
+      <div className="fixed bottom-4 left-4 z-40 md:hidden">
         <Button
           onClick={handleWhatsAppOrder}
-          className="rounded-full shadow-lg h-14 w-14 bg-green-600 hover:bg-green-700 text-white p-0"
+          className="rounded-full shadow-lg h-12 w-12 bg-green-600 hover:bg-green-700 text-white p-0"
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
