@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -41,6 +42,13 @@ import {
   CreditCard,
   Search,
   Image as ImageIcon,
+  ArrowLeft,
+  TrendingUp,
+  BarChart3,
+  ChevronRight,
+  Sparkles,
+  Heart,
+  Clock,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -309,6 +317,18 @@ export default function AdminDashboard() {
     } catch { toast.error('An error occurred') }
   }
 
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) { toast.success(`Order marked as ${status}`); fetchOrders() }
+      else { toast.error('Failed to update order status') }
+    } catch { toast.error('An error occurred') }
+  }
+
   // ─── Testimony Operations ────────────────────────────────────────────────
 
   const toggleTestimonyApproval = async (testimony: Testimony) => {
@@ -366,69 +386,111 @@ export default function AdminDashboard() {
 
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0)
   const pendingOrders = orders.filter(o => o.status === 'pending').length
+  const deliveredOrders = orders.filter(o => o.status === 'delivered').length
   const inStockProducts = products.filter(p => p.inStock).length
   const featuredProducts = products.filter(p => p.featured).length
   const approvedTestimonies = testimonies.filter(t => t.approved).length
 
   // ─── Sidebar Navigation Items ────────────────────────────────────────────
 
-  const navItems: { key: ActiveSection; label: string; icon: React.ReactNode }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-4" /> },
-    { key: 'products', label: 'Products', icon: <Package className="size-4" /> },
-    { key: 'categories', label: 'Categories', icon: <FolderOpen className="size-4" /> },
-    { key: 'orders', label: 'Orders', icon: <ShoppingCart className="size-4" /> },
-    { key: 'testimonies', label: 'Testimonies', icon: <MessageSquareHeart className="size-4" /> },
+  const navItems: { key: ActiveSection; label: string; icon: React.ReactNode; description: string }[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: 'Overview & stats' },
+    { key: 'products', label: 'Products', icon: <Package className="size-4" />, description: `${products.length} items` },
+    { key: 'categories', label: 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} groups` },
+    { key: 'orders', label: 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} total` },
+    { key: 'testimonies', label: 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} reviews` },
   ]
 
   // ─── Sidebar Content ─────────────────────────────────────────────────────
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-sidebar-border">
+      {/* Brand Header */}
+      <div className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
         <div className="flex items-center gap-3">
-          <div className="size-10 rounded-lg bg-primary flex items-center justify-center">
+          <div className="size-11 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25">
             <span className="text-primary-foreground font-bold text-lg">G</span>
           </div>
           <div>
-            <h1 className="font-handwriting text-primary-foreground text-xl leading-tight">God&apos;s Grace</h1>
-            <p className="text-xs text-muted-foreground">Boutique Admin</p>
+            <h1 className="font-handwriting text-primary text-xl leading-tight">God&apos;s Grace</h1>
+            <p className="text-[11px] text-muted-foreground tracking-wide uppercase">Boutique Admin</p>
           </div>
         </div>
       </div>
+
+      <Separator />
+
+      {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
+        <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Navigation</p>
         {navItems.map(item => (
           <button
             key={item.key}
             onClick={() => { setActiveSection(item.key); setSidebarOpen(false) }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
               activeSection === item.key
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
             }`}
           >
-            {item.icon}
-            {item.label}
+            <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
+              activeSection === item.key ? 'bg-primary-foreground/20' : 'bg-muted'
+            }`}>
+              {item.icon}
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="font-medium leading-tight">{item.label}</p>
+              <p className={`text-[10px] leading-tight ${activeSection === item.key ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                {item.description}
+              </p>
+            </div>
+            {activeSection === item.key && <ChevronRight className="size-4 shrink-0" />}
           </button>
         ))}
       </nav>
-      <div className="p-4 border-t border-sidebar-border">
-        <p className="text-xs text-muted-foreground text-center">God&apos;s Grace Boutique &copy; {new Date().getFullYear()}</p>
+
+      <Separator />
+
+      {/* Back to Store */}
+      <div className="p-3">
+        <a
+          href="/"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          <span>Back to Store</span>
+        </a>
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t">
+        <p className="text-[10px] text-muted-foreground text-center font-handwriting">God&apos;s Grace Boutique &copy; {new Date().getFullYear()}</p>
       </div>
     </div>
   )
+
+  // ─── Section Title Helper ────────────────────────────────────────────────
+
+  const sectionTitles: Record<ActiveSection, { title: string; subtitle: string; icon: React.ReactNode }> = {
+    dashboard: { title: 'Dashboard', subtitle: 'Welcome back! Here\'s your store overview.', icon: <LayoutDashboard className="size-5" /> },
+    products: { title: 'Products', subtitle: 'Manage your product catalog', icon: <Package className="size-5" /> },
+    categories: { title: 'Categories', subtitle: 'Organize your products', icon: <FolderOpen className="size-5" /> },
+    orders: { title: 'Orders', subtitle: 'Track and manage customer orders', icon: <ShoppingCart className="size-5" /> },
+    testimonies: { title: 'Testimonies', subtitle: 'Review customer feedback', icon: <MessageSquareHeart className="size-5" /> },
+  }
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-sidebar border-r border-sidebar-border">
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-card border-r border-border">
         {sidebarContent}
       </aside>
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64 bg-sidebar">
+        <SheetContent side="left" className="p-0 w-72 bg-card">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
@@ -437,23 +499,31 @@ export default function AdminDashboard() {
       </Sheet>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64">
+      <main className="flex-1 lg:ml-72">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
-          <div className="flex items-center justify-between px-4 md:px-6 h-14">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b">
+          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
                 <Menu className="size-5" />
               </Button>
-              <h2 className="font-semibold text-lg capitalize font-elegant">{activeSection}</h2>
+              <div className="flex items-center gap-3">
+                <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  {sectionTitles[activeSection].icon}
+                </div>
+                <div>
+                  <h2 className="font-semibold text-base font-elegant leading-tight">{sectionTitles[activeSection].title}</h2>
+                  <p className="text-[11px] text-muted-foreground hidden sm:block">{sectionTitles[activeSection].subtitle}</p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {products.length} Products
+              <Badge variant="secondary" className="text-xs gap-1 hidden sm:flex">
+                <Package className="size-3" /> {products.length} Products
               </Badge>
               {pendingOrders > 0 && (
-                <Badge className="text-xs">
-                  {pendingOrders} Pending
+                <Badge className="text-xs gap-1">
+                  <Clock className="size-3" /> {pendingOrders} Pending
                 </Badge>
               )}
             </div>
@@ -461,87 +531,138 @@ export default function AdminDashboard() {
         </header>
 
         {/* Page Content */}
-        <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="flex flex-col items-center gap-3">
-                <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+              <div className="flex flex-col items-center gap-4">
+                <div className="size-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="text-center">
+                  <p className="text-sm font-medium">Loading dashboard...</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+                </div>
               </div>
             </div>
           ) : (
             <>
-              {/* ── Dashboard Section ── */}
+              {/* ════════════════════ Dashboard Section ════════════════════ */}
               {activeSection === 'dashboard' && (
                 <div className="space-y-6">
+                  {/* Welcome Banner */}
+                  <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-foreground/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+                    <CardContent className="p-6 lg:p-8 relative">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">Welcome to God&apos;s Grace</h2>
+                          <p className="text-primary-foreground/80 text-sm">Boutique Admin Dashboard — Where Elegance Meets Faith</p>
+                        </div>
+                        <Sparkles className="size-10 text-primary-foreground/30 shrink-0" />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   {/* Stats Cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-1.5">
-                          <Package className="size-3.5" /> Total Products
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{products.length}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{inStockProducts} in stock, {featuredProducts} featured</p>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-4 lg:p-5">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
+                            <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} in stock</p>
+                          </div>
+                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <Package className="size-5 text-primary" />
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-1.5">
-                          <FolderOpen className="size-3.5" /> Categories
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{categories.length}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Active categories</p>
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-4 lg:p-5">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Categories</p>
+                            <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">Active groups</p>
+                          </div>
+                          <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
+                            <FolderOpen className="size-5 text-chart-3" />
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-1.5">
-                          <ShoppingCart className="size-3.5" /> Total Orders
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{orders.length}</div>
-                        <p className="text-xs text-muted-foreground mt-1">{pendingOrders} pending</p>
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-4 lg:p-5">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Orders</p>
+                            <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} pending</p>
+                          </div>
+                          <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
+                            <ShoppingCart className="size-5 text-chart-2" />
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardDescription className="flex items-center gap-1.5">
-                          <CreditCard className="size-3.5" /> Revenue
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{totalRevenue.toLocaleString('en-US', { style: 'currency', currency: 'XOF' })}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Total from all orders</p>
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-4 lg:p-5">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue</p>
+                            <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">FCFA total</p>
+                          </div>
+                          <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                            <TrendingUp className="size-5 text-gold" />
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   {/* Quick Stats Row */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Recent Orders */}
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base font-elegant">Recent Orders</CardTitle>
-                        <CardDescription>Latest 5 orders</CardDescription>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base font-elegant flex items-center gap-2">
+                            <ShoppingCart className="size-4 text-primary" /> Recent Orders
+                          </CardTitle>
+                          {orders.length > 5 && (
+                            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
+                              View all <ChevronRight className="size-3" />
+                            </Button>
+                          )}
+                        </div>
                       </CardHeader>
                       <CardContent>
                         {orders.length === 0 ? (
-                          <p className="text-sm text-muted-foreground py-4 text-center">No orders yet</p>
+                          <div className="py-6 text-center">
+                            <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">No orders yet</p>
+                          </div>
                         ) : (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {orders.slice(0, 5).map(order => (
-                              <div key={order.id} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="font-medium truncate">{order.customerName}</span>
+                              <div key={order.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                    <span className="text-xs font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+                                    <p className="text-[10px] text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                  <span className="font-semibold">{order.total.toLocaleString()} FCFA</span>
-                                  <Badge variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                                  <span className="font-semibold text-sm">{order.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">FCFA</span></span>
+                                  <Badge
+                                    variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'}
+                                    className="text-[10px] px-1.5 py-0"
+                                  >
                                     {order.status}
                                   </Badge>
                                 </div>
@@ -551,52 +672,84 @@ export default function AdminDashboard() {
                         )}
                       </CardContent>
                     </Card>
+
+                    {/* Quick Info */}
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base font-elegant">Testimonies</CardTitle>
-                        <CardDescription>Approval status</CardDescription>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-elegant flex items-center gap-2">
+                          <BarChart3 className="size-4 text-primary" /> Store Overview
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {testimonies.length === 0 ? (
-                          <p className="text-sm text-muted-foreground py-4 text-center">No testimonies yet</p>
-                        ) : (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Approved</span>
-                              <Badge>{approvedTestimonies}</Badge>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                            <div className="flex items-center gap-3">
+                              <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
+                                <Sparkles className="size-4 text-chart-3" />
+                              </div>
+                              <span className="text-sm">Featured Products</span>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Pending Review</span>
-                              <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Total</span>
-                              <Badge variant="secondary">{testimonies.length}</Badge>
-                            </div>
+                            <Badge>{featuredProducts}</Badge>
                           </div>
-                        )}
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                            <div className="flex items-center gap-3">
+                              <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
+                                <CheckCircle2 className="size-4 text-chart-2" />
+                              </div>
+                              <span className="text-sm">Delivered Orders</span>
+                            </div>
+                            <Badge variant="secondary">{deliveredOrders}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                            <div className="flex items-center gap-3">
+                              <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center">
+                                <Heart className="size-4 text-gold" />
+                              </div>
+                              <span className="text-sm">Approved Testimonies</span>
+                            </div>
+                            <Badge variant="outline">{approvedTestimonies}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                            <div className="flex items-center gap-3">
+                              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Clock className="size-4 text-primary" />
+                              </div>
+                              <span className="text-sm">Pending Testimonies</span>
+                            </div>
+                            <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   {/* Category Breakdown */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base font-elegant">Products by Category</CardTitle>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-elegant flex items-center gap-2">
+                        <FolderOpen className="size-4 text-primary" /> Products by Category
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {categories.length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">No categories yet</p>
+                        <div className="py-6 text-center">
+                          <FolderOpen className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">No categories yet</p>
+                        </div>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                           {categories.map(cat => (
-                            <div key={cat.id} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                              {cat.image && (
-                                <img src={cat.image} alt={cat.name} className="size-8 rounded object-cover" />
+                            <div key={cat.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer" onClick={() => setActiveSection('products')}>
+                              {cat.image ? (
+                                <img src={cat.image} alt={cat.name} className="size-10 rounded-lg object-cover bg-muted shrink-0" />
+                              ) : (
+                                <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                  <FolderOpen className="size-4 text-primary" />
+                                </div>
                               )}
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">{cat.name}</p>
-                                <p className="text-xs text-muted-foreground">{cat.products?.length || 0} items</p>
+                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} items</p>
                               </div>
                             </div>
                           ))}
@@ -607,7 +760,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* ── Products Section ── */}
+              {/* ════════════════════ Products Section ════════════════════ */}
               {activeSection === 'products' && (
                 <div className="space-y-4">
                   {/* Header */}
@@ -623,142 +776,207 @@ export default function AdminDashboard() {
                     </div>
                     <Button
                       onClick={() => { resetProductForm(); setProductDialogOpen(true) }}
-                      className="gap-2"
+                      className="gap-2 shadow-md shadow-primary/20"
                     >
                       <Plus className="size-4" /> Add Product
                     </Button>
                   </div>
 
-                  {/* Products Table */}
+                  {/* Products - Desktop Table */}
                   {filteredProducts.length === 0 ? (
                     <Card>
-                      <CardContent className="py-12 text-center">
-                        <Package className="size-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-muted-foreground">No products found</p>
+                      <CardContent className="py-16 text-center">
+                        <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                          <Package className="size-8 text-primary/50" />
+                        </div>
+                        <p className="font-medium text-muted-foreground">No products found</p>
                         <p className="text-xs text-muted-foreground mt-1">Add your first product to get started</p>
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card>
-                      <CardContent className="p-0">
-                        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-12">Image</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead className="hidden md:table-cell">Category</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead className="hidden sm:table-cell">Stock</TableHead>
-                                <TableHead className="hidden lg:table-cell">Featured</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredProducts.map(product => (
-                                <TableRow key={product.id}>
-                                  <TableCell>
-                                    <img
-                                      src={product.image}
-                                      alt={product.name}
-                                      className="size-10 rounded object-cover bg-muted"
-                                      onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
+                    <>
+                      {/* Mobile: Card Layout */}
+                      <div className="lg:hidden space-y-3">
+                        {filteredProducts.map(product => (
+                          <Card key={product.id} className="overflow-hidden">
+                            <CardContent className="p-4">
+                              <div className="flex gap-3">
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="size-16 rounded-lg object-cover bg-muted shrink-0"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                      <p className="font-medium text-sm truncate max-w-[180px]">{product.name}</p>
-                                      <p className="text-xs text-muted-foreground truncate max-w-[180px]">{product.nameFr}</p>
+                                      <p className="font-medium text-sm truncate">{product.name}</p>
+                                      <p className="text-[11px] text-muted-foreground truncate">{product.nameFr}</p>
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="hidden md:table-cell">
-                                    <Badge variant="outline" className="text-xs">{product.category?.name || 'N/A'}</Badge>
-                                  </TableCell>
-                                  <TableCell>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <Button variant="ghost" size="icon" className="size-7" onClick={() => openEditProduct(product)}>
+                                        <Pencil className="size-3" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+                                        <Trash2 className="size-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                                     <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
-                                  </TableCell>
-                                  <TableCell className="hidden sm:table-cell">
-                                    <Switch
-                                      checked={product.inStock}
-                                      onCheckedChange={() => toggleProductStock(product)}
-                                    />
-                                  </TableCell>
-                                  <TableCell className="hidden lg:table-cell">
-                                    <Switch
-                                      checked={product.featured}
-                                      onCheckedChange={() => toggleProductFeatured(product)}
-                                    />
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                      <Button variant="ghost" size="icon" className="size-8" onClick={() => openEditProduct(product)}>
-                                        <Pencil className="size-3.5" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
-                                        <Trash2 className="size-3.5" />
-                                      </Button>
+                                    {product.category && (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.category.name}</Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-2">
+                                    <div className="flex items-center gap-1.5 text-[11px]">
+                                      <Switch checked={product.inStock} onCheckedChange={() => toggleProductStock(product)} className="scale-75" />
+                                      <span className={product.inStock ? 'text-green-600' : 'text-muted-foreground'}>Stock</span>
                                     </div>
-                                  </TableCell>
+                                    <div className="flex items-center gap-1.5 text-[11px]">
+                                      <Switch checked={product.featured} onCheckedChange={() => toggleProductFeatured(product)} className="scale-75" />
+                                      <span className={product.featured ? 'text-gold' : 'text-muted-foreground'}>Featured</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Desktop: Table Layout */}
+                      <Card className="hidden lg:block">
+                        <CardContent className="p-0">
+                          <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-14">Image</TableHead>
+                                  <TableHead>Name</TableHead>
+                                  <TableHead>Category</TableHead>
+                                  <TableHead>Price</TableHead>
+                                  <TableHead>Stock</TableHead>
+                                  <TableHead>Featured</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
+                              </TableHeader>
+                              <TableBody>
+                                {filteredProducts.map(product => (
+                                  <TableRow key={product.id}>
+                                    <TableCell>
+                                      <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        className="size-10 rounded-lg object-cover bg-muted"
+                                        onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="min-w-0">
+                                        <p className="font-medium text-sm truncate max-w-[200px]">{product.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{product.nameFr}</p>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline" className="text-xs">{product.category?.name || 'N/A'}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Switch
+                                        checked={product.inStock}
+                                        onCheckedChange={() => toggleProductStock(product)}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <Switch
+                                        checked={product.featured}
+                                        onCheckedChange={() => toggleProductFeatured(product)}
+                                      />
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex items-center justify-end gap-1">
+                                        <Button variant="ghost" size="icon" className="size-8" onClick={() => openEditProduct(product)}>
+                                          <Pencil className="size-3.5" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+                                          <Trash2 className="size-3.5" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
                   )}
                 </div>
               )}
 
-              {/* ── Categories Section ── */}
+              {/* ════════════════════ Categories Section ════════════════════ */}
               {activeSection === 'categories' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">{categories.length} categories</p>
-                    <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2">
+                    <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2 shadow-md shadow-primary/20">
                       <Plus className="size-4" /> Add Category
                     </Button>
                   </div>
 
                   {categories.length === 0 ? (
                     <Card>
-                      <CardContent className="py-12 text-center">
-                        <FolderOpen className="size-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-muted-foreground">No categories yet</p>
+                      <CardContent className="py-16 text-center">
+                        <div className="size-16 rounded-2xl bg-chart-3/10 flex items-center justify-center mx-auto mb-4">
+                          <FolderOpen className="size-8 text-chart-3/50" />
+                        </div>
+                        <p className="font-medium text-muted-foreground">No categories yet</p>
                         <p className="text-xs text-muted-foreground mt-1">Add your first category to organize products</p>
                       </CardContent>
                     </Card>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                       {categories.map(cat => (
-                        <Card key={cat.id} className="group">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-3">
+                        <Card key={cat.id} className="group overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                          <CardContent className="p-0">
+                            {/* Category Image Banner */}
+                            <div className="h-28 bg-gradient-to-br from-primary/5 to-chart-3/5 relative overflow-hidden">
                               {cat.image ? (
-                                <img src={cat.image} alt={cat.name} className="size-16 rounded-lg object-cover bg-muted shrink-0" />
+                                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
                               ) : (
-                                <div className="size-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                  <ImageIcon className="size-6 text-muted-foreground/50" />
+                                <div className="flex items-center justify-center h-full">
+                                  <FolderOpen className="size-8 text-primary/20" />
                                 </div>
                               )}
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-sm truncate">{cat.name}</h3>
-                                <p className="text-xs text-muted-foreground truncate">{cat.nameFr}</p>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                    /{cat.slug}
-                                  </Badge>
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                    {cat.products?.length || 0} items
-                                  </Badge>
-                                </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                              <div className="absolute bottom-2 left-3 right-3">
+                                <p className="font-semibold text-sm text-white drop-shadow-md truncate">{cat.name}</p>
                               </div>
+                              {/* Delete button */}
                               <Button
-                                variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 right-2 size-7 bg-background/60 hover:bg-destructive hover:text-destructive-foreground opacity-0 group-hover:opacity-100 transition-all"
                                 onClick={() => confirmDelete('category', cat.id, cat.name)}
                               >
-                                <Trash2 className="size-3.5" />
+                                <Trash2 className="size-3" />
                               </Button>
+                            </div>
+                            {/* Category Info */}
+                            <div className="p-3">
+                              <p className="text-xs text-muted-foreground truncate">{cat.nameFr}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  /{cat.slug}
+                                </Badge>
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  {cat.products?.length || 0} items
+                                </Badge>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -768,7 +986,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* ── Orders Section ── */}
+              {/* ════════════════════ Orders Section ════════════════════ */}
               {activeSection === 'orders' && (
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -786,83 +1004,155 @@ export default function AdminDashboard() {
 
                   {filteredOrders.length === 0 ? (
                     <Card>
-                      <CardContent className="py-12 text-center">
-                        <ShoppingCart className="size-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-muted-foreground">No orders found</p>
+                      <CardContent className="py-16 text-center">
+                        <div className="size-16 rounded-2xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
+                          <ShoppingCart className="size-8 text-chart-2/50" />
+                        </div>
+                        <p className="font-medium text-muted-foreground">No orders found</p>
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card>
-                      <CardContent className="p-0">
-                        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Customer</TableHead>
-                                <TableHead className="hidden sm:table-cell">Phone</TableHead>
-                                <TableHead>Total</TableHead>
-                                <TableHead className="hidden md:table-cell">Payment</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="hidden lg:table-cell">Date</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {filteredOrders.map(order => (
-                                <TableRow key={order.id}>
-                                  <TableCell>
-                                    <p className="font-medium text-sm">{order.customerName}</p>
-                                  </TableCell>
-                                  <TableCell className="hidden sm:table-cell">
-                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                      <Phone className="size-3" /> {order.customerPhone || 'N/A'}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell>
-                                    <span className="font-semibold text-sm">{order.total.toLocaleString()} FCFA</span>
-                                  </TableCell>
-                                  <TableCell className="hidden md:table-cell">
-                                    <Badge variant="outline" className="text-xs capitalize">{order.paymentMethod}</Badge>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Badge
-                                      variant={
-                                        order.status === 'delivered' ? 'default' :
-                                        order.status === 'pending' ? 'outline' :
-                                        order.status === 'cancelled' ? 'destructive' : 'secondary'
-                                      }
-                                      className="text-xs capitalize"
-                                    >
-                                      {order.status}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="hidden lg:table-cell">
-                                    <span className="text-xs text-muted-foreground">
-                                      {new Date(order.createdAt).toLocaleDateString()}
-                                    </span>
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                      <Button variant="ghost" size="icon" className="size-8" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
-                                        <Eye className="size-3.5" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
-                                        <Trash2 className="size-3.5" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
+                    <>
+                      {/* Mobile: Card Layout */}
+                      <div className="lg:hidden space-y-3">
+                        {filteredOrders.map(order => (
+                          <Card key={order.id} className="overflow-hidden">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                    <span className="text-sm font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+                                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                      <Phone className="size-2.5" /> {order.customerPhone || 'N/A'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge
+                                  variant={
+                                    order.status === 'delivered' ? 'default' :
+                                    order.status === 'pending' ? 'outline' :
+                                    order.status === 'cancelled' ? 'destructive' : 'secondary'
+                                  }
+                                  className="text-[10px] capitalize shrink-0"
+                                >
+                                  {order.status}
+                                </Badge>
+                              </div>
+                              <Separator className="my-3" />
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="font-bold text-sm">{order.total.toLocaleString()} FCFA</span>
+                                  <Badge variant="outline" className="text-[10px] capitalize">{order.paymentMethod}</Badge>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="size-7" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+                                    <Eye className="size-3" />
+                                  </Button>
+                                  {order.status === 'pending' && (
+                                    <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:text-green-700" onClick={() => updateOrderStatus(order.id, 'delivered')}>
+                                      <CheckCircle2 className="size-3" />
+                                    </Button>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+                                    <Trash2 className="size-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground mt-2">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Desktop: Table Layout */}
+                      <Card className="hidden lg:block">
+                        <CardContent className="p-0">
+                          <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Customer</TableHead>
+                                  <TableHead>Phone</TableHead>
+                                  <TableHead>Total</TableHead>
+                                  <TableHead>Payment</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead>Date</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </CardContent>
-                    </Card>
+                              </TableHeader>
+                              <TableBody>
+                                {filteredOrders.map(order => (
+                                  <TableRow key={order.id}>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                          <span className="text-[10px] font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                        <span className="font-medium text-sm">{order.customerName}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                        <Phone className="size-3" /> {order.customerPhone || 'N/A'}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <span className="font-semibold text-sm">{order.total.toLocaleString()} FCFA</span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant="outline" className="text-xs capitalize">{order.paymentMethod}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Select
+                                        value={order.status}
+                                        onValueChange={(val) => updateOrderStatus(order.id, val)}
+                                      >
+                                        <SelectTrigger className={`h-7 text-xs capitalize w-[110px] ${
+                                          order.status === 'delivered' ? 'border-green-500/50 text-green-600' :
+                                          order.status === 'pending' ? 'border-yellow-500/50 text-yellow-600' :
+                                          order.status === 'cancelled' ? 'border-red-500/50 text-red-600' : ''
+                                        }`}>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="pending">Pending</SelectItem>
+                                          <SelectItem value="processing">Processing</SelectItem>
+                                          <SelectItem value="delivered">Delivered</SelectItem>
+                                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </TableCell>
+                                    <TableCell>
+                                      <span className="text-xs text-muted-foreground">
+                                        {new Date(order.createdAt).toLocaleDateString()}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex items-center justify-end gap-1">
+                                        <Button variant="ghost" size="icon" className="size-8" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+                                          <Eye className="size-3.5" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+                                          <Trash2 className="size-3.5" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
                   )}
                 </div>
               )}
 
-              {/* ── Testimonies Section ── */}
+              {/* ════════════════════ Testimonies Section ════════════════════ */}
               {activeSection === 'testimonies' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -873,60 +1163,82 @@ export default function AdminDashboard() {
 
                   {testimonies.length === 0 ? (
                     <Card>
-                      <CardContent className="py-12 text-center">
-                        <MessageSquareHeart className="size-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-muted-foreground">No testimonies yet</p>
+                      <CardContent className="py-16 text-center">
+                        <div className="size-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
+                          <MessageSquareHeart className="size-8 text-gold/50" />
+                        </div>
+                        <p className="font-medium text-muted-foreground">No testimonies yet</p>
                       </CardContent>
                     </Card>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {testimonies.map(testimony => (
-                        <Card key={testimony.id} className="group">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-3">
+                        <Card key={testimony.id} className={`group overflow-hidden transition-all duration-300 ${testimony.approved ? 'ring-1 ring-green-500/20' : 'ring-1 ring-yellow-500/20'}`}>
+                          <CardContent className="p-5">
+                            <div className="flex items-start gap-4">
+                              {/* Avatar */}
+                              <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${
+                                testimony.approved ? 'bg-green-500/10' : 'bg-yellow-500/10'
+                              }`}>
+                                <span className={`text-sm font-bold ${testimony.approved ? 'text-green-600' : 'text-yellow-600'}`}>
+                                  {testimony.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
+                                {/* Name & Rating */}
+                                <div className="flex items-center gap-2 mb-1">
                                   <h3 className="font-semibold text-sm">{testimony.name}</h3>
                                   <div className="flex items-center gap-0.5">
                                     {Array.from({ length: 5 }).map((_, i) => (
                                       <Star
                                         key={i}
-                                        className={`size-3 ${i < testimony.rating ? 'text-gold fill-gold' : 'text-muted-foreground/30'}`}
+                                        className={`size-3 ${i < testimony.rating ? 'text-gold fill-gold' : 'text-muted-foreground/20'}`}
                                       />
                                     ))}
                                   </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground line-clamp-3">{testimony.message}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <Badge variant={testimony.approved ? 'default' : 'outline'} className="text-xs">
-                                    {testimony.approved ? (
-                                      <><CheckCircle2 className="size-3 mr-1" /> Approved</>
-                                    ) : (
-                                      <><XCircle className="size-3 mr-1" /> Pending</>
-                                    )}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(testimony.createdAt).toLocaleDateString()}
-                                  </span>
+
+                                {/* Message */}
+                                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{testimony.message}</p>
+
+                                {/* Footer */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      variant={testimony.approved ? 'default' : 'outline'}
+                                      className={`text-[10px] gap-1 ${testimony.approved ? 'bg-green-600 hover:bg-green-700' : 'border-yellow-500/50 text-yellow-600'}`}
+                                    >
+                                      {testimony.approved ? (
+                                        <><CheckCircle2 className="size-2.5" /> Approved</>
+                                      ) : (
+                                        <><Clock className="size-2.5" /> Pending</>
+                                      )}
+                                    </Badge>
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {new Date(testimony.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant={testimony.approved ? 'outline' : 'default'}
+                                      size="sm"
+                                      className={`text-[11px] gap-1 h-7 ${!testimony.approved ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                                      onClick={() => toggleTestimonyApproval(testimony)}
+                                    >
+                                      {testimony.approved ? <><StarOff className="size-3" /> Unapprove</> : <><CheckCircle2 className="size-3" /> Approve</>}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-[11px] gap-1 h-7 text-destructive hover:text-destructive"
+                                      onClick={() => confirmDelete('testimony', testimony.id, testimony.name)}
+                                    >
+                                      <Trash2 className="size-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex flex-col gap-1 shrink-0">
-                                <Button
-                                  variant={testimony.approved ? 'outline' : 'default'}
-                                  size="sm"
-                                  className="text-xs gap-1"
-                                  onClick={() => toggleTestimonyApproval(testimony)}
-                                >
-                                  {testimony.approved ? <><StarOff className="size-3" /> Unapprove</> : <><CheckCircle2 className="size-3" /> Approve</>}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-xs gap-1 text-destructive hover:text-destructive"
-                                  onClick={() => confirmDelete('testimony', testimony.id, testimony.name)}
-                                >
-                                  <Trash2 className="size-3" /> Delete
-                                </Button>
                               </div>
                             </div>
                           </CardContent>
@@ -941,11 +1253,11 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      {/* ── Product Dialog ── */}
+      {/* ════════════════════ Product Dialog ════════════════════ */}
       <Dialog open={productDialogOpen} onOpenChange={(open) => { setProductDialogOpen(open); if (!open) resetProductForm() }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogTitle className="font-elegant text-lg">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             <DialogDescription>
               {editingProduct ? 'Update product information' : 'Fill in the details to create a new product'}
             </DialogDescription>
@@ -1000,23 +1312,23 @@ export default function AdminDashboard() {
             </div>
           </div>
           {productForm.image && (
-            <div className="border rounded-lg p-2">
+            <div className="border rounded-xl p-3 bg-muted/30">
               <p className="text-xs text-muted-foreground mb-2">Image Preview</p>
-              <img src={productForm.image} alt="Preview" className="size-24 rounded object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              <img src={productForm.image} alt="Preview" className="size-24 rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>Cancel</Button>
-            <Button onClick={handleProductSubmit}>{editingProduct ? 'Update Product' : 'Create Product'}</Button>
+            <Button onClick={handleProductSubmit} className="shadow-md shadow-primary/20">{editingProduct ? 'Update Product' : 'Create Product'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Category Dialog ── */}
+      {/* ════════════════════ Category Dialog ════════════════════ */}
       <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New Category</DialogTitle>
+            <DialogTitle className="font-elegant text-lg">Add New Category</DialogTitle>
             <DialogDescription>Create a new product category</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1039,45 +1351,54 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCategorySubmit}>Create Category</Button>
+            <Button onClick={handleCategorySubmit} className="shadow-md shadow-primary/20">Create Category</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Order Detail Dialog ── */}
+      {/* ════════════════════ Order Detail Dialog ════════════════════ */}
       <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Order Details</DialogTitle>
+            <DialogTitle className="font-elegant text-lg">Order Details</DialogTitle>
             <DialogDescription>Viewing order information</DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Customer</p>
-                  <p className="font-medium text-sm">{selectedOrder.customerName}</p>
+              {/* Customer Info Header */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+                <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">{selectedOrder.customerName.charAt(0).toUpperCase()}</span>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="font-medium text-sm flex items-center gap-1">
+                  <p className="font-semibold">{selectedOrder.customerName}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Phone className="size-3" /> {selectedOrder.customerPhone || 'N/A'}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Payment Method</p>
-                  <Badge variant="outline" className="capitalize mt-0.5">{selectedOrder.paymentMethod}</Badge>
+              </div>
+
+              {/* Order Details Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Payment</p>
+                  <Badge variant="outline" className="capitalize mt-1">{selectedOrder.paymentMethod}</Badge>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <Badge variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'} className="capitalize mt-0.5">
+                <div className="p-3 rounded-xl bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Status</p>
+                  <Badge
+                    variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'}
+                    className="capitalize mt-1"
+                  >
                     {selectedOrder.status}
                   </Badge>
                 </div>
               </div>
+
+              {/* Order Items */}
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Order Items</p>
-                <div className="bg-muted/50 rounded-lg p-3 max-h-48 overflow-y-auto">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">Order Items</p>
+                <div className="bg-muted/40 rounded-xl p-3 max-h-48 overflow-y-auto">
                   {(() => {
                     try {
                       const items = JSON.parse(selectedOrder.items)
@@ -1100,14 +1421,17 @@ export default function AdminDashboard() {
                   })()}
                 </div>
               </div>
-              <div className="flex justify-between items-center border-t pt-3">
+
+              {/* Total */}
+              <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
                 <span className="font-semibold">Total</span>
-                <span className="font-bold text-lg">{selectedOrder.total.toLocaleString()} FCFA</span>
+                <span className="font-bold text-lg text-primary">{selectedOrder.total.toLocaleString()} FCFA</span>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Order Date</p>
-                <p className="text-sm">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
-              </div>
+
+              {/* Date */}
+              <p className="text-[11px] text-muted-foreground">
+                Ordered on {new Date(selectedOrder.createdAt).toLocaleString()}
+              </p>
             </div>
           )}
           <DialogFooter>
@@ -1116,11 +1440,11 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Delete Confirmation Dialog ── */}
+      {/* ════════════════════ Delete Confirmation Dialog ════════════════════ */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-destructive">Confirm Deletion</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
               {deleteTarget?.type === 'category' && ' This will also delete all products in this category.'}

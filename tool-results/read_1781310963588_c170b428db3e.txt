@@ -1,0 +1,1139 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback } from 'react'
+     4→import { toast } from 'sonner'
+     5→import { Button } from '@/components/ui/button'
+     6→import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Label } from '@/components/ui/label'
+     9→import { Textarea } from '@/components/ui/textarea'
+    10→import { Switch } from '@/components/ui/switch'
+    11→import { Badge } from '@/components/ui/badge'
+    12→
+    13→import {
+    14→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    15→} from '@/components/ui/table'
+    16→import {
+    17→  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+    18→} from '@/components/ui/dialog'
+    19→import {
+    20→  Sheet, SheetContent, SheetHeader, SheetTitle,
+    21→} from '@/components/ui/sheet'
+    22→import {
+    23→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    24→} from '@/components/ui/select'
+    25→import {
+    26→  ShoppingCart,
+    27→  Package,
+    28→  FolderOpen,
+    29→  MessageSquareHeart,
+    30→  Plus,
+    31→  Trash2,
+    32→  Pencil,
+    33→  Star,
+    34→  StarOff,
+    35→  Menu,
+    36→  LayoutDashboard,
+    37→  CheckCircle2,
+    38→  XCircle,
+    39→  Eye,
+    40→  Phone,
+    41→  CreditCard,
+    42→  Search,
+    43→  Image as ImageIcon,
+    44→} from 'lucide-react'
+    45→
+    46→// ─── Types ───────────────────────────────────────────────────────────────────
+    47→
+    48→interface Category {
+    49→  id: string
+    50→  name: string
+    51→  nameFr: string
+    52→  slug: string
+    53→  image: string | null
+    54→  createdAt: string
+    55→  products?: Product[]
+    56→}
+    57→
+    58→interface Product {
+    59→  id: string
+    60→  name: string
+    61→  nameFr: string
+    62→  description: string
+    63→  descriptionFr: string
+    64→  price: number
+    65→  image: string
+    66→  categoryId: string
+    67→  inStock: boolean
+    68→  featured: boolean
+    69→  createdAt: string
+    70→  updatedAt: string
+    71→  category?: Category
+    72→}
+    73→
+    74→interface Order {
+    75→  id: string
+    76→  customerName: string
+    77→  customerPhone: string
+    78→  items: string
+    79→  total: number
+    80→  status: string
+    81→  paymentMethod: string
+    82→  createdAt: string
+    83→  updatedAt: string
+    84→}
+    85→
+    86→interface Testimony {
+    87→  id: string
+    88→  name: string
+    89→  message: string
+    90→  rating: number
+    91→  approved: boolean
+    92→  createdAt: string
+    93→  updatedAt: string
+    94→}
+    95→
+    96→type ActiveSection = 'dashboard' | 'products' | 'categories' | 'orders' | 'testimonies'
+    97→
+    98→// ─── Main Component ──────────────────────────────────────────────────────────
+    99→
+   100→export default function AdminDashboard() {
+   101→  const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard')
+   102→  const [sidebarOpen, setSidebarOpen] = useState(false)
+   103→
+   104→  // Data state
+   105→  const [products, setProducts] = useState<Product[]>([])
+   106→  const [categories, setCategories] = useState<Category[]>([])
+   107→  const [orders, setOrders] = useState<Order[]>([])
+   108→  const [testimonies, setTestimonies] = useState<Testimony[]>([])
+   109→  const [loading, setLoading] = useState(true)
+   110→
+   111→  // Dialog state
+   112→  const [productDialogOpen, setProductDialogOpen] = useState(false)
+   113→  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+   114→  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+   115→  const [orderDetailOpen, setOrderDetailOpen] = useState(false)
+   116→  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+   117→  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+   118→  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name: string } | null>(null)
+   119→
+   120→  // Search
+   121→  const [productSearch, setProductSearch] = useState('')
+   122→  const [orderSearch, setOrderSearch] = useState('')
+   123→
+   124→  // Form state
+   125→  const [productForm, setProductForm] = useState({
+   126→    name: '', nameFr: '', description: '', descriptionFr: '',
+   127→    price: '', image: '', categoryId: '', inStock: true, featured: false,
+   128→  })
+   129→  const [categoryForm, setCategoryForm] = useState({
+   130→    name: '', nameFr: '', slug: '', image: '',
+   131→  })
+   132→
+   133→  // ─── Data Fetching ───────────────────────────────────────────────────────
+   134→
+   135→  const fetchProducts = useCallback(async () => {
+   136→    try {
+   137→      const res = await fetch('/api/products')
+   138→      if (res.ok) { const data = await res.json(); setProducts(data) }
+   139→    } catch { toast.error('Failed to fetch products') }
+   140→  }, [])
+   141→
+   142→  const fetchCategories = useCallback(async () => {
+   143→    try {
+   144→      const res = await fetch('/api/categories')
+   145→      if (res.ok) { const data = await res.json(); setCategories(data) }
+   146→    } catch { toast.error('Failed to fetch categories') }
+   147→  }, [])
+   148→
+   149→  const fetchOrders = useCallback(async () => {
+   150→    try {
+   151→      const res = await fetch('/api/orders')
+   152→      if (res.ok) { const data = await res.json(); setOrders(data) }
+   153→    } catch { toast.error('Failed to fetch orders') }
+   154→  }, [])
+   155→
+   156→  const fetchTestimonies = useCallback(async () => {
+   157→    try {
+   158→      const res = await fetch('/api/testimonies')
+   159→      if (res.ok) { const data = await res.json(); setTestimonies(data) }
+   160→    } catch { toast.error('Failed to fetch testimonies') }
+   161→  }, [])
+   162→
+   163→  useEffect(() => {
+   164→    let cancelled = false
+   165→    async function loadAll() {
+   166→      try {
+   167→        const [pRes, cRes, oRes, tRes] = await Promise.all([
+   168→          fetch('/api/products'),
+   169→          fetch('/api/categories'),
+   170→          fetch('/api/orders'),
+   171→          fetch('/api/testimonies'),
+   172→        ])
+   173→        if (!cancelled) {
+   174→          if (pRes.ok) setProducts(await pRes.json())
+   175→          if (cRes.ok) setCategories(await cRes.json())
+   176→          if (oRes.ok) setOrders(await oRes.json())
+   177→          if (tRes.ok) setTestimonies(await tRes.json())
+   178→          setLoading(false)
+   179→        }
+   180→      } catch {
+   181→        if (!cancelled) setLoading(false)
+   182→      }
+   183→    }
+   184→    loadAll()
+   185→    return () => { cancelled = true }
+   186→  }, [])
+   187→
+   188→  // ─── Product CRUD ────────────────────────────────────────────────────────
+   189→
+   190→  const handleProductSubmit = async () => {
+   191→    if (!productForm.name || !productForm.nameFr || !productForm.description || !productForm.descriptionFr || !productForm.price || !productForm.image || !productForm.categoryId) {
+   192→      toast.error('Please fill in all required fields')
+   193→      return
+   194→    }
+   195→    try {
+   196→      if (editingProduct) {
+   197→        const res = await fetch(`/api/products/${editingProduct.id}`, {
+   198→          method: 'PUT',
+   199→          headers: { 'Content-Type': 'application/json' },
+   200→          body: JSON.stringify({
+   201→            name: productForm.name, nameFr: productForm.nameFr,
+   202→            description: productForm.description, descriptionFr: productForm.descriptionFr,
+   203→            price: parseFloat(productForm.price), image: productForm.image,
+   204→            categoryId: productForm.categoryId,
+   205→            inStock: productForm.inStock, featured: productForm.featured,
+   206→          }),
+   207→        })
+   208→        if (res.ok) { toast.success('Product updated successfully'); setProductDialogOpen(false); setEditingProduct(null); fetchProducts() }
+   209→        else { toast.error('Failed to update product') }
+   210→      } else {
+   211→        const res = await fetch('/api/products', {
+   212→          method: 'POST',
+   213→          headers: { 'Content-Type': 'application/json' },
+   214→          body: JSON.stringify({
+   215→            name: productForm.name, nameFr: productForm.nameFr,
+   216→            description: productForm.description, descriptionFr: productForm.descriptionFr,
+   217→            price: productForm.price, image: productForm.image,
+   218→            categoryId: productForm.categoryId,
+   219→            inStock: productForm.inStock, featured: productForm.featured,
+   220→          }),
+   221→        })
+   222→        if (res.ok) { toast.success('Product created successfully'); setProductDialogOpen(false); resetProductForm(); fetchProducts() }
+   223→        else { const data = await res.json(); toast.error(data.error || 'Failed to create product') }
+   224→      }
+   225→    } catch { toast.error('An error occurred') }
+   226→  }
+   227→
+   228→  const resetProductForm = () => {
+   229→    setProductForm({ name: '', nameFr: '', description: '', descriptionFr: '', price: '', image: '', categoryId: '', inStock: true, featured: false })
+   230→    setEditingProduct(null)
+   231→  }
+   232→
+   233→  const openEditProduct = (product: Product) => {
+   234→    setEditingProduct(product)
+   235→    setProductForm({
+   236→      name: product.name, nameFr: product.nameFr,
+   237→      description: product.description, descriptionFr: product.descriptionFr,
+   238→      price: product.price.toString(), image: product.image,
+   239→      categoryId: product.categoryId, inStock: product.inStock, featured: product.featured,
+   240→    })
+   241→    setProductDialogOpen(true)
+   242→  }
+   243→
+   244→  const toggleProductStock = async (product: Product) => {
+   245→    try {
+   246→      const res = await fetch(`/api/products/${product.id}`, {
+   247→        method: 'PUT',
+   248→        headers: { 'Content-Type': 'application/json' },
+   249→        body: JSON.stringify({ inStock: !product.inStock }),
+   250→      })
+   251→      if (res.ok) { toast.success(`Product ${!product.inStock ? 'in stock' : 'out of stock'}`); fetchProducts() }
+   252→      else { toast.error('Failed to update stock status') }
+   253→    } catch { toast.error('An error occurred') }
+   254→  }
+   255→
+   256→  const toggleProductFeatured = async (product: Product) => {
+   257→    try {
+   258→      const res = await fetch(`/api/products/${product.id}`, {
+   259→        method: 'PUT',
+   260→        headers: { 'Content-Type': 'application/json' },
+   261→        body: JSON.stringify({ featured: !product.featured }),
+   262→      })
+   263→      if (res.ok) { toast.success(`Product ${!product.featured ? 'featured' : 'unfeatured'}`); fetchProducts() }
+   264→      else { toast.error('Failed to update featured status') }
+   265→    } catch { toast.error('An error occurred') }
+   266→  }
+   267→
+   268→  const deleteProduct = async (id: string) => {
+   269→    try {
+   270→      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+   271→      if (res.ok) { toast.success('Product deleted'); fetchProducts() }
+   272→      else { toast.error('Failed to delete product') }
+   273→    } catch { toast.error('An error occurred') }
+   274→  }
+   275→
+   276→  // ─── Category CRUD ───────────────────────────────────────────────────────
+   277→
+   278→  const handleCategorySubmit = async () => {
+   279→    if (!categoryForm.name || !categoryForm.nameFr || !categoryForm.slug) {
+   280→      toast.error('Name, French name, and slug are required')
+   281→      return
+   282→    }
+   283→    try {
+   284→      const res = await fetch('/api/categories', {
+   285→        method: 'POST',
+   286→        headers: { 'Content-Type': 'application/json' },
+   287→        body: JSON.stringify(categoryForm),
+   288→      })
+   289→      if (res.ok) { toast.success('Category created'); setCategoryDialogOpen(false); setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); fetchCategories() }
+   290→      else { const data = await res.json(); toast.error(data.error || 'Failed to create category') }
+   291→    } catch { toast.error('An error occurred') }
+   292→  }
+   293→
+   294→  const deleteCategory = async (id: string) => {
+   295→    try {
+   296→      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
+   297→      if (res.ok) { toast.success('Category and its products deleted'); fetchCategories(); fetchProducts() }
+   298→      else { toast.error('Failed to delete category') }
+   299→    } catch { toast.error('An error occurred') }
+   300→  }
+   301→
+   302→  // ─── Order Operations ────────────────────────────────────────────────────
+   303→
+   304→  const deleteOrder = async (id: string) => {
+   305→    try {
+   306→      const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
+   307→      if (res.ok) { toast.success('Order deleted'); fetchOrders() }
+   308→      else { toast.error('Failed to delete order') }
+   309→    } catch { toast.error('An error occurred') }
+   310→  }
+   311→
+   312→  // ─── Testimony Operations ────────────────────────────────────────────────
+   313→
+   314→  const toggleTestimonyApproval = async (testimony: Testimony) => {
+   315→    try {
+   316→      const res = await fetch(`/api/testimonies/${testimony.id}`, {
+   317→        method: 'PUT',
+   318→        headers: { 'Content-Type': 'application/json' },
+   319→        body: JSON.stringify({ approved: !testimony.approved }),
+   320→      })
+   321→      if (res.ok) { toast.success(`Testimony ${!testimony.approved ? 'approved' : 'unapproved'}`); fetchTestimonies() }
+   322→      else { toast.error('Failed to update testimony') }
+   323→    } catch { toast.error('An error occurred') }
+   324→  }
+   325→
+   326→  const deleteTestimony = async (id: string) => {
+   327→    try {
+   328→      const res = await fetch(`/api/testimonies/${id}`, { method: 'DELETE' })
+   329→      if (res.ok) { toast.success('Testimony deleted'); fetchTestimonies() }
+   330→      else { toast.error('Failed to delete testimony') }
+   331→    } catch { toast.error('An error occurred') }
+   332→  }
+   333→
+   334→  // ─── Delete Confirmation ─────────────────────────────────────────────────
+   335→
+   336→  const confirmDelete = (type: string, id: string, name: string) => {
+   337→    setDeleteTarget({ type, id, name })
+   338→    setDeleteConfirmOpen(true)
+   339→  }
+   340→
+   341→  const executeDelete = async () => {
+   342→    if (!deleteTarget) return
+   343→    switch (deleteTarget.type) {
+   344→      case 'product': await deleteProduct(deleteTarget.id); break
+   345→      case 'category': await deleteCategory(deleteTarget.id); break
+   346→      case 'order': await deleteOrder(deleteTarget.id); break
+   347→      case 'testimony': await deleteTestimony(deleteTarget.id); break
+   348→    }
+   349→    setDeleteConfirmOpen(false)
+   350→    setDeleteTarget(null)
+   351→  }
+   352→
+   353→  // ─── Computed Values ─────────────────────────────────────────────────────
+   354→
+   355→  const filteredProducts = products.filter(p =>
+   356→    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+   357→    p.nameFr.toLowerCase().includes(productSearch.toLowerCase()) ||
+   358→    (p.category?.name || '').toLowerCase().includes(productSearch.toLowerCase())
+   359→  )
+   360→
+   361→  const filteredOrders = orders.filter(o =>
+   362→    o.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   363→    o.customerPhone.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   364→    o.id.toLowerCase().includes(orderSearch.toLowerCase())
+   365→  )
+   366→
+   367→  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0)
+   368→  const pendingOrders = orders.filter(o => o.status === 'pending').length
+   369→  const inStockProducts = products.filter(p => p.inStock).length
+   370→  const featuredProducts = products.filter(p => p.featured).length
+   371→  const approvedTestimonies = testimonies.filter(t => t.approved).length
+   372→
+   373→  // ─── Sidebar Navigation Items ────────────────────────────────────────────
+   374→
+   375→  const navItems: { key: ActiveSection; label: string; icon: React.ReactNode }[] = [
+   376→    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-4" /> },
+   377→    { key: 'products', label: 'Products', icon: <Package className="size-4" /> },
+   378→    { key: 'categories', label: 'Categories', icon: <FolderOpen className="size-4" /> },
+   379→    { key: 'orders', label: 'Orders', icon: <ShoppingCart className="size-4" /> },
+   380→    { key: 'testimonies', label: 'Testimonies', icon: <MessageSquareHeart className="size-4" /> },
+   381→  ]
+   382→
+   383→  // ─── Sidebar Content ─────────────────────────────────────────────────────
+   384→
+   385→  const sidebarContent = (
+   386→    <div className="flex flex-col h-full">
+   387→      <div className="p-6 border-b border-sidebar-border">
+   388→        <div className="flex items-center gap-3">
+   389→          <div className="size-10 rounded-lg bg-primary flex items-center justify-center">
+   390→            <span className="text-primary-foreground font-bold text-lg">G</span>
+   391→          </div>
+   392→          <div>
+   393→            <h1 className="font-handwriting text-primary-foreground text-xl leading-tight">God&apos;s Grace</h1>
+   394→            <p className="text-xs text-muted-foreground">Boutique Admin</p>
+   395→          </div>
+   396→        </div>
+   397→      </div>
+   398→      <nav className="flex-1 p-3 space-y-1">
+   399→        {navItems.map(item => (
+   400→          <button
+   401→            key={item.key}
+   402→            onClick={() => { setActiveSection(item.key); setSidebarOpen(false) }}
+   403→            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+   404→              activeSection === item.key
+   405→                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+   406→                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+   407→            }`}
+   408→          >
+   409→            {item.icon}
+   410→            {item.label}
+   411→          </button>
+   412→        ))}
+   413→      </nav>
+   414→      <div className="p-4 border-t border-sidebar-border">
+   415→        <p className="text-xs text-muted-foreground text-center">God&apos;s Grace Boutique &copy; {new Date().getFullYear()}</p>
+   416→      </div>
+   417→    </div>
+   418→  )
+   419→
+   420→  // ─── Render ──────────────────────────────────────────────────────────────
+   421→
+   422→  return (
+   423→    <div className="min-h-screen bg-background flex">
+   424→      {/* Desktop Sidebar */}
+   425→      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-sidebar border-r border-sidebar-border">
+   426→        {sidebarContent}
+   427→      </aside>
+   428→
+   429→      {/* Mobile Sidebar */}
+   430→      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+   431→        <SheetContent side="left" className="p-0 w-64 bg-sidebar">
+   432→          <SheetHeader className="sr-only">
+   433→            <SheetTitle>Navigation</SheetTitle>
+   434→          </SheetHeader>
+   435→          {sidebarContent}
+   436→        </SheetContent>
+   437→      </Sheet>
+   438→
+   439→      {/* Main Content */}
+   440→      <main className="flex-1 md:ml-64">
+   441→        {/* Top Bar */}
+   442→        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b">
+   443→          <div className="flex items-center justify-between px-4 md:px-6 h-14">
+   444→            <div className="flex items-center gap-3">
+   445→              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
+   446→                <Menu className="size-5" />
+   447→              </Button>
+   448→              <h2 className="font-semibold text-lg capitalize font-elegant">{activeSection}</h2>
+   449→            </div>
+   450→            <div className="flex items-center gap-2">
+   451→              <Badge variant="secondary" className="text-xs">
+   452→                {products.length} Products
+   453→              </Badge>
+   454→              {pendingOrders > 0 && (
+   455→                <Badge className="text-xs">
+   456→                  {pendingOrders} Pending
+   457→                </Badge>
+   458→              )}
+   459→            </div>
+   460→          </div>
+   461→        </header>
+   462→
+   463→        {/* Page Content */}
+   464→        <div className="p-4 md:p-6 max-w-7xl mx-auto">
+   465→          {loading ? (
+   466→            <div className="flex items-center justify-center h-64">
+   467→              <div className="flex flex-col items-center gap-3">
+   468→                <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+   469→                <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+   470→              </div>
+   471→            </div>
+   472→          ) : (
+   473→            <>
+   474→              {/* ── Dashboard Section ── */}
+   475→              {activeSection === 'dashboard' && (
+   476→                <div className="space-y-6">
+   477→                  {/* Stats Cards */}
+   478→                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   479→                    <Card>
+   480→                      <CardHeader className="pb-2">
+   481→                        <CardDescription className="flex items-center gap-1.5">
+   482→                          <Package className="size-3.5" /> Total Products
+   483→                        </CardDescription>
+   484→                      </CardHeader>
+   485→                      <CardContent>
+   486→                        <div className="text-2xl font-bold">{products.length}</div>
+   487→                        <p className="text-xs text-muted-foreground mt-1">{inStockProducts} in stock, {featuredProducts} featured</p>
+   488→                      </CardContent>
+   489→                    </Card>
+   490→                    <Card>
+   491→                      <CardHeader className="pb-2">
+   492→                        <CardDescription className="flex items-center gap-1.5">
+   493→                          <FolderOpen className="size-3.5" /> Categories
+   494→                        </CardDescription>
+   495→                      </CardHeader>
+   496→                      <CardContent>
+   497→                        <div className="text-2xl font-bold">{categories.length}</div>
+   498→                        <p className="text-xs text-muted-foreground mt-1">Active categories</p>
+   499→                      </CardContent>
+   500→                    </Card>
+   501→                    <Card>
+   502→                      <CardHeader className="pb-2">
+   503→                        <CardDescription className="flex items-center gap-1.5">
+   504→                          <ShoppingCart className="size-3.5" /> Total Orders
+   505→                        </CardDescription>
+   506→                      </CardHeader>
+   507→                      <CardContent>
+   508→                        <div className="text-2xl font-bold">{orders.length}</div>
+   509→                        <p className="text-xs text-muted-foreground mt-1">{pendingOrders} pending</p>
+   510→                      </CardContent>
+   511→                    </Card>
+   512→                    <Card>
+   513→                      <CardHeader className="pb-2">
+   514→                        <CardDescription className="flex items-center gap-1.5">
+   515→                          <CreditCard className="size-3.5" /> Revenue
+   516→                        </CardDescription>
+   517→                      </CardHeader>
+   518→                      <CardContent>
+   519→                        <div className="text-2xl font-bold">{totalRevenue.toLocaleString('en-US', { style: 'currency', currency: 'XOF' })}</div>
+   520→                        <p className="text-xs text-muted-foreground mt-1">Total from all orders</p>
+   521→                      </CardContent>
+   522→                    </Card>
+   523→                  </div>
+   524→
+   525→                  {/* Quick Stats Row */}
+   526→                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   527→                    <Card>
+   528→                      <CardHeader>
+   529→                        <CardTitle className="text-base font-elegant">Recent Orders</CardTitle>
+   530→                        <CardDescription>Latest 5 orders</CardDescription>
+   531→                      </CardHeader>
+   532→                      <CardContent>
+   533→                        {orders.length === 0 ? (
+   534→                          <p className="text-sm text-muted-foreground py-4 text-center">No orders yet</p>
+   535→                        ) : (
+   536→                          <div className="space-y-3">
+   537→                            {orders.slice(0, 5).map(order => (
+   538→                              <div key={order.id} className="flex items-center justify-between text-sm">
+   539→                                <div className="flex items-center gap-2 min-w-0">
+   540→                                  <span className="font-medium truncate">{order.customerName}</span>
+   541→                                </div>
+   542→                                <div className="flex items-center gap-2 shrink-0">
+   543→                                  <span className="font-semibold">{order.total.toLocaleString()} FCFA</span>
+   544→                                  <Badge variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
+   545→                                    {order.status}
+   546→                                  </Badge>
+   547→                                </div>
+   548→                              </div>
+   549→                            ))}
+   550→                          </div>
+   551→                        )}
+   552→                      </CardContent>
+   553→                    </Card>
+   554→                    <Card>
+   555→                      <CardHeader>
+   556→                        <CardTitle className="text-base font-elegant">Testimonies</CardTitle>
+   557→                        <CardDescription>Approval status</CardDescription>
+   558→                      </CardHeader>
+   559→                      <CardContent>
+   560→                        {testimonies.length === 0 ? (
+   561→                          <p className="text-sm text-muted-foreground py-4 text-center">No testimonies yet</p>
+   562→                        ) : (
+   563→                          <div className="space-y-3">
+   564→                            <div className="flex items-center justify-between text-sm">
+   565→                              <span className="text-muted-foreground">Approved</span>
+   566→                              <Badge>{approvedTestimonies}</Badge>
+   567→                            </div>
+   568→                            <div className="flex items-center justify-between text-sm">
+   569→                              <span className="text-muted-foreground">Pending Review</span>
+   570→                              <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
+   571→                            </div>
+   572→                            <div className="flex items-center justify-between text-sm">
+   573→                              <span className="text-muted-foreground">Total</span>
+   574→                              <Badge variant="secondary">{testimonies.length}</Badge>
+   575→                            </div>
+   576→                          </div>
+   577→                        )}
+   578→                      </CardContent>
+   579→                    </Card>
+   580→                  </div>
+   581→
+   582→                  {/* Category Breakdown */}
+   583→                  <Card>
+   584→                    <CardHeader>
+   585→                      <CardTitle className="text-base font-elegant">Products by Category</CardTitle>
+   586→                    </CardHeader>
+   587→                    <CardContent>
+   588→                      {categories.length === 0 ? (
+   589→                        <p className="text-sm text-muted-foreground py-4 text-center">No categories yet</p>
+   590→                      ) : (
+   591→                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+   592→                          {categories.map(cat => (
+   593→                            <div key={cat.id} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+   594→                              {cat.image && (
+   595→                                <img src={cat.image} alt={cat.name} className="size-8 rounded object-cover" />
+   596→                              )}
+   597→                              <div className="min-w-0">
+   598→                                <p className="text-sm font-medium truncate">{cat.name}</p>
+   599→                                <p className="text-xs text-muted-foreground">{cat.products?.length || 0} items</p>
+   600→                              </div>
+   601→                            </div>
+   602→                          ))}
+   603→                        </div>
+   604→                      )}
+   605→                    </CardContent>
+   606→                  </Card>
+   607→                </div>
+   608→              )}
+   609→
+   610→              {/* ── Products Section ── */}
+   611→              {activeSection === 'products' && (
+   612→                <div className="space-y-4">
+   613→                  {/* Header */}
+   614→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+   615→                    <div className="relative flex-1 max-w-sm">
+   616→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   617→                      <Input
+   618→                        placeholder="Search products..."
+   619→                        value={productSearch}
+   620→                        onChange={e => setProductSearch(e.target.value)}
+   621→                        className="pl-9"
+   622→                      />
+   623→                    </div>
+   624→                    <Button
+   625→                      onClick={() => { resetProductForm(); setProductDialogOpen(true) }}
+   626→                      className="gap-2"
+   627→                    >
+   628→                      <Plus className="size-4" /> Add Product
+   629→                    </Button>
+   630→                  </div>
+   631→
+   632→                  {/* Products Table */}
+   633→                  {filteredProducts.length === 0 ? (
+   634→                    <Card>
+   635→                      <CardContent className="py-12 text-center">
+   636→                        <Package className="size-12 text-muted-foreground/50 mx-auto mb-3" />
+   637→                        <p className="text-muted-foreground">No products found</p>
+   638→                        <p className="text-xs text-muted-foreground mt-1">Add your first product to get started</p>
+   639→                      </CardContent>
+   640→                    </Card>
+   641→                  ) : (
+   642→                    <Card>
+   643→                      <CardContent className="p-0">
+   644→                        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+   645→                          <Table>
+   646→                            <TableHeader>
+   647→                              <TableRow>
+   648→                                <TableHead className="w-12">Image</TableHead>
+   649→                                <TableHead>Name</TableHead>
+   650→                                <TableHead className="hidden md:table-cell">Category</TableHead>
+   651→                                <TableHead>Price</TableHead>
+   652→                                <TableHead className="hidden sm:table-cell">Stock</TableHead>
+   653→                                <TableHead className="hidden lg:table-cell">Featured</TableHead>
+   654→                                <TableHead className="text-right">Actions</TableHead>
+   655→                              </TableRow>
+   656→                            </TableHeader>
+   657→                            <TableBody>
+   658→                              {filteredProducts.map(product => (
+   659→                                <TableRow key={product.id}>
+   660→                                  <TableCell>
+   661→                                    <img
+   662→                                      src={product.image}
+   663→                                      alt={product.name}
+   664→                                      className="size-10 rounded object-cover bg-muted"
+   665→                                      onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+   666→                                    />
+   667→                                  </TableCell>
+   668→                                  <TableCell>
+   669→                                    <div className="min-w-0">
+   670→                                      <p className="font-medium text-sm truncate max-w-[180px]">{product.name}</p>
+   671→                                      <p className="text-xs text-muted-foreground truncate max-w-[180px]">{product.nameFr}</p>
+   672→                                    </div>
+   673→                                  </TableCell>
+   674→                                  <TableCell className="hidden md:table-cell">
+   675→                                    <Badge variant="outline" className="text-xs">{product.category?.name || 'N/A'}</Badge>
+   676→                                  </TableCell>
+   677→                                  <TableCell>
+   678→                                    <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+   679→                                  </TableCell>
+   680→                                  <TableCell className="hidden sm:table-cell">
+   681→                                    <Switch
+   682→                                      checked={product.inStock}
+   683→                                      onCheckedChange={() => toggleProductStock(product)}
+   684→                                    />
+   685→                                  </TableCell>
+   686→                                  <TableCell className="hidden lg:table-cell">
+   687→                                    <Switch
+   688→                                      checked={product.featured}
+   689→                                      onCheckedChange={() => toggleProductFeatured(product)}
+   690→                                    />
+   691→                                  </TableCell>
+   692→                                  <TableCell className="text-right">
+   693→                                    <div className="flex items-center justify-end gap-1">
+   694→                                      <Button variant="ghost" size="icon" className="size-8" onClick={() => openEditProduct(product)}>
+   695→                                        <Pencil className="size-3.5" />
+   696→                                      </Button>
+   697→                                      <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+   698→                                        <Trash2 className="size-3.5" />
+   699→                                      </Button>
+   700→                                    </div>
+   701→                                  </TableCell>
+   702→                                </TableRow>
+   703→                              ))}
+   704→                            </TableBody>
+   705→                          </Table>
+   706→                        </div>
+   707→                      </CardContent>
+   708→                    </Card>
+   709→                  )}
+   710→                </div>
+   711→              )}
+   712→
+   713→              {/* ── Categories Section ── */}
+   714→              {activeSection === 'categories' && (
+   715→                <div className="space-y-4">
+   716→                  <div className="flex items-center justify-between">
+   717→                    <p className="text-sm text-muted-foreground">{categories.length} categories</p>
+   718→                    <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2">
+   719→                      <Plus className="size-4" /> Add Category
+   720→                    </Button>
+   721→                  </div>
+   722→
+   723→                  {categories.length === 0 ? (
+   724→                    <Card>
+   725→                      <CardContent className="py-12 text-center">
+   726→                        <FolderOpen className="size-12 text-muted-foreground/50 mx-auto mb-3" />
+   727→                        <p className="text-muted-foreground">No categories yet</p>
+   728→                        <p className="text-xs text-muted-foreground mt-1">Add your first category to organize products</p>
+   729→                      </CardContent>
+   730→                    </Card>
+   731→                  ) : (
+   732→                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   733→                      {categories.map(cat => (
+   734→                        <Card key={cat.id} className="group">
+   735→                          <CardContent className="p-4">
+   736→                            <div className="flex items-start gap-3">
+   737→                              {cat.image ? (
+   738→                                <img src={cat.image} alt={cat.name} className="size-16 rounded-lg object-cover bg-muted shrink-0" />
+   739→                              ) : (
+   740→                                <div className="size-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
+   741→                                  <ImageIcon className="size-6 text-muted-foreground/50" />
+   742→                                </div>
+   743→                              )}
+   744→                              <div className="flex-1 min-w-0">
+   745→                                <h3 className="font-semibold text-sm truncate">{cat.name}</h3>
+   746→                                <p className="text-xs text-muted-foreground truncate">{cat.nameFr}</p>
+   747→                                <div className="flex items-center gap-2 mt-1.5">
+   748→                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+   749→                                    /{cat.slug}
+   750→                                  </Badge>
+   751→                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+   752→                                    {cat.products?.length || 0} items
+   753→                                  </Badge>
+   754→                                </div>
+   755→                              </div>
+   756→                              <Button
+   757→                                variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+   758→                                onClick={() => confirmDelete('category', cat.id, cat.name)}
+   759→                              >
+   760→                                <Trash2 className="size-3.5" />
+   761→                              </Button>
+   762→                            </div>
+   763→                          </CardContent>
+   764→                        </Card>
+   765→                      ))}
+   766→                    </div>
+   767→                  )}
+   768→                </div>
+   769→              )}
+   770→
+   771→              {/* ── Orders Section ── */}
+   772→              {activeSection === 'orders' && (
+   773→                <div className="space-y-4">
+   774→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+   775→                    <div className="relative flex-1 max-w-sm">
+   776→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   777→                      <Input
+   778→                        placeholder="Search orders..."
+   779→                        value={orderSearch}
+   780→                        onChange={e => setOrderSearch(e.target.value)}
+   781→                        className="pl-9"
+   782→                      />
+   783→                    </div>
+   784→                    <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
+   785→                  </div>
+   786→
+   787→                  {filteredOrders.length === 0 ? (
+   788→                    <Card>
+   789→                      <CardContent className="py-12 text-center">
+   790→                        <ShoppingCart className="size-12 text-muted-foreground/50 mx-auto mb-3" />
+   791→                        <p className="text-muted-foreground">No orders found</p>
+   792→                      </CardContent>
+   793→                    </Card>
+   794→                  ) : (
+   795→                    <Card>
+   796→                      <CardContent className="p-0">
+   797→                        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+   798→                          <Table>
+   799→                            <TableHeader>
+   800→                              <TableRow>
+   801→                                <TableHead>Customer</TableHead>
+   802→                                <TableHead className="hidden sm:table-cell">Phone</TableHead>
+   803→                                <TableHead>Total</TableHead>
+   804→                                <TableHead className="hidden md:table-cell">Payment</TableHead>
+   805→                                <TableHead>Status</TableHead>
+   806→                                <TableHead className="hidden lg:table-cell">Date</TableHead>
+   807→                                <TableHead className="text-right">Actions</TableHead>
+   808→                              </TableRow>
+   809→                            </TableHeader>
+   810→                            <TableBody>
+   811→                              {filteredOrders.map(order => (
+   812→                                <TableRow key={order.id}>
+   813→                                  <TableCell>
+   814→                                    <p className="font-medium text-sm">{order.customerName}</p>
+   815→                                  </TableCell>
+   816→                                  <TableCell className="hidden sm:table-cell">
+   817→                                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+   818→                                      <Phone className="size-3" /> {order.customerPhone || 'N/A'}
+   819→                                    </span>
+   820→                                  </TableCell>
+   821→                                  <TableCell>
+   822→                                    <span className="font-semibold text-sm">{order.total.toLocaleString()} FCFA</span>
+   823→                                  </TableCell>
+   824→                                  <TableCell className="hidden md:table-cell">
+   825→                                    <Badge variant="outline" className="text-xs capitalize">{order.paymentMethod}</Badge>
+   826→                                  </TableCell>
+   827→                                  <TableCell>
+   828→                                    <Badge
+   829→                                      variant={
+   830→                                        order.status === 'delivered' ? 'default' :
+   831→                                        order.status === 'pending' ? 'outline' :
+   832→                                        order.status === 'cancelled' ? 'destructive' : 'secondary'
+   833→                                      }
+   834→                                      className="text-xs capitalize"
+   835→                                    >
+   836→                                      {order.status}
+   837→                                    </Badge>
+   838→                                  </TableCell>
+   839→                                  <TableCell className="hidden lg:table-cell">
+   840→                                    <span className="text-xs text-muted-foreground">
+   841→                                      {new Date(order.createdAt).toLocaleDateString()}
+   842→                                    </span>
+   843→                                  </TableCell>
+   844→                                  <TableCell className="text-right">
+   845→                                    <div className="flex items-center justify-end gap-1">
+   846→                                      <Button variant="ghost" size="icon" className="size-8" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+   847→                                        <Eye className="size-3.5" />
+   848→                                      </Button>
+   849→                                      <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+   850→                                        <Trash2 className="size-3.5" />
+   851→                                      </Button>
+   852→                                    </div>
+   853→                                  </TableCell>
+   854→                                </TableRow>
+   855→                              ))}
+   856→                            </TableBody>
+   857→                          </Table>
+   858→                        </div>
+   859→                      </CardContent>
+   860→                    </Card>
+   861→                  )}
+   862→                </div>
+   863→              )}
+   864→
+   865→              {/* ── Testimonies Section ── */}
+   866→              {activeSection === 'testimonies' && (
+   867→                <div className="space-y-4">
+   868→                  <div className="flex items-center justify-between">
+   869→                    <p className="text-sm text-muted-foreground">
+   870→                      {testimonies.length} testimonies ({approvedTestimonies} approved)
+   871→                    </p>
+   872→                  </div>
+   873→
+   874→                  {testimonies.length === 0 ? (
+   875→                    <Card>
+   876→                      <CardContent className="py-12 text-center">
+   877→                        <MessageSquareHeart className="size-12 text-muted-foreground/50 mx-auto mb-3" />
+   878→                        <p className="text-muted-foreground">No testimonies yet</p>
+   879→                      </CardContent>
+   880→                    </Card>
+   881→                  ) : (
+   882→                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   883→                      {testimonies.map(testimony => (
+   884→                        <Card key={testimony.id} className="group">
+   885→                          <CardContent className="p-4">
+   886→                            <div className="flex items-start justify-between gap-3">
+   887→                              <div className="flex-1 min-w-0">
+   888→                                <div className="flex items-center gap-2 mb-2">
+   889→                                  <h3 className="font-semibold text-sm">{testimony.name}</h3>
+   890→                                  <div className="flex items-center gap-0.5">
+   891→                                    {Array.from({ length: 5 }).map((_, i) => (
+   892→                                      <Star
+   893→                                        key={i}
+   894→                                        className={`size-3 ${i < testimony.rating ? 'text-gold fill-gold' : 'text-muted-foreground/30'}`}
+   895→                                      />
+   896→                                    ))}
+   897→                                  </div>
+   898→                                </div>
+   899→                                <p className="text-sm text-muted-foreground line-clamp-3">{testimony.message}</p>
+   900→                                <div className="flex items-center gap-2 mt-2">
+   901→                                  <Badge variant={testimony.approved ? 'default' : 'outline'} className="text-xs">
+   902→                                    {testimony.approved ? (
+   903→                                      <><CheckCircle2 className="size-3 mr-1" /> Approved</>
+   904→                                    ) : (
+   905→                                      <><XCircle className="size-3 mr-1" /> Pending</>
+   906→                                    )}
+   907→                                  </Badge>
+   908→                                  <span className="text-xs text-muted-foreground">
+   909→                                    {new Date(testimony.createdAt).toLocaleDateString()}
+   910→                                  </span>
+   911→                                </div>
+   912→                              </div>
+   913→                              <div className="flex flex-col gap-1 shrink-0">
+   914→                                <Button
+   915→                                  variant={testimony.approved ? 'outline' : 'default'}
+   916→                                  size="sm"
+   917→                                  className="text-xs gap-1"
+   918→                                  onClick={() => toggleTestimonyApproval(testimony)}
+   919→                                >
+   920→                                  {testimony.approved ? <><StarOff className="size-3" /> Unapprove</> : <><CheckCircle2 className="size-3" /> Approve</>}
+   921→                                </Button>
+   922→                                <Button
+   923→                                  variant="ghost"
+   924→                                  size="sm"
+   925→                                  className="text-xs gap-1 text-destructive hover:text-destructive"
+   926→                                  onClick={() => confirmDelete('testimony', testimony.id, testimony.name)}
+   927→                                >
+   928→                                  <Trash2 className="size-3" /> Delete
+   929→                                </Button>
+   930→                              </div>
+   931→                            </div>
+   932→                          </CardContent>
+   933→                        </Card>
+   934→                      ))}
+   935→                    </div>
+   936→                  )}
+   937→                </div>
+   938→              )}
+   939→            </>
+   940→          )}
+   941→        </div>
+   942→      </main>
+   943→
+   944→      {/* ── Product Dialog ── */}
+   945→      <Dialog open={productDialogOpen} onOpenChange={(open) => { setProductDialogOpen(open); if (!open) resetProductForm() }}>
+   946→        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+   947→          <DialogHeader>
+   948→            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+   949→            <DialogDescription>
+   950→              {editingProduct ? 'Update product information' : 'Fill in the details to create a new product'}
+   951→            </DialogDescription>
+   952→          </DialogHeader>
+   953→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+   954→            <div className="space-y-2">
+   955→              <Label htmlFor="prod-name">Name (English) *</Label>
+   956→              <Input id="prod-name" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder="Product name" />
+   957→            </div>
+   958→            <div className="space-y-2">
+   959→              <Label htmlFor="prod-nameFr">Name (French) *</Label>
+   960→              <Input id="prod-nameFr" value={productForm.nameFr} onChange={e => setProductForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom du produit" />
+   961→            </div>
+   962→            <div className="space-y-2 sm:col-span-2">
+   963→              <Label htmlFor="prod-desc">Description (English) *</Label>
+   964→              <Textarea id="prod-desc" value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder="Product description" rows={3} />
+   965→            </div>
+   966→            <div className="space-y-2 sm:col-span-2">
+   967→              <Label htmlFor="prod-descFr">Description (French) *</Label>
+   968→              <Textarea id="prod-descFr" value={productForm.descriptionFr} onChange={e => setProductForm(f => ({ ...f, descriptionFr: e.target.value }))} placeholder="Description du produit" rows={3} />
+   969→            </div>
+   970→            <div className="space-y-2">
+   971→              <Label htmlFor="prod-price">Price (FCFA) *</Label>
+   972→              <Input id="prod-price" type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="0" min="0" />
+   973→            </div>
+   974→            <div className="space-y-2">
+   975→              <Label htmlFor="prod-image">Image URL *</Label>
+   976→              <Input id="prod-image" value={productForm.image} onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+   977→            </div>
+   978→            <div className="space-y-2">
+   979→              <Label htmlFor="prod-category">Category *</Label>
+   980→              <Select value={productForm.categoryId} onValueChange={val => setProductForm(f => ({ ...f, categoryId: val }))}>
+   981→                <SelectTrigger className="w-full">
+   982→                  <SelectValue placeholder="Select category" />
+   983→                </SelectTrigger>
+   984→                <SelectContent>
+   985→                  {categories.map(cat => (
+   986→                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+   987→                  ))}
+   988→                </SelectContent>
+   989→              </Select>
+   990→            </div>
+   991→            <div className="space-y-2">
+   992→              <div className="flex items-center justify-between">
+   993→                <Label>In Stock</Label>
+   994→                <Switch checked={productForm.inStock} onCheckedChange={val => setProductForm(f => ({ ...f, inStock: val }))} />
+   995→              </div>
+   996→              <div className="flex items-center justify-between mt-3">
+   997→                <Label>Featured</Label>
+   998→                <Switch checked={productForm.featured} onCheckedChange={val => setProductForm(f => ({ ...f, featured: val }))} />
+   999→              </div>
+  1000→            </div>
+  1001→          </div>
+  1002→          {productForm.image && (
+  1003→            <div className="border rounded-lg p-2">
+  1004→              <p className="text-xs text-muted-foreground mb-2">Image Preview</p>
+  1005→              <img src={productForm.image} alt="Preview" className="size-24 rounded object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+  1006→            </div>
+  1007→          )}
+  1008→          <DialogFooter>
+  1009→            <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>Cancel</Button>
+  1010→            <Button onClick={handleProductSubmit}>{editingProduct ? 'Update Product' : 'Create Product'}</Button>
+  1011→          </DialogFooter>
+  1012→        </DialogContent>
+  1013→      </Dialog>
+  1014→
+  1015→      {/* ── Category Dialog ── */}
+  1016→      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+  1017→        <DialogContent className="sm:max-w-md">
+  1018→          <DialogHeader>
+  1019→            <DialogTitle>Add New Category</DialogTitle>
+  1020→            <DialogDescription>Create a new product category</DialogDescription>
+  1021→          </DialogHeader>
+  1022→          <div className="space-y-4 py-4">
+  1023→            <div className="space-y-2">
+  1024→              <Label htmlFor="cat-name">Name (English) *</Label>
+  1025→              <Input id="cat-name" value={categoryForm.name} onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))} placeholder="Category name" />
+  1026→            </div>
+  1027→            <div className="space-y-2">
+  1028→              <Label htmlFor="cat-nameFr">Name (French) *</Label>
+  1029→              <Input id="cat-nameFr" value={categoryForm.nameFr} onChange={e => setCategoryForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom de la catégorie" />
+  1030→            </div>
+  1031→            <div className="space-y-2">
+  1032→              <Label htmlFor="cat-slug">Slug *</Label>
+  1033→              <Input id="cat-slug" value={categoryForm.slug} onChange={e => setCategoryForm(f => ({ ...f, slug: e.target.value }))} placeholder="category-slug" />
+  1034→            </div>
+  1035→            <div className="space-y-2">
+  1036→              <Label htmlFor="cat-image">Image URL</Label>
+  1037→              <Input id="cat-image" value={categoryForm.image} onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))} placeholder="https://..." />
+  1038→            </div>
+  1039→          </div>
+  1040→          <DialogFooter>
+  1041→            <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>Cancel</Button>
+  1042→            <Button onClick={handleCategorySubmit}>Create Category</Button>
+  1043→          </DialogFooter>
+  1044→        </DialogContent>
+  1045→      </Dialog>
+  1046→
+  1047→      {/* ── Order Detail Dialog ── */}
+  1048→      <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+  1049→        <DialogContent className="sm:max-w-lg">
+  1050→          <DialogHeader>
+  1051→            <DialogTitle>Order Details</DialogTitle>
+  1052→            <DialogDescription>Viewing order information</DialogDescription>
+  1053→          </DialogHeader>
+  1054→          {selectedOrder && (
+  1055→            <div className="space-y-4 py-4">
+  1056→              <div className="grid grid-cols-2 gap-4">
+  1057→                <div>
+  1058→                  <p className="text-xs text-muted-foreground">Customer</p>
+  1059→                  <p className="font-medium text-sm">{selectedOrder.customerName}</p>
+  1060→                </div>
+  1061→                <div>
+  1062→                  <p className="text-xs text-muted-foreground">Phone</p>
+  1063→                  <p className="font-medium text-sm flex items-center gap-1">
+  1064→                    <Phone className="size-3" /> {selectedOrder.customerPhone || 'N/A'}
+  1065→                  </p>
+  1066→                </div>
+  1067→                <div>
+  1068→                  <p className="text-xs text-muted-foreground">Payment Method</p>
+  1069→                  <Badge variant="outline" className="capitalize mt-0.5">{selectedOrder.paymentMethod}</Badge>
+  1070→                </div>
+  1071→                <div>
+  1072→                  <p className="text-xs text-muted-foreground">Status</p>
+  1073→                  <Badge variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'} className="capitalize mt-0.5">
+  1074→                    {selectedOrder.status}
+  1075→                  </Badge>
+  1076→                </div>
+  1077→              </div>
+  1078→              <div>
+  1079→                <p className="text-xs text-muted-foreground mb-2">Order Items</p>
+  1080→                <div className="bg-muted/50 rounded-lg p-3 max-h-48 overflow-y-auto">
+  1081→                  {(() => {
+  1082→                    try {
+  1083→                      const items = JSON.parse(selectedOrder.items)
+  1084→                      if (Array.isArray(items)) {
+  1085→                        return (
+  1086→                          <div className="space-y-2">
+  1087→                            {items.map((item: { name?: string; price?: number; quantity?: number }, i: number) => (
+  1088→                              <div key={i} className="flex justify-between text-sm">
+  1089→                                <span>{item.name || `Item ${i + 1}`} {item.quantity ? `x${item.quantity}` : ''}</span>
+  1090→                                <span className="font-medium">{item.price ? `${item.price.toLocaleString()} FCFA` : ''}</span>
+  1091→                              </div>
+  1092→                            ))}
+  1093→                          </div>
+  1094→                        )
+  1095→                      }
+  1096→                      return <p className="text-sm">{selectedOrder.items}</p>
+  1097→                    } catch {
+  1098→                      return <p className="text-sm">{selectedOrder.items}</p>
+  1099→                    }
+  1100→                  })()}
+  1101→                </div>
+  1102→              </div>
+  1103→              <div className="flex justify-between items-center border-t pt-3">
+  1104→                <span className="font-semibold">Total</span>
+  1105→                <span className="font-bold text-lg">{selectedOrder.total.toLocaleString()} FCFA</span>
+  1106→              </div>
+  1107→              <div>
+  1108→                <p className="text-xs text-muted-foreground">Order Date</p>
+  1109→                <p className="text-sm">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+  1110→              </div>
+  1111→            </div>
+  1112→          )}
+  1113→          <DialogFooter>
+  1114→            <Button variant="outline" onClick={() => setOrderDetailOpen(false)}>Close</Button>
+  1115→          </DialogFooter>
+  1116→        </DialogContent>
+  1117→      </Dialog>
+  1118→
+  1119→      {/* ── Delete Confirmation Dialog ── */}
+  1120→      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+  1121→        <DialogContent className="sm:max-w-md">
+  1122→          <DialogHeader>
+  1123→            <DialogTitle>Confirm Deletion</DialogTitle>
+  1124→            <DialogDescription>
+  1125→              Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
+  1126→              {deleteTarget?.type === 'category' && ' This will also delete all products in this category.'}
+  1127→              This action cannot be undone.
+  1128→            </DialogDescription>
+  1129→          </DialogHeader>
+  1130→          <DialogFooter>
+  1131→            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+  1132→            <Button variant="destructive" onClick={executeDelete}>Delete</Button>
+  1133→          </DialogFooter>
+  1134→        </DialogContent>
+  1135→      </Dialog>
+  1136→    </div>
+  1137→  )
+  1138→}
+  1139→
