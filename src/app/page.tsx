@@ -61,6 +61,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [productSearch, setProductSearch] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -108,9 +109,15 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter((p) => p.categoryId === selectedCategory);
+  const filteredProducts = products.filter((p) => {
+    const matchCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
+    const matchSearch = productSearch.trim() === '' || 
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
+      p.nameFr.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.description.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.descriptionFr.toLowerCase().includes(productSearch.toLowerCase());
+    return matchCategory && matchSearch;
+  });
 
   const getCategoryName = (cat: Category) => lang === 'fr' ? cat.nameFr : cat.name;
   const getProductName = (p: Product) => lang === 'fr' ? p.nameFr : p.name;
@@ -421,6 +428,26 @@ export default function HomePage() {
               </motion.div>
             </div>
 
+            {/* Search Bar */}
+            <div className="relative mb-6 max-w-md mx-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder={lang === 'fr' ? 'Rechercher un produit...' : 'Search products...'}
+                className="pl-9 pr-9 h-10 rounded-full border-border/50 bg-muted/30 focus:bg-background"
+              />
+              {productSearch && (
+                <button
+                  onClick={() => setProductSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
             {/* Category Filter */}
             <div className="flex flex-wrap gap-2 mb-8 sm:mb-10 justify-center">
               <Button
@@ -444,6 +471,15 @@ export default function HomePage() {
                 </Button>
               ))}
             </div>
+
+            {/* Results Count */}
+            {(productSearch || selectedCategory !== 'all') && (
+              <p className="text-xs text-muted-foreground text-center mb-4">
+                {filteredProducts.length} {lang === 'fr' 
+                  ? (filteredProducts.length > 1 ? 'produits trouvés' : 'produit trouvé')
+                  : (filteredProducts.length !== 1 ? 'products found' : 'product found')}
+              </p>
+            )}
 
             {/* Products Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
