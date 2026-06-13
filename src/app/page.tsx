@@ -599,7 +599,7 @@ export default function HomePage() {
               <button
                 onClick={() => {
                   const container = document.getElementById('featured-scroll');
-                  container?.scrollBy({ left: -320, behavior: 'smooth' });
+                  container?.scrollBy({ left: -240, behavior: 'smooth' });
                 }}
                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border border-border/50 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground -translate-x-1"
                 aria-label="Scroll left"
@@ -610,7 +610,7 @@ export default function HomePage() {
               <button
                 onClick={() => {
                   const container = document.getElementById('featured-scroll');
-                  container?.scrollBy({ left: 320, behavior: 'smooth' });
+                  container?.scrollBy({ left: 240, behavior: 'smooth' });
                 }}
                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background shadow-lg border border-border/50 flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground translate-x-1"
                 aria-label="Scroll right"
@@ -634,10 +634,10 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1, duration: 0.5 }}
-                    className="flex-none w-[75vw] sm:w-[280px] md:w-[300px] snap-start"
+                    className="flex-none w-[55vw] sm:w-[200px] md:w-[220px] snap-start"
                   >
                     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 h-full flex flex-col">
-                      <div className="relative overflow-hidden aspect-[3/4]">
+                      <div className="relative overflow-hidden aspect-[4/5]">
                         <img
                           src={product.image}
                           alt={getProductName(product)}
@@ -693,7 +693,7 @@ export default function HomePage() {
                     key={i}
                     onClick={() => {
                       const container = document.getElementById('featured-scroll');
-                      const scrollAmount = i * 320;
+                      const scrollAmount = i * 240;
                       container?.scrollTo({ left: scrollAmount, behavior: 'smooth' });
                     }}
                     className="h-2 w-2 rounded-full bg-primary/30 hover:bg-primary transition-colors"
