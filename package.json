@@ -13,7 +13,7 @@
     "db:reset": "prisma migrate reset",
     "db:switch:pg": "cp prisma/schema.postgresql.prisma prisma/schema.prisma",
     "db:switch:sqlite": "cp prisma/schema.sqlite.prisma prisma/schema.prisma",
-    "vercel:setup": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && prisma generate",
+    "vercel:setup": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && prisma generate && prisma db push",
     "postinstall": "prisma generate"
   },
   "dependencies": {
