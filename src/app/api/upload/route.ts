@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { put } from '@vercel/blob'
+
 export const maxDuration = 60
 export const bodySizeLimit = '50mb'
 
@@ -27,18 +29,22 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`
 
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    if (process.env.VERCEL === '1') {
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        return NextResponse.json(
+          { error: 'Blob storage not configured. Add BLOB_READ_WRITE_TOKEN in Vercel settings.' },
+          { status: 500 }
+        )
+      }
       try {
-        const { put } = await import('@vercel/blob')
         const blob = await put(`uploads/${uniqueName}`, buffer, {
           access: 'public',
           contentType: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}`,
         })
         return NextResponse.json({ url: blob.url, size: file.size, name: file.name })
       } catch (blobError: any) {
-        console.error('Vercel Blob upload failed:', blobError?.message || blobError)
         return NextResponse.json(
-          { error: `Image upload failed: ${blobError?.message || 'Blob storage error'}. Please try again or use an image URL instead.` },
+          { error: `Blob upload failed: ${blobError?.message || 'Unknown error'}` },
           { status: 500 }
         )
       }
@@ -57,7 +63,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Upload failed. Please try again or use an image URL instead.' }, { status: 500 })
     }
   } catch (error: any) {
-    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 })
   }
 }
