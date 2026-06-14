@@ -37,8 +37,7 @@ export async function POST(req: NextRequest) {
         )
       }
       try {
-        const blob = await put(`uploads/${uniqueName}`, buffer, {
-          access: 'public',
+               const blob = await put(`uploads/${uniqueName}`, buffer, {
           contentType: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}`,
         })
         return NextResponse.json({ url: blob.url, size: file.size, name: file.name })
