@@ -637,9 +637,10 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         ))}
       </nav>
 
-      <Separator />
+            <Separator />
 
-        {/* Back to Store + Logout */}
+      {/* Back to Store + Logout */}
+      <div className="p-3 space-y-1">
         <button
           onClick={onBackToStore}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors w-full"
