@@ -53,7 +53,7 @@ import {
   Clock,
   Globe,
   LogOut,
-  Download,
+
   Lock,
   User,
   AlertCircle,
