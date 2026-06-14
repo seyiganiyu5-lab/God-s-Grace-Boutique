@@ -1371,6 +1371,10 @@ export default function HomePage() {
                     TikTok
                   </a>
                 </div>
+                <div className="flex items-center gap-2 text-sm text-background/60">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>Koumassi Saint Étienne, Abidjan, Côte d&apos;Ivoire</span>
+                </div>
               </div>
             </div>
           </div>

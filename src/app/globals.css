@@ -170,3 +170,14 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Hide Next.js dev indicator (the "N" logo) */
+nextjs-portal {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}

@@ -26,8 +26,8 @@ const playfairDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "God's Grace Boutique - Where Elegance Meets Faith",
-  description: "Discover our exquisite collection of African-inspired fashion, jewelry, shoes, and accessories at God's Grace Boutique. Quality and affordable fashion for every woman.",
-  keywords: ["God's Grace Boutique", "African fashion", "jewelry", "clothing", "shoes", "scarves", "Ankara", "boutique"],
+  description: "Discover our exquisite collection of African-inspired fashion, jewelry, shoes, and accessories at God's Grace Boutique in Koumassi Saint Étienne, Abidjan, Côte d'Ivoire. Quality and affordable fashion for every woman.",
+  keywords: ["God's Grace Boutique", "African fashion", "jewelry", "clothing", "shoes", "scarves", "Ankara", "boutique", "Abidjan", "Koumassi", "Côte d'Ivoire"],
   icons: {
     icon: "/images/logo.png",
   },

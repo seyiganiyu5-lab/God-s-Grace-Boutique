@@ -48,7 +48,7 @@ export const translations = {
     contactWave: "Wave",
     contactMtn: "MTN Money",
     contactAddress: "Visit Us",
-    contactAddressText: "God's Grace Boutique - Your Fashion Destination",
+    contactAddressText: "Koumassi Saint Étienne, Abidjan, Côte d'Ivoire",
     
     // Cart
     cartTitle: "Your Cart",
@@ -128,7 +128,7 @@ export const translations = {
     contactWave: "Wave",
     contactMtn: "MTN Money",
     contactAddress: "Visitez-Nous",
-    contactAddressText: "God's Grace Boutique - Votre Destination Mode",
+    contactAddressText: "Koumassi Saint Étienne, Abidjan, Côte d'Ivoire",
     
     // Cart
     cartTitle: "Votre Panier",
