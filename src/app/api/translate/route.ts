@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import ZAI from 'z-ai-web-dev-sdk'
+
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,42 +11,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing text, from, or to parameters' }, { status: 400 })
     }
 
-    // ─── Method 1: Try AI translation (works in cloud with z-ai-web-dev-sdk) ───
+    if (from === to) {
+      return NextResponse.json({ translated: text, fallback: false })
+    }
+
+    const fromLang = from === 'en' ? 'English' : 'French'
+    const toLang = to === 'fr' ? 'French' : 'English'
+
+    // ─── Method 1: AI translation (works in cloud with z-ai-web-dev-sdk) ───
     try {
-      const ZAI = (await import('z-ai-web-dev-sdk')).default
       const zai = await ZAI.create()
       const response = await zai.chat.completions.create({
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator for an African fashion e-commerce website called "God's Grace Boutique". Translate the following text from ${from === 'en' ? 'English' : 'French'} to ${to === 'fr' ? 'French' : 'English'}. Only return the translation, nothing else. Keep it natural and appropriate for a fashion/boutique context. If the text is already in the target language, return it as is.`
+            content: `You are a professional translator for an African fashion e-commerce website called "God's Grace Boutique". Translate the following text from ${fromLang} to ${toLang}. Only return the translation, nothing else. Keep it natural and appropriate for a fashion/boutique context. If the text is already in the target language, return it as is.`
           },
           { role: 'user', content: text }
         ],
       })
       const translated = response.choices[0]?.message?.content?.trim()
       if (translated && translated !== text) {
+        console.log('[translate] AI translation succeeded:', text, '->', translated)
         return NextResponse.json({ translated, fallback: false })
       }
-    } catch (aiError) {
-      console.log('AI translation not available, trying next method...')
+    } catch (aiError: any) {
+      console.error('[translate] AI translation failed:', aiError?.message || aiError)
     }
 
     // ─── Method 2: MyMemory Free Translation API (works anywhere) ───
     try {
       const langPair = `${from}|${to}`
       const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
       if (res.ok) {
         const data = await res.json()
         const translated = data?.responseData?.translatedText?.trim()
-        // MyMemory returns uppercase text when it fails — skip those
-        if (translated && translated !== text && translated !== text.toUpperCase() && !translated.startsWith('MYMEMORY WARNING')) {
+        if (translated && translated !== text && translated !== text.toUpperCase() && !translated.startsWith('MYMEMORY WARNING') && !translated.startsWith('PLEASE SELECT')) {
+          console.log('[translate] MyMemory translation succeeded:', text, '->', translated)
           return NextResponse.json({ translated, fallback: false })
         }
       }
-    } catch (apiError) {
-      console.log('MyMemory API failed, trying dictionary fallback...')
+    } catch (apiError: any) {
+      console.error('[translate] MyMemory API failed:', apiError?.message || apiError)
     }
 
     // ─── Method 3: Comprehensive dictionary fallback ───
@@ -85,8 +95,8 @@ export async function POST(req: NextRequest) {
       'kente': 'kente',
       // Common words
       'women': 'femmes', 'femmes': 'women',
-      'women\'s': 'femmes', 'men': 'hommes', 'hommes': 'men',
-      'men\'s': 'hommes',
+      "women's": 'femmes', 'men': 'hommes', 'hommes': 'men',
+      "men's": 'hommes',
       'children': 'enfants', 'enfants': 'children',
       'girls': 'filles', 'filles': 'girls',
       'girl': 'fille', 'fille': 'girl',
@@ -212,7 +222,6 @@ export async function POST(req: NextRequest) {
       'chains': 'chaînes',
       'strap': 'bracelet', 'sangle': 'strap',
       'ankle': 'cheville', 'cheville': 'ankle',
-      'high': 'haut',
       'low': 'bas', 'bas': 'low',
       'heel': 'talon', 'talon': 'heel',
       'sole': 'semelle', 'semelle': 'sole',
@@ -222,7 +231,6 @@ export async function POST(req: NextRequest) {
       'front': 'avant', 'avant': 'front',
       'back': 'arrière', 'arrière': 'back',
       'side': 'côté', 'côté': 'side',
-      'top': 'haut',
       'bottom': 'bas',
       'middle': 'milieu', 'milieu': 'middle',
       'center': 'centre', 'centre': 'center',
@@ -256,7 +264,6 @@ export async function POST(req: NextRequest) {
       'pretty': 'joli',
       'cute': 'mignon', 'mignon': 'cute',
       'lovely': 'adorable', 'adorable': 'lovely',
-      'sexy': 'sexy',
       'chic': 'chic',
       'sophisticated': 'sophistiqué', 'sophistiqué': 'sophisticated',
       'refined': 'raffiné', 'raffiné': 'refined',
@@ -264,13 +271,12 @@ export async function POST(req: NextRequest) {
       'simple': 'simple',
       'rich': 'riche', 'riche': 'rich',
       'royal': 'royal',
-      'classic': 'classique',
       'vintage': 'vintage',
       'retro': 'rétro',
       'contemporary': 'contemporain', 'contemporain': 'contemporary',
       'latest': 'dernier', 'dernier': 'latest',
       'brand': 'marque', 'marque': 'brand',
-      'new': 'nouveau', 'nouvelle': 'new',
+      'nouvelle': 'new',
       'old': 'vieux', 'vieux': 'old',
       'young': 'jeune', 'jeune': 'young',
       'fresh': 'frais', 'frais': 'fresh',
@@ -285,7 +291,6 @@ export async function POST(req: NextRequest) {
       'good': 'bon', 'bon': 'good',
       'bad': 'mauvais', 'mauvais': 'bad',
       'big': 'grand', 'grand': 'big',
-      'small': 'petit',
       'tiny': 'minuscule', 'minuscule': 'tiny',
       'huge': 'énorme', 'énorme': 'huge',
       'warm': 'chaud', 'chaud': 'warm',
@@ -294,7 +299,6 @@ export async function POST(req: NextRequest) {
       'hot': 'chaud',
       'bright': 'brillant', 'brillant': 'bright',
       'dark': 'sombre', 'sombre': 'dark',
-      'light': 'lumière',
       'shiny': 'brillant',
       'sparkling': 'étincelant', 'étincelant': 'sparkling',
       'glittering': 'scintillant',
@@ -304,10 +308,8 @@ export async function POST(req: NextRequest) {
       'strong': 'fort', 'fort': 'strong',
       'weak': 'faible', 'faible': 'weak',
       'lightweight': 'léger', 'léger': 'lightweight',
-      'heavy': 'lourd',
       'smooth': 'lisse', 'lisse': 'smooth',
       'rough': 'rugueux',
-      'soft': 'doux',
       'hard': 'dur', 'dur': 'hard',
       'flexible': 'flexible',
       'rigid': 'rigide',
@@ -316,12 +318,10 @@ export async function POST(req: NextRequest) {
       'washable': 'lavable',
       'reusable': 'réutilisable',
       'disposable': 'jetable',
-      'portable': 'portable',
       'adjustable': 'ajustable',
       'removable': 'amovible',
       'detachable': 'détachable',
       'foldable': 'pliable',
-      'portable': 'portable',
       // Verbs commonly in descriptions
       'make': 'faire',
       'wear': 'porter', 'porter': 'wear',
@@ -333,7 +333,6 @@ export async function POST(req: NextRequest) {
       'add': 'ajouter', 'ajouter': 'add',
       'enhance': 'améliorer', 'améliorer': 'enhance',
       'elevate': 'rehausser', 'rehausser': 'elevate',
-      'complete': 'compléter', 'compléter': 'complete',
       'accentuate': 'accentuer',
       'highlight': 'mettre en valeur',
       'feature': 'caractéristique', 'caractéristique': 'feature',
@@ -348,13 +347,10 @@ export async function POST(req: NextRequest) {
       'give': 'donner', 'donner': 'give',
       'show': 'montrer', 'montrer': 'show',
       'create': 'créer', 'créer': 'create',
-      'design': 'conception',
       'craft': 'artisanat', 'artisanat': 'craft',
-      'perfect': 'parfait',
       'ideal': 'idéal', 'idéal': 'ideal',
       'suitable': 'approprié', 'approprié': 'suitable',
       'appropriate': 'approprié',
-      'great': 'superbe',
       'must-have': 'indispensable', 'indispensable': 'must-have',
       'essential': 'essentiel', 'essentiel': 'essential',
       'necessary': 'nécessaire', 'nécessaire': 'necessary',
@@ -411,9 +407,7 @@ export async function POST(req: NextRequest) {
       // Then word-by-word for remaining untranslated words
       const words = remaining.split(/(\s+)/)
       translated = words.map(word => {
-        // Skip whitespace
         if (/^\s+$/.test(word)) return word
-        // Skip punctuation-only
         if (/^[.,!?;:'"()\-]+$/.test(word)) return word
 
         const cleanWord = word.toLowerCase().replace(/[.,!?;:'"()\-]+/g, '')
@@ -428,9 +422,10 @@ export async function POST(req: NextRequest) {
       }).join('')
     }
 
+    console.log('[translate] Dictionary fallback:', text, '->', translated)
     return NextResponse.json({ translated, fallback: true })
-  } catch (error) {
-    console.error('Translation error:', error)
-    return NextResponse.json({ error: 'Translation failed' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[translate] Translation error:', error?.message || error)
+    return NextResponse.json({ error: `Translation failed: ${error?.message || 'Unknown error'}` }, { status: 500 })
   }
 }
