@@ -640,16 +640,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
       <Separator />
 
-      {/* Back to Store + Download + Logout */}
-      <div className="p-3 space-y-1">
-        <a
-          href="/api/download"
-          download
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-primary hover:text-primary hover:bg-primary/10 transition-colors w-full"
-        >
-          <Download className="size-4" />
-          <span>{lang === 'fr' ? 'Télécharger le Projet' : 'Download Project'}</span>
-        </a>
+        {/* Back to Store + Logout */}
         <button
           onClick={onBackToStore}
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors w-full"
