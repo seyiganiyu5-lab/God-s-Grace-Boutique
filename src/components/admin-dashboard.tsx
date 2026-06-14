@@ -221,6 +221,30 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   // Upload state
   const [productUploading, setProductUploading] = useState(false)
   const [categoryUploading, setCategoryUploading] = useState(false)
+  const [productDragOver, setProductDragOver] = useState(false)
+  const [categoryDragOver, setCategoryDragOver] = useState(false)
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent, target: 'product' | 'category') => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (target === 'product') setProductDragOver(true)
+    else setCategoryDragOver(true)
+  }
+  const handleDragLeave = (e: React.DragEvent, target: 'product' | 'category') => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (target === 'product') setProductDragOver(false)
+    else setCategoryDragOver(false)
+  }
+  const handleDrop = (e: React.DragEvent, target: 'product' | 'category') => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (target === 'product') setProductDragOver(false)
+    else setCategoryDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleImageUpload(file, target)
+  }
 
   // Image upload handler
   const handleImageUpload = async (file: File, target: 'product' | 'category') => {
@@ -228,14 +252,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
     const setUploading = target === 'product' ? setProductUploading : setCategoryUploading
     const setForm = target === 'product' ? setProductForm : setCategoryForm
 
-    // Validate
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-    if (!allowedTypes.includes(file.type)) {
+    // Validate - be permissive with types (some browsers don't set file.type properly)
+    if (file.type && !file.type.startsWith('image/')) {
       toast.error('Invalid file type. Only images are allowed.')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Max 5MB.')
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('File too large. Max 50MB.')
       return
     }
 
@@ -246,14 +269,22 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
       if (res.ok) {
         const data = await res.json()
-        setForm((prev: any) => ({ ...prev, image: data.url }))
-        toast.success('Image uploaded successfully')
+        if (data.url) {
+          setForm((prev: any) => ({ ...prev, image: data.url }))
+          toast.success('Image uploaded successfully')
+        } else {
+          toast.error(data.error || 'Upload failed')
+        }
       } else {
-        const data = await res.json()
-        toast.error(data.error || 'Upload failed')
+        let errorMsg = 'Upload failed'
+        try {
+          const data = await res.json()
+          errorMsg = data.error || errorMsg
+        } catch {}
+        toast.error(errorMsg)
       }
     } catch {
-      toast.error('Upload failed')
+      toast.error('Upload failed — check your connection')
     } finally {
       setUploading(false)
     }
@@ -1549,32 +1580,42 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             <div className="space-y-2">
               <Label>Product Image *</Label>
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start gap-2 h-10 relative overflow-hidden"
-                    disabled={productUploading}
-                    onClick={() => document.getElementById('prod-file-input')?.click()}
-                  >
-                    {productUploading ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
-                    ) : (
-                      <><Upload className="h-4 w-4" /> Choose Image from Device</>
-                    )}
-                  </Button>
+                <label
+                  htmlFor="prod-file-input"
+                  onDragOver={e => handleDragOver(e, 'product')}
+                  onDragLeave={e => handleDragLeave(e, 'product')}
+                  onDrop={e => handleDrop(e, 'product')}
+                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+                    productDragOver
+                      ? 'border-primary bg-primary/10'
+                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+                  } ${productUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                >
                   <input
                     id="prod-file-input"
                     type="file"
                     accept="image/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={e => {
                       const file = e.target.files?.[0]
                       if (file) handleImageUpload(file, 'product')
                       e.target.value = ''
                     }}
                   />
-                </div>
+                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+                    {productUploading ? (
+                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">Uploading...</span></>
+                    ) : productDragOver ? (
+                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">Drop image here</span></>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Click or drag & drop an image</span>
+                        <span className="text-[10px] text-primary font-medium mt-0.5">Browse Files</span>
+                      </>
+                    )}
+                  </div>
+                </label>
                 <div className="relative">
                   <Input
                     value={productForm.image}
@@ -1659,30 +1700,42 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             <div className="space-y-2">
               <Label>Category Image</Label>
               <div className="space-y-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full justify-start gap-2 h-10"
-                  disabled={categoryUploading}
-                  onClick={() => document.getElementById('cat-file-input')?.click()}
+                <label
+                  htmlFor="cat-file-input"
+                  onDragOver={e => handleDragOver(e, 'category')}
+                  onDragLeave={e => handleDragLeave(e, 'category')}
+                  onDrop={e => handleDrop(e, 'category')}
+                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+                    categoryDragOver
+                      ? 'border-primary bg-primary/10'
+                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+                  } ${categoryUploading ? 'opacity-50 pointer-events-none' : ''}`}
                 >
-                  {categoryUploading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
-                  ) : (
-                    <><Upload className="h-4 w-4" /> Choose Image from Device</>
-                  )}
-                </Button>
-                <input
-                  id="cat-file-input"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => {
-                    const file = e.target.files?.[0]
-                    if (file) handleImageUpload(file, 'category')
-                    e.target.value = ''
-                  }}
-                />
+                  <input
+                    id="cat-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file, 'category')
+                      e.target.value = ''
+                    }}
+                  />
+                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+                    {categoryUploading ? (
+                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">Uploading...</span></>
+                    ) : categoryDragOver ? (
+                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">Drop image here</span></>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Click or drag & drop an image</span>
+                        <span className="text-[10px] text-primary font-medium mt-0.5">Browse Files</span>
+                      </>
+                    )}
+                  </div>
+                </label>
                 <div className="relative">
                   <Input
                     value={categoryForm.image}
