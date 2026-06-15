@@ -1,0 +1,502 @@
+   501→      if (res.ok) { toast.success(lang === 'fr' ? `Témoignage ${!testimony.approved ? 'approuvé' : 'désapprouvé'}` : `Testimony ${!testimony.approved ? 'approved' : 'unapproved'}`); fetchTestimonies() }
+   502→      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du témoignage' : 'Failed to update testimony') }
+   503→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   504→  }
+   505→
+   506→  const deleteTestimony = async (id: string) => {
+   507→    try {
+   508→      const res = await fetch(`/api/testimonies/${id}`, { method: 'DELETE' })
+   509→      if (res.ok) { toast.success(lang === 'fr' ? 'Témoignage supprimé' : 'Testimony deleted'); fetchTestimonies() }
+   510→      else { toast.error(lang === 'fr' ? 'Échec de la suppression du témoignage' : 'Failed to delete testimony') }
+   511→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   512→  }
+   513→
+   514→  // ─── Delete Confirmation ─────────────────────────────────────────────────
+   515→
+   516→  const confirmDelete = (type: string, id: string, name: string) => {
+   517→    setDeleteTarget({ type, id, name })
+   518→    setDeleteConfirmOpen(true)
+   519→  }
+   520→
+   521→  const executeDelete = async () => {
+   522→    if (!deleteTarget) return
+   523→    switch (deleteTarget.type) {
+   524→      case 'product': await deleteProduct(deleteTarget.id); break
+   525→      case 'category': await deleteCategory(deleteTarget.id); break
+   526→      case 'order': await deleteOrder(deleteTarget.id); break
+   527→      case 'testimony': await deleteTestimony(deleteTarget.id); break
+   528→    }
+   529→    setDeleteConfirmOpen(false)
+   530→    setDeleteTarget(null)
+   531→  }
+   532→
+   533→  // ─── Computed Values ─────────────────────────────────────────────────────
+   534→
+   535→  const filteredProducts = products.filter(p =>
+   536→    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+   537→    p.nameFr.toLowerCase().includes(productSearch.toLowerCase()) ||
+   538→    (p.category?.name || '').toLowerCase().includes(productSearch.toLowerCase())
+   539→  )
+   540→
+   541→  const filteredOrders = orders.filter(o =>
+   542→    o.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   543→    o.customerPhone.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   544→    o.id.toLowerCase().includes(orderSearch.toLowerCase())
+   545→  )
+   546→
+   547→  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0)
+   548→  const pendingOrders = orders.filter(o => o.status === 'pending').length
+   549→  const deliveredOrders = orders.filter(o => o.status === 'delivered').length
+   550→  const inStockProducts = products.filter(p => p.inStock).length
+   551→  const featuredProducts = products.filter(p => p.featured).length
+   552→  const approvedTestimonies = testimonies.filter(t => t.approved).length
+   553→
+   554→  // ─── Sidebar Navigation Items ────────────────────────────────────────────
+   555→
+   556→  const navItems: { key: ActiveSection; label: string; icon: React.ReactNode; description: string }[] = [
+   557→    { key: 'dashboard', label: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: lang === 'fr' ? 'Vue d\'ensemble' : 'Overview & stats' },
+   558→    { key: 'products', label: lang === 'fr' ? 'Produits' : 'Products', icon: <Package className="size-4" />, description: `${products.length} ${lang === 'fr' ? 'articles' : 'items'}` },
+   559→    { key: 'categories', label: lang === 'fr' ? 'Catégories' : 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} ${lang === 'fr' ? 'groupes' : 'groups'}` },
+   560→    { key: 'orders', label: lang === 'fr' ? 'Commandes' : 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} ${lang === 'fr' ? 'total' : 'total'}` },
+   561→    { key: 'testimonies', label: lang === 'fr' ? 'Témoignages' : 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} ${lang === 'fr' ? 'avis' : 'reviews'}` },
+   562→  ]
+   563→
+   564→  // ─── Sidebar Content ─────────────────────────────────────────────────────
+   565→
+   566→  const sidebarContent = (
+   567→    <div className="flex flex-col h-full">
+   568→      {/* Brand Header */}
+   569→      <div className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+   570→        <div className="flex items-center gap-3">
+   571→          <div className="size-11 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25">
+   572→            <span className="text-primary-foreground font-bold text-lg">G</span>
+   573→          </div>
+   574→          <div>
+   575→            <h1 className="font-handwriting text-primary text-xl leading-tight">God&apos;s Grace</h1>
+   576→            <p className="text-[11px] text-muted-foreground tracking-wide uppercase">{lang === 'fr' ? 'Admin Boutique' : 'Boutique Admin'}</p>
+   577→          </div>
+   578→        </div>
+   579→      </div>
+   580→
+   581→      <Separator />
+   582→
+   583→      {/* Navigation */}
+   584→      <nav className="flex-1 p-3 space-y-1">
+   585→        <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{lang === 'fr' ? 'Navigation' : 'Navigation'}</p>
+   586→        {navItems.map(item => (
+   587→          <button
+   588→            key={item.key}
+   589→            onClick={() => { setActiveSection(item.key); setSidebarOpen(false) }}
+   590→            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+   591→              activeSection === item.key
+   592→                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+   593→                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+   594→            }`}
+   595→          >
+   596→            <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
+   597→              activeSection === item.key ? 'bg-primary-foreground/20' : 'bg-muted'
+   598→            }`}>
+   599→              {item.icon}
+   600→            </div>
+   601→            <div className="text-left flex-1 min-w-0">
+   602→              <p className="font-medium leading-tight">{item.label}</p>
+   603→              <p className={`text-[10px] leading-tight ${activeSection === item.key ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+   604→                {item.description}
+   605→              </p>
+   606→            </div>
+   607→            {activeSection === item.key && <ChevronRight className="size-4 shrink-0" />}
+   608→          </button>
+   609→        ))}
+   610→      </nav>
+   611→
+   612→      <Separator />
+   613→
+   614→      {/* Back to Store + Logout */}
+   615→      <div className="p-3 space-y-1">
+   616→        <button
+   617→          onClick={onBackToStore}
+   618→          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors w-full"
+   619→        >
+   620→          <ArrowLeft className="size-4" />
+   621→          <span>{lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}</span>
+   622→        </button>
+   623→        <button
+   624→          onClick={handleLogout}
+   625→          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
+   626→        >
+   627→          <LogOut className="size-4" />
+   628→          <span>{lang === 'fr' ? 'Déconnexion' : 'Logout'}</span>
+   629→        </button>
+   630→      </div>
+   631→
+   632→      {/* Footer */}
+   633→      <div className="p-4 border-t">
+   634→        <p className="text-[10px] text-muted-foreground text-center font-handwriting">God&apos;s Grace Boutique &copy; {new Date().getFullYear()}</p>
+   635→      </div>
+   636→    </div>
+   637→  )
+   638→
+   639→  // ─── Section Title Helper ────────────────────────────────────────────────
+   640→
+   641→  const sectionTitles: Record<ActiveSection, { title: string; subtitle: string; icon: React.ReactNode }> = {
+   642→    dashboard: { title: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', subtitle: lang === 'fr' ? "Vue d'ensemble de votre boutique" : "Welcome back! Here's your store overview.", icon: <LayoutDashboard className="size-5" /> },
+   643→    products: { title: lang === 'fr' ? 'Produits' : 'Products', subtitle: lang === 'fr' ? 'Gérer votre catalogue' : 'Manage your product catalog', icon: <Package className="size-5" /> },
+   644→    categories: { title: lang === 'fr' ? 'Catégories' : 'Categories', subtitle: lang === 'fr' ? 'Organiser vos produits' : 'Organize your products', icon: <FolderOpen className="size-5" /> },
+   645→    orders: { title: lang === 'fr' ? 'Commandes' : 'Orders', subtitle: lang === 'fr' ? 'Suivre et gérer les commandes' : 'Track and manage customer orders', icon: <ShoppingCart className="size-5" /> },
+   646→    testimonies: { title: lang === 'fr' ? 'Témoignages' : 'Testimonies', subtitle: lang === 'fr' ? 'Examiner les avis clients' : 'Review customer feedback', icon: <MessageSquareHeart className="size-5" /> },
+   647→  }
+   648→
+   649→  // ─── Auth Checking State ──────────────────────────────────────────────
+   650→
+   651→  if (authChecking) {
+   652→    return (
+   653→      <div className="min-h-screen bg-background flex items-center justify-center">
+   654→        <div className="flex flex-col items-center gap-4">
+   655→          <div className="size-12 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+   656→          <div className="text-center">
+   657→            <p className="text-sm font-medium">{lang === 'fr' ? 'Vérification...' : 'Verifying...'}</p>
+   658→            <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+   659→          </div>
+   660→        </div>
+   661→      </div>
+   662→    )
+   663→  }
+   664→
+   665→  // ─── Login Page ───────────────────────────────────────────────────────
+   666→
+   667→  if (!isAuthenticated) {
+   668→    return (
+   669→      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+   670→        <div className="w-full max-w-md">
+   671→          {/* Login Card */}
+   672→          <Card className="overflow-hidden">
+   673→            {/* Header */}
+   674→            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-center text-primary-foreground">
+   675→              <div className="size-16 rounded-2xl bg-primary-foreground/20 flex items-center justify-center mx-auto mb-4 shadow-lg">
+   676→                <Lock className="size-8 text-primary-foreground" />
+   677→              </div>
+   678→              <h1 className="font-handwriting text-2xl mb-1">God&apos;s Grace</h1>
+   679→              <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? 'Administration Boutique' : 'Boutique Administration'}</p>
+   680→            </div>
+   681→
+   682→            {/* Form */}
+   683→            <CardContent className="p-6">
+   684→              <form onSubmit={handleLogin} className="space-y-4">
+   685→                {loginError && (
+   686→                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+   687→                    <AlertCircle className="size-4 shrink-0" />
+   688→                    <span>{loginError}</span>
+   689→                  </div>
+   690→                )}
+   691→
+   692→                <div className="space-y-2">
+   693→                  <Label htmlFor="username">{lang === 'fr' ? 'Nom d\'utilisateur' : 'Username'}</Label>
+   694→                  <div className="relative">
+   695→                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   696→                    <Input
+   697→                      id="username"
+   698→                      type="text"
+   699→                      value={loginForm.username}
+   700→                      onChange={(e) => setLoginForm(f => ({ ...f, username: e.target.value }))}
+   701→                      placeholder={lang === 'fr' ? 'Entrez votre nom d\'utilisateur' : 'Enter your username'}
+   702→                      className="pl-9"
+   703→                      required
+   704→                      autoComplete="username"
+   705→                    />
+   706→                  </div>
+   707→                </div>
+   708→
+   709→                <div className="space-y-2">
+   710→                  <Label htmlFor="password">{lang === 'fr' ? 'Mot de passe' : 'Password'}</Label>
+   711→                  <div className="relative">
+   712→                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   713→                    <Input
+   714→                      id="password"
+   715→                      type="password"
+   716→                      value={loginForm.password}
+   717→                      onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
+   718→                      placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
+   719→                      className="pl-9"
+   720→                      required
+   721→                      autoComplete="current-password"
+   722→                    />
+   723→                  </div>
+   724→                </div>
+   725→
+   726→                <Button
+   727→                  type="submit"
+   728→                  className="w-full shadow-md shadow-primary/20"
+   729→                  disabled={loginLoading}
+   730→                >
+   731→                  {loginLoading ? (
+   732→                    <div className="flex items-center gap-2">
+   733→                      <div className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+   734→                      <span>{lang === 'fr' ? 'Connexion...' : 'Signing in...'}</span>
+   735→                    </div>
+   736→                  ) : (
+   737→                    <div className="flex items-center gap-2">
+   738→                      <Lock className="size-4" />
+   739→                      <span>{lang === 'fr' ? 'Se connecter' : 'Sign In'}</span>
+   740→                    </div>
+   741→                  )}
+   742→                </Button>
+   743→              </form>
+   744→
+   745→              <div className="mt-6 text-center">
+   746→                <button
+   747→                  onClick={onBackToStore}
+   748→                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
+   749→                >
+   750→                  <ArrowLeft className="size-3" />
+   751→                  {lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}
+   752→                </button>
+   753→              </div>
+   754→            </CardContent>
+   755→          </Card>
+   756→
+   757→          {/* Language Toggle Below Login */}
+   758→          <div className="mt-4 text-center">
+   759→            <Button
+   760→              variant="ghost"
+   761→              size="sm"
+   762→              onClick={toggleLang}
+   763→              className="gap-1.5 text-xs text-muted-foreground"
+   764→            >
+   765→              <Globe className="size-3.5" />
+   766→              {lang === 'en' ? 'Français' : 'English'}
+   767→            </Button>
+   768→          </div>
+   769→        </div>
+   770→      </div>
+   771→    )
+   772→  }
+   773→
+   774→  // ─── Render Dashboard ──────────────────────────────────────────────
+   775→
+   776→  return (
+   777→    <div className="min-h-screen bg-background flex">
+   778→      {/* Desktop Sidebar */}
+   779→      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-card border-r border-border">
+   780→        {sidebarContent}
+   781→      </aside>
+   782→
+   783→      {/* Mobile Sidebar */}
+   784→      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+   785→        <SheetContent side="left" className="p-0 w-72 bg-card">
+   786→          <SheetHeader className="sr-only">
+   787→            <SheetTitle>{lang === 'fr' ? 'Navigation' : 'Navigation'}</SheetTitle>
+   788→          </SheetHeader>
+   789→          {sidebarContent}
+   790→        </SheetContent>
+   791→      </Sheet>
+   792→
+   793→      {/* Main Content */}
+   794→      <main className="flex-1 lg:ml-72">
+   795→        {/* Top Bar */}
+   796→        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b">
+   797→          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
+   798→            <div className="flex items-center gap-4">
+   799→              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+   800→                <Menu className="size-5" />
+   801→              </Button>
+   802→              <div className="flex items-center gap-3">
+   803→                <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+   804→                  {sectionTitles[activeSection].icon}
+   805→                </div>
+   806→                <div>
+   807→                  <h2 className="font-semibold text-base font-elegant leading-tight">{sectionTitles[activeSection].title}</h2>
+   808→                  <p className="text-[11px] text-muted-foreground hidden sm:block">{sectionTitles[activeSection].subtitle}</p>
+   809→                </div>
+   810→              </div>
+   811→            </div>
+   812→            <div className="flex items-center gap-2">
+   813→              <Badge variant="secondary" className="text-xs gap-1 hidden sm:flex">
+   814→                <Package className="size-3" /> {products.length} {lang === 'fr' ? 'Produits' : 'Products'}
+   815→              </Badge>
+   816→              {pendingOrders > 0 && (
+   817→                <Badge className="text-xs gap-1">
+   818→                  <Clock className="size-3" /> {pendingOrders} {lang === 'fr' ? 'En attente' : 'Pending'}
+   819→                </Badge>
+   820→              )}
+   821→              {/* Language Toggle */}
+   822→              <Button
+   823→                variant="outline"
+   824→                size="sm"
+   825→                onClick={toggleLang}
+   826→                className="gap-1.5 text-xs font-semibold h-8"
+   827→              >
+   828→                <Globe className="size-3.5" />
+   829→                {lang === 'en' ? 'FR' : 'EN'}
+   830→              </Button>
+   831→            </div>
+   832→          </div>
+   833→        </header>
+   834→
+   835→        {/* Page Content */}
+   836→        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+   837→          {loading ? (
+   838→            <div className="flex items-center justify-center h-64">
+   839→              <div className="flex flex-col items-center gap-4">
+   840→                <div className="size-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+   841→                <div className="text-center">
+   842→                  <p className="text-sm font-medium">{lang === 'fr' ? 'Chargement du tableau de bord...' : 'Loading dashboard...'}</p>
+   843→                  <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+   844→                </div>
+   845→              </div>
+   846→            </div>
+   847→          ) : (
+   848→            <>
+   849→              {/* ════════════════════ Dashboard Section ════════════════════ */}
+   850→              {activeSection === 'dashboard' && (
+   851→                <div className="space-y-6">
+   852→                  {/* Welcome Banner */}
+   853→                  <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground overflow-hidden relative">
+   854→                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+   855→                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-foreground/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+   856→                    <CardContent className="p-6 lg:p-8 relative">
+   857→                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   858→                        <div>
+   859→                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">{lang === 'fr' ? "Bienvenue chez God's Grace" : "Welcome to God's Grace"}</h2>
+   860→                          <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? 'Tableau de bord Boutique — L\'Élégance Rencontre la Foi' : 'Boutique Admin Dashboard — Where Elegance Meets Faith'}</p>
+   861→                        </div>
+   862→                        <Sparkles className="size-10 text-primary-foreground/30 shrink-0" />
+   863→                      </div>
+   864→                    </CardContent>
+   865→                  </Card>
+   866→
+   867→                  {/* Stats Cards */}
+   868→                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+   869→                    <Card className="overflow-hidden">
+   870→                      <CardContent className="p-4 lg:p-5">
+   871→                        <div className="flex items-start justify-between">
+   872→                          <div>
+   873→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Produits' : 'Products'}</p>
+   874→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
+   875→                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} {lang === 'fr' ? 'en stock' : 'in stock'}</p>
+   876→                          </div>
+   877→                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+   878→                            <Package className="size-5 text-primary" />
+   879→                          </div>
+   880→                        </div>
+   881→                      </CardContent>
+   882→                    </Card>
+   883→                    <Card className="overflow-hidden">
+   884→                      <CardContent className="p-4 lg:p-5">
+   885→                        <div className="flex items-start justify-between">
+   886→                          <div>
+   887→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Catégories' : 'Categories'}</p>
+   888→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
+   889→                            <p className="text-[11px] text-muted-foreground mt-1">{lang === 'fr' ? 'Groupes actifs' : 'Active groups'}</p>
+   890→                          </div>
+   891→                          <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
+   892→                            <FolderOpen className="size-5 text-chart-3" />
+   893→                          </div>
+   894→                        </div>
+   895→                      </CardContent>
+   896→                    </Card>
+   897→                    <Card className="overflow-hidden">
+   898→                      <CardContent className="p-4 lg:p-5">
+   899→                        <div className="flex items-start justify-between">
+   900→                          <div>
+   901→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Commandes' : 'Orders'}</p>
+   902→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
+   903→                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} {lang === 'fr' ? 'en attente' : 'pending'}</p>
+   904→                          </div>
+   905→                          <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
+   906→                            <ShoppingCart className="size-5 text-chart-2" />
+   907→                          </div>
+   908→                        </div>
+   909→                      </CardContent>
+   910→                    </Card>
+   911→                    <Card className="overflow-hidden">
+   912→                      <CardContent className="p-4 lg:p-5">
+   913→                        <div className="flex items-start justify-between">
+   914→                          <div>
+   915→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Revenus' : 'Revenue'}</p>
+   916→                            <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
+   917→                            <p className="text-[11px] text-muted-foreground mt-1">FCFA {lang === 'fr' ? 'total' : 'total'}</p>
+   918→                          </div>
+   919→                          <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+   920→                            <TrendingUp className="size-5 text-gold" />
+   921→                          </div>
+   922→                        </div>
+   923→                      </CardContent>
+   924→                    </Card>
+   925→                  </div>
+   926→
+   927→                  {/* Quick Stats Row */}
+   928→                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   929→                    {/* Recent Orders */}
+   930→                    <Card>
+   931→                      <CardHeader className="pb-3">
+   932→                        <div className="flex items-center justify-between">
+   933→                          <CardTitle className="text-base font-elegant flex items-center gap-2">
+   934→                            <ShoppingCart className="size-4 text-primary" /> {lang === 'fr' ? 'Commandes récentes' : 'Recent Orders'}
+   935→                          </CardTitle>
+   936→                          {orders.length > 5 && (
+   937→                            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
+   938→                              {lang === 'fr' ? 'Voir tout' : 'View all'} <ChevronRight className="size-3" />
+   939→                            </Button>
+   940→                          )}
+   941→                        </div>
+   942→                      </CardHeader>
+   943→                      <CardContent>
+   944→                        {orders.length === 0 ? (
+   945→                          <div className="py-6 text-center">
+   946→                            <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+   947→                            <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Aucune commande' : 'No orders yet'}</p>
+   948→                          </div>
+   949→                        ) : (
+   950→                          <div className="space-y-2">
+   951→                            {orders.slice(0, 5).map(order => (
+   952→                              <div key={order.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
+   953→                                <div className="flex items-center gap-3 min-w-0">
+   954→                                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+   955→                                    <span className="text-xs font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+   956→                                  </div>
+   957→                                  <div className="min-w-0">
+   958→                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+   959→                                    <p className="text-[10px] text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
+   960→                                  </div>
+   961→                                </div>
+   962→                                <div className="flex items-center gap-2 shrink-0">
+   963→                                  <span className="font-semibold text-sm">{order.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">FCFA</span></span>
+   964→                                  <Badge
+   965→                                    variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'}
+   966→                                    className="text-[10px] px-1.5 py-0"
+   967→                                  >
+   968→                                    {translateStatus(order.status)}
+   969→                                  </Badge>
+   970→                                </div>
+   971→                              </div>
+   972→                            ))}
+   973→                          </div>
+   974→                        )}
+   975→                      </CardContent>
+   976→                    </Card>
+   977→
+   978→                    {/* Quick Info */}
+   979→                    <Card>
+   980→                      <CardHeader className="pb-3">
+   981→                        <CardTitle className="text-base font-elegant flex items-center gap-2">
+   982→                          <BarChart3 className="size-4 text-primary" /> {lang === 'fr' ? 'Aperçu de la boutique' : 'Store Overview'}
+   983→                        </CardTitle>
+   984→                      </CardHeader>
+   985→                      <CardContent>
+   986→                        <div className="space-y-3">
+   987→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+   988→                            <div className="flex items-center gap-3">
+   989→                              <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
+   990→                                <Sparkles className="size-4 text-chart-3" />
+   991→                              </div>
+   992→                              <span className="text-sm">{lang === 'fr' ? 'Produits en vedette' : 'Featured Products'}</span>
+   993→                            </div>
+   994→                            <Badge>{featuredProducts}</Badge>
+   995→                          </div>
+   996→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+   997→                            <div className="flex items-center gap-3">
+   998→                              <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
+   999→                                <CheckCircle2 className="size-4 text-chart-2" />
+  1000→                              </div>
+
+[showing lines 501-1000 of 1883; use offset=1001 with limit to continue reading]
