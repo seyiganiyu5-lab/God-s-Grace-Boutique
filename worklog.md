@@ -179,3 +179,32 @@ Stage Summary:
 - Full login page with secure authentication (bcrypt + JWT + httpOnly cookies)
 - Admin dashboard now fully bilingual (EN/FR)
 - Logout button in sidebar, language toggle in top bar
+
+---
+Task ID: 3
+Agent: main
+Task: Fix ALL untranslated English text in the admin dashboard to support French
+
+Work Log:
+- Added `translateStatus` helper function to translate order statuses (pending→En attente, processing→En cours, delivered→Livré, cancelled→Annulé)
+- Fixed all 6 image upload toast messages (invalid file type, file too large, upload success, upload failed, default error, connection error)
+- Fixed all 4 data fetching toast messages (products, categories, orders, testimonies)
+- Fixed all product CRUD toast messages (fill required fields, update/create success/failure, stock toggle, featured toggle, delete)
+- Fixed all category CRUD toast messages (name/slug required, create success/failure, delete with products)
+- Fixed all order operations toast messages (delete, status update with translateStatus)
+- Fixed all testimony operations toast messages (approve/unapprove, delete)
+- Fixed loading state text: "Loading dashboard..." → bilingual
+- Fixed 3 order status displays using translateStatus (dashboard recent orders, mobile order card, order detail dialog)
+- Fixed 2 category name displays to use cat.nameFr when lang='fr' (dashboard category breakdown, categories section image overlay)
+- Fixed 2 product category name displays to use French name when lang='fr' (desktop table, mobile card)
+- Fixed order items "Item X" → bilingual "Article X" / "Item X"
+- All `An error occurred` catch blocks now use `lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred'`
+- Lint passes with no errors
+- Dev server running cleanly
+
+Stage Summary:
+- All toast messages in admin dashboard now support French
+- Order statuses display in French when language is set to FR
+- Category and product category names show French versions in FR mode
+- Loading states and order item labels are bilingual
+- translateStatus helper provides consistent status translation across all UI locations

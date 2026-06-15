@@ -1,0 +1,427 @@
+     1→  1449→  1449→              {/* ════════════════════ Testimonies Section ════════════════════ */}
+     2→  1450→  1450→              {activeSection === 'testimonies' && (
+     3→  1451→  1451→                <div className="space-y-4">
+     4→  1452→  1452→                  <div className="flex items-center justify-between">
+     5→  1453→  1453→                    <p className="text-sm text-muted-foreground">
+     6→  1454→  1454→                      {testimonies.length} {lang === 'fr' ? 'témoignages' : 'testimonies'} ({approvedTestimonies} {lang === 'fr' ? 'approuvés' : 'approved'})
+     7→  1455→  1455→                    </p>
+     8→  1456→  1456→                  </div>
+     9→  1457→  1457→
+    10→  1458→  1458→                  {testimonies.length === 0 ? (
+    11→  1459→  1459→                    <Card>
+    12→  1460→  1460→                      <CardContent className="py-16 text-center">
+    13→  1461→  1461→                        <div className="size-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
+    14→  1462→  1462→                          <MessageSquareHeart className="size-8 text-gold/50" />
+    15→  1463→  1463→                        </div>
+    16→  1464→  1464→                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun témoignage' : 'No testimonies yet'}</p>
+    17→  1465→  1465→                      </CardContent>
+    18→  1466→  1466→                    </Card>
+    19→  1467→  1467→                  ) : (
+    20→  1468→  1468→                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    21→  1469→  1469→                      {testimonies.map(testimony => (
+    22→  1470→  1470→                        <Card key={testimony.id} className={`group overflow-hidden transition-all duration-300 ${testimony.approved ? 'ring-1 ring-green-500/20' : 'ring-1 ring-yellow-500/20'}`}>
+    23→  1471→  1471→                          <CardContent className="p-5">
+    24→  1472→  1472→                            <div className="flex items-start gap-4">
+    25→  1473→  1473→                              {/* Avatar */}
+    26→  1474→  1474→                              <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${
+    27→  1475→  1475→                                testimony.approved ? 'bg-green-500/10' : 'bg-yellow-500/10'
+    28→  1476→  1476→                              }`}>
+    29→  1477→  1477→                                <span className={`text-sm font-bold ${testimony.approved ? 'text-green-600' : 'text-yellow-600'}`}>
+    30→  1478→  1478→                                  {testimony.name.charAt(0).toUpperCase()}
+    31→  1479→  1479→                                </span>
+    32→  1480→  1480→                              </div>
+    33→  1481→  1481→
+    34→  1482→  1482→                              <div className="flex-1 min-w-0">
+    35→  1483→  1483→                                {/* Name & Rating */}
+    36→  1484→  1484→                                <div className="flex items-center gap-2 mb-1">
+    37→  1485→  1485→                                  <h3 className="font-semibold text-sm">{testimony.name}</h3>
+    38→  1486→  1486→                                  <div className="flex items-center gap-0.5">
+    39→  1487→  1487→                                    {Array.from({ length: 5 }).map((_, i) => (
+    40→  1488→  1488→                                      <Star
+    41→  1489→  1489→                                        key={i}
+    42→  1490→  1490→                                        className={`size-3 ${i < testimony.rating ? 'text-gold fill-gold' : 'text-muted-foreground/20'}`}
+    43→  1491→  1491→                                      />
+    44→  1492→  1492→                                    ))}
+    45→  1493→  1493→                                  </div>
+    46→  1494→  1494→                                </div>
+    47→  1495→  1495→
+    48→  1496→  1496→                                {/* Message */}
+    49→  1497→  1497→                                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{testimony.message}</p>
+    50→  1498→  1498→
+    51→  1499→  1499→                                {/* Footer */}
+    52→  1500→  1500→                                <div className="flex items-center justify-between">
+    53→  1501→  1501→                                  <div className="flex items-center gap-2">
+    54→  1502→  1502→                                    <Badge
+    55→  1503→  1503→                                      variant={testimony.approved ? 'default' : 'outline'}
+    56→  1504→  1504→                                      className={`text-[10px] gap-1 ${testimony.approved ? 'bg-green-600 hover:bg-green-700' : 'border-yellow-500/50 text-yellow-600'}`}
+    57→  1505→  1505→                                    >
+    58→  1506→  1506→                                      {testimony.approved ? (
+    59→  1507→  1507→                                        <><CheckCircle2 className="size-2.5" /> {lang === 'fr' ? 'Approuvé' : 'Approved'}</>
+    60→  1508→  1508→                                      ) : (
+    61→  1509→  1509→                                        <><Clock className="size-2.5" /> {lang === 'fr' ? 'En attente' : 'Pending'}</>
+    62→  1510→  1510→                                      )}
+    63→  1511→  1511→                                    </Badge>
+    64→  1512→  1512→                                    <span className="text-[10px] text-muted-foreground">
+    65→  1513→  1513→                                      {new Date(testimony.createdAt).toLocaleDateString()}
+    66→  1514→  1514→                                    </span>
+    67→  1515→  1515→                                  </div>
+    68→  1516→  1516→
+    69→  1517→  1517→                                  <div className="flex items-center gap-1">
+    70→  1518→  1518→                                    <Button
+    71→  1519→  1519→                                      variant={testimony.approved ? 'outline' : 'default'}
+    72→  1520→  1520→                                      size="sm"
+    73→  1521→  1521→                                      className={`text-[11px] gap-1 h-7 ${!testimony.approved ? 'bg-green-600 hover:bg-green-700' : ''}`}
+    74→  1522→  1522→                                      onClick={() => toggleTestimonyApproval(testimony)}
+    75→  1523→  1523→                                    >
+    76→  1524→  1524→                                      {testimony.approved ? <><StarOff className="size-3" /> {lang === 'fr' ? 'Désapprouver' : 'Unapprove'}</> : <><CheckCircle2 className="size-3" /> {lang === 'fr' ? 'Approuver' : 'Approve'}</>}
+    77→  1525→  1525→                                    </Button>
+    78→  1526→  1526→                                    <Button
+    79→  1527→  1527→                                      variant="ghost"
+    80→  1528→  1528→                                      size="sm"
+    81→  1529→  1529→                                      className="text-[11px] gap-1 h-7 text-destructive hover:text-destructive"
+    82→  1530→  1530→                                      onClick={() => confirmDelete('testimony', testimony.id, testimony.name)}
+    83→  1531→  1531→                                    >
+    84→  1532→  1532→                                      <Trash2 className="size-3" />
+    85→  1533→  1533→                                    </Button>
+    86→  1534→  1534→                                  </div>
+    87→  1535→  1535→                                </div>
+    88→  1536→  1536→                              </div>
+    89→  1537→  1537→                            </div>
+    90→  1538→  1538→                          </CardContent>
+    91→  1539→  1539→                        </Card>
+    92→  1540→  1540→                      ))}
+    93→  1541→  1541→                    </div>
+    94→  1542→  1542→                  )}
+    95→  1543→  1543→                </div>
+    96→  1544→  1544→              )}
+    97→  1545→  1545→            </>
+    98→  1546→  1546→          )}
+    99→  1547→  1547→        </div>
+   100→  1548→  1548→      </main>
+   101→  1549→  1549→
+   102→  1550→  1550→      {/* ════════════════════ Product Dialog ════════════════════ */}
+   103→  1551→  1551→      <Dialog open={productDialogOpen} onOpenChange={(open) => { setProductDialogOpen(open); if (!open) resetProductForm() }}>
+   104→  1552→  1552→        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+   105→  1553→  1553→          <DialogHeader>
+   106→  1554→  1554→            <DialogTitle className="font-elegant text-lg">{editingProduct ? (lang === 'fr' ? 'Modifier le produit' : 'Edit Product') : (lang === 'fr' ? 'Ajouter un nouveau produit' : 'Add New Product')}</DialogTitle>
+   107→  1555→  1555→            <DialogDescription>
+   108→  1556→  1556→              {editingProduct ? (lang === 'fr' ? 'Mettre à jour les informations du produit' : 'Update product information') : (lang === 'fr' ? 'Remplissez les détails pour créer un nouveau produit' : 'Fill in the details to create a new product')}
+   109→  1557→  1557→            </DialogDescription>
+   110→  1558→  1558→          </DialogHeader>
+   111→  1559→  1559→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+   112→  1560→  1560→            <div className="space-y-2">
+   113→  1561→  1561→              <Label htmlFor="prod-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+   114→  1562→  1562→              <Input id="prod-name" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom du produit' : 'Product name'} />
+   115→  1563→  1563→            </div>
+   116→  1564→  1564→            <div className="space-y-2">
+   117→  1565→  1565→              <Label htmlFor="prod-nameFr">{lang === 'fr' ? 'Nom (Français) *' : 'Name (French) *'}</Label>
+   118→  1566→  1566→              <Input id="prod-nameFr" value={productForm.nameFr} onChange={e => setProductForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom du produit" />
+   119→  1567→  1567→            </div>
+   120→  1568→  1568→            <div className="space-y-2 sm:col-span-2">
+   121→  1569→  1569→              <Label htmlFor="prod-desc">{lang === 'fr' ? 'Description (Anglais) *' : 'Description (English) *'}</Label>
+   122→  1570→  1570→              <Textarea id="prod-desc" value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder={lang === 'fr' ? 'Description du produit' : 'Product description'} rows={3} />
+   123→  1571→  1571→            </div>
+   124→  1572→  1572→            <div className="space-y-2 sm:col-span-2">
+   125→  1573→  1573→              <Label htmlFor="prod-descFr">{lang === 'fr' ? 'Description (Français) *' : 'Description (French) *'}</Label>
+   126→  1574→  1574→              <Textarea id="prod-descFr" value={productForm.descriptionFr} onChange={e => setProductForm(f => ({ ...f, descriptionFr: e.target.value }))} placeholder="Description du produit" rows={3} />
+   127→  1575→  1575→            </div>
+   128→  1576→  1576→            <div className="space-y-2">
+   129→  1577→  1577→              <Label htmlFor="prod-price">{lang === 'fr' ? 'Prix (FCFA) *' : 'Price (FCFA) *'}</Label>
+   130→  1578→  1578→              <Input id="prod-price" type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="0" min="0" />
+   131→  1579→  1579→            </div>
+   132→  1580→  1580→            <div className="space-y-2">
+   133→  1581→  1581→              <Label>{lang === 'fr' ? 'Image du produit *' : 'Product Image *'}</Label>
+   134→  1582→  1582→              <div className="space-y-3">
+   135→  1583→  1583→                <label
+   136→  1584→  1584→                  htmlFor="prod-file-input"
+   137→  1585→  1585→                  onDragOver={e => handleDragOver(e, 'product')}
+   138→  1586→  1586→                  onDragLeave={e => handleDragLeave(e, 'product')}
+   139→  1587→  1587→                  onDrop={e => handleDrop(e, 'product')}
+   140→  1588→  1588→                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+   141→  1589→  1589→                    productDragOver
+   142→  1590→  1590→                      ? 'border-primary bg-primary/10'
+   143→  1591→  1591→                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+   144→  1592→  1592→                  } ${productUploading ? 'opacity-50 pointer-events-none' : ''}`}
+   145→  1593→  1593→                >
+   146→  1594→  1594→                  <input
+   147→  1595→  1595→                    id="prod-file-input"
+   148→  1596→  1596→                    type="file"
+   149→  1597→  1597→                    accept="image/*"
+   150→  1598→  1598→                    className="sr-only"
+   151→  1599→  1599→                    onChange={e => {
+   152→  1600→  1600→                      const file = e.target.files?.[0]
+   153→  1601→  1601→                      if (file) handleImageUpload(file, 'product')
+   154→  1602→  1602→                      e.target.value = ''
+   155→  1603→  1603→                    }}
+   156→  1604→  1604→                  />
+   157→  1605→  1605→                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+   158→  1606→  1606→                    {productUploading ? (
+   159→  1607→  1607→                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
+   160→  1608→  1608→                    ) : productDragOver ? (
+   161→  1609→  1609→                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
+   162→  1610→  1610→                    ) : (
+   163→  1611→  1611→                      <>
+   164→  1612→  1612→                        <Upload className="h-5 w-5 text-muted-foreground" />
+   165→  1613→  1613→                        <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Cliquez ou glissez une image' : 'Click or drag & drop an image'}</span>
+   166→  1614→  1614→                        <span className="text-[10px] text-primary font-medium mt-0.5">{lang === 'fr' ? 'Parcourir les fichiers' : 'Browse Files'}</span>
+   167→  1615→  1615→                      </>
+   168→  1616→  1616→                    )}
+   169→  1617→  1617→                  </div>
+   170→  1618→  1618→                </label>
+   171→  1619→  1619→                <div className="relative">
+   172→  1620→  1620→                  <Input
+   173→  1621→  1621→                    value={productForm.image}
+   174→  1622→  1622→                    onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))}
+   175→  1623→  1623→                    placeholder={lang === 'fr' ? 'Ou collez l\'URL de l\'image...' : 'Or paste image URL...'}
+   176→  1624→  1624→                    className="pr-8"
+   177→  1625→  1625→                  />
+   178→  1626→  1626→                  {productForm.image && (
+   179→  1627→  1627→                    <button
+   180→  1628→  1628→                      type="button"
+   181→  1629→  1629→                      onClick={() => setProductForm(f => ({ ...f, image: '' }))}
+   182→  1630→  1630→                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+   183→  1631→  1631→                    >
+   184→  1632→  1632→                      <XIcon className="h-3.5 w-3.5" />
+   185→  1633→  1633→                    </button>
+   186→  1634→  1634→                  )}
+   187→  1635→  1635→                </div>
+   188→  1636→  1636→              </div>
+   189→  1637→  1637→            </div>
+   190→  1638→  1638→            <div className="space-y-2">
+   191→  1639→  1639→              <Label htmlFor="prod-category">{lang === 'fr' ? 'Catégorie *' : 'Category *'}</Label>
+   192→  1640→  1640→              <Select value={productForm.categoryId} onValueChange={val => setProductForm(f => ({ ...f, categoryId: val }))}>
+   193→  1641→  1641→                <SelectTrigger className="w-full">
+   194→  1642→  1642→                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner une catégorie' : 'Select category'} />
+   195→  1643→  1643→                </SelectTrigger>
+   196→  1644→  1644→                <SelectContent>
+   197→  1645→  1645→                  {categories.map(cat => (
+   198→  1646→  1646→                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+   199→  1647→  1647→                  ))}
+   200→  1648→  1648→                </SelectContent>
+   201→  1649→  1649→              </Select>
+   202→  1650→  1650→            </div>
+   203→  1651→  1651→            <div className="space-y-2">
+   204→  1652→  1652→              <div className="flex items-center justify-between">
+   205→  1653→  1653→                <Label>{lang === 'fr' ? 'En stock' : 'In Stock'}</Label>
+   206→  1654→  1654→                <Switch checked={productForm.inStock} onCheckedChange={val => setProductForm(f => ({ ...f, inStock: val }))} />
+   207→  1655→  1655→              </div>
+   208→  1656→  1656→              <div className="flex items-center justify-between mt-3">
+   209→  1657→  1657→                <Label>{lang === 'fr' ? 'En vedette' : 'Featured'}</Label>
+   210→  1658→  1658→                <Switch checked={productForm.featured} onCheckedChange={val => setProductForm(f => ({ ...f, featured: val }))} />
+   211→  1659→  1659→              </div>
+   212→  1660→  1660→            </div>
+   213→  1661→  1661→          </div>
+   214→  1662→  1662→          {productForm.image && (
+   215→  1663→  1663→            <div className="border rounded-xl p-4 bg-muted/30">
+   216→  1664→  1664→              <div className="flex items-center justify-between mb-2">
+   217→  1665→  1665→                <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Aperçu de l\'image' : 'Image Preview'}</p>
+   218→  1666→  1666→                <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive" onClick={() => setProductForm(f => ({ ...f, image: '' }))}>
+   219→  1667→  1667→                  <XIcon className="h-3 w-3 mr-1" /> {lang === 'fr' ? 'Supprimer' : 'Remove'}
+   220→  1668→  1668→                </Button>
+   221→  1669→  1669→              </div>
+   222→  1670→  1670→              <img src={productForm.image} alt="Preview" className="h-32 w-auto rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+   223→  1671→  1671→            </div>
+   224→  1672→  1672→          )}
+   225→  1673→  1673→          <DialogFooter>
+   226→  1674→  1674→            <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+   227→  1675→  1675→            <Button onClick={handleProductSubmit} className="shadow-md shadow-primary/20">{editingProduct ? (lang === 'fr' ? 'Mettre à jour' : 'Update Product') : (lang === 'fr' ? 'Créer le produit' : 'Create Product')}</Button>
+   228→  1676→  1676→          </DialogFooter>
+   229→  1677→  1677→        </DialogContent>
+   230→  1678→  1678→      </Dialog>
+   231→  1679→  1679→
+   232→  1680→  1680→      {/* ════════════════════ Category Dialog ════════════════════ */}
+   233→  1681→  1681→      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+   234→  1682→  1682→        <DialogContent className="sm:max-w-md">
+   235→  1683→  1683→          <DialogHeader>
+   236→  1684→  1684→            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Ajouter une nouvelle catégorie' : 'Add New Category'}</DialogTitle>
+   237→  1685→  1685→            <DialogDescription>{lang === 'fr' ? 'Créer une nouvelle catégorie de produits' : 'Create a new product category'}</DialogDescription>
+   238→  1686→  1686→          </DialogHeader>
+   239→  1687→  1687→          <div className="space-y-4 py-4">
+   240→  1688→  1688→            <div className="space-y-2">
+   241→  1689→  1689→              <Label htmlFor="cat-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+   242→  1690→  1690→              <Input id="cat-name" value={categoryForm.name} onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom de la catégorie' : 'Category name'} />
+   243→  1691→  1691→            </div>
+   244→  1692→  1692→            <div className="space-y-2">
+   245→  1693→  1693→              <Label htmlFor="cat-nameFr">{lang === 'fr' ? 'Nom (Français) *' : 'Name (French) *'}</Label>
+   246→  1694→  1694→              <Input id="cat-nameFr" value={categoryForm.nameFr} onChange={e => setCategoryForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom de la catégorie" />
+   247→  1695→  1695→            </div>
+   248→  1696→  1696→            <div className="space-y-2">
+   249→  1697→  1697→              <Label htmlFor="cat-slug">{lang === 'fr' ? 'Slug *' : 'Slug *'}</Label>
+   250→  1698→  1698→              <Input id="cat-slug" value={categoryForm.slug} onChange={e => setCategoryForm(f => ({ ...f, slug: e.target.value }))} placeholder="category-slug" />
+   251→  1699→  1699→            </div>
+   252→  1700→  1700→            <div className="space-y-2">
+   253→  1701→  1701→              <Label>{lang === 'fr' ? 'Image de la catégorie' : 'Category Image'}</Label>
+   254→  1702→  1702→              <div className="space-y-3">
+   255→  1703→  1703→                <label
+   256→  1704→  1704→                  htmlFor="cat-file-input"
+   257→  1705→  1705→                  onDragOver={e => handleDragOver(e, 'category')}
+   258→  1706→  1706→                  onDragLeave={e => handleDragLeave(e, 'category')}
+   259→  1707→  1707→                  onDrop={e => handleDrop(e, 'category')}
+   260→  1708→  1708→                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+   261→  1709→  1709→                    categoryDragOver
+   262→  1710→  1710→                      ? 'border-primary bg-primary/10'
+   263→  1711→  1711→                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+   264→  1712→  1712→                  } ${categoryUploading ? 'opacity-50 pointer-events-none' : ''}`}
+   265→  1713→  1713→                >
+   266→  1714→  1714→                  <input
+   267→  1715→  1715→                    id="cat-file-input"
+   268→  1716→  1716→                    type="file"
+   269→  1717→  1717→                    accept="image/*"
+   270→  1718→  1718→                    className="sr-only"
+   271→  1719→  1719→                    onChange={e => {
+   272→  1720→  1720→                      const file = e.target.files?.[0]
+   273→  1721→  1721→                      if (file) handleImageUpload(file, 'category')
+   274→  1722→  1722→                      e.target.value = ''
+   275→  1723→  1723→                    }}
+   276→  1724→  1724→                  />
+   277→  1725→  1725→                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+   278→  1726→  1726→                    {categoryUploading ? (
+   279→  1727→  1727→                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
+   280→  1728→  1728→                    ) : categoryDragOver ? (
+   281→  1729→  1729→                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
+   282→  1730→  1730→                    ) : (
+   283→  1731→  1731→                      <>
+   284→  1732→  1732→                        <Upload className="h-5 w-5 text-muted-foreground" />
+   285→  1733→  1733→                        <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Cliquez ou glissez une image' : 'Click or drag & drop an image'}</span>
+   286→  1734→  1734→                        <span className="text-[10px] text-primary font-medium mt-0.5">{lang === 'fr' ? 'Parcourir les fichiers' : 'Browse Files'}</span>
+   287→  1735→  1735→                      </>
+   288→  1736→  1736→                    )}
+   289→  1737→  1737→                  </div>
+   290→  1738→  1738→                </label>
+   291→  1739→  1739→                <div className="relative">
+   292→  1740→  1740→                  <Input
+   293→  1741→  1741→                    value={categoryForm.image}
+   294→  1742→  1742→                    onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))}
+   295→  1743→  1743→                    placeholder={lang === 'fr' ? 'Ou collez l\'URL de l\'image...' : 'Or paste image URL...'}
+   296→  1744→  1744→                    className="pr-8"
+   297→  1745→  1745→                  />
+   298→  1746→  1746→                  {categoryForm.image && (
+   299→  1747→  1747→                    <button
+   300→  1748→  1748→                      type="button"
+   301→  1749→  1749→                      onClick={() => setCategoryForm(f => ({ ...f, image: '' }))}
+   302→  1750→  1750→                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+   303→  1751→  1751→                    >
+   304→  1752→  1752→                      <XIcon className="h-3.5 w-3.5" />
+   305→  1753→  1753→                    </button>
+   306→  1754→  1754→                  )}
+   307→  1755→  1755→                </div>
+   308→  1756→  1756→              </div>
+   309→  1757→  1757→              {categoryForm.image && (
+   310→  1758→  1758→                <div className="mt-2 rounded-lg overflow-hidden border bg-muted/30 p-2">
+   311→  1759→  1759→                  <img src={categoryForm.image} alt="Preview" className="h-24 w-auto rounded-lg object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+   312→  1760→  1760→                </div>
+   313→  1761→  1761→              )}
+   314→  1762→  1762→            </div>
+   315→  1763→  1763→          </div>
+   316→  1764→  1764→          <DialogFooter>
+   317→  1765→  1765→            <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+   318→  1766→  1766→            <Button onClick={handleCategorySubmit} className="shadow-md shadow-primary/20">{lang === 'fr' ? 'Créer la catégorie' : 'Create Category'}</Button>
+   319→  1767→  1767→          </DialogFooter>
+   320→  1768→  1768→        </DialogContent>
+   321→  1769→  1769→      </Dialog>
+   322→  1770→  1770→
+   323→  1771→  1771→      {/* ════════════════════ Order Detail Dialog ════════════════════ */}
+   324→  1772→  1772→      <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+   325→  1773→  1773→        <DialogContent className="sm:max-w-lg">
+   326→  1774→  1774→          <DialogHeader>
+   327→  1775→  1775→            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Détails de la commande' : 'Order Details'}</DialogTitle>
+   328→  1776→  1776→            <DialogDescription>{lang === 'fr' ? 'Informations sur la commande' : 'Viewing order information'}</DialogDescription>
+   329→  1777→  1777→          </DialogHeader>
+   330→  1778→  1778→          {selectedOrder && (
+   331→  1779→  1779→            <div className="space-y-4 py-4">
+   332→  1780→  1780→              {/* Customer Info Header */}
+   333→  1781→  1781→              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+   334→  1782→  1782→                <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center">
+   335→  1783→  1783→                  <span className="text-sm font-bold text-primary">{selectedOrder.customerName.charAt(0).toUpperCase()}</span>
+   336→  1784→  1784→                </div>
+   337→  1785→  1785→                <div>
+   338→  1786→  1786→                  <p className="font-semibold">{selectedOrder.customerName}</p>
+   339→  1787→  1787→                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+   340→  1788→  1788→                    <Phone className="size-3" /> {selectedOrder.customerPhone || 'N/A'}
+   341→  1789→  1789→                  </p>
+   342→  1790→  1790→                </div>
+   343→  1791→  1791→              </div>
+   344→  1792→  1792→
+   345→  1793→  1793→              {/* Order Details Grid */}
+   346→  1794→  1794→              <div className="grid grid-cols-2 gap-3">
+   347→  1795→  1795→                <div className="p-3 rounded-xl bg-muted/30">
+   348→  1796→  1796→                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Paiement' : 'Payment'}</p>
+   349→  1797→  1797→                  <Badge variant="outline" className="capitalize mt-1">{selectedOrder.paymentMethod}</Badge>
+   350→  1798→  1798→                </div>
+   351→  1799→  1799→                <div className="p-3 rounded-xl bg-muted/30">
+   352→  1800→  1800→                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Statut' : 'Status'}</p>
+   353→  1801→  1801→                  <Badge
+   354→  1802→  1802→                    variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'}
+   355→  1803→  1803→                    className="capitalize mt-1"
+   356→  1804→  1804→                  >
+   357→  1805→  1805→                    {selectedOrder.status}
+   358→  1806→  1806→                  </Badge>
+   359→  1807→  1807→                </div>
+   360→  1808→  1808→              </div>
+   361→  1809→  1809→
+   362→  1810→  1810→              {/* Order Items */}
+   363→  1811→  1811→              <div>
+   364→  1812→  1812→                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">{lang === 'fr' ? 'Articles commandés' : 'Order Items'}</p>
+   365→  1813→  1813→                <div className="bg-muted/40 rounded-xl p-3 max-h-48 overflow-y-auto">
+   366→  1814→  1814→                  {(() => {
+   367→  1815→  1815→                    try {
+   368→  1816→  1816→                      const items = JSON.parse(selectedOrder.items)
+   369→  1817→  1817→                      if (Array.isArray(items)) {
+   370→  1818→  1818→                        return (
+   371→  1819→  1819→                          <div className="space-y-2">
+   372→  1820→  1820→                            {items.map((item: { name?: string; price?: number; quantity?: number }, i: number) => (
+   373→  1821→  1821→                              <div key={i} className="flex justify-between text-sm">
+   374→  1822→  1822→                                <span>{item.name || `Item ${i + 1}`} {item.quantity ? `x${item.quantity}` : ''}</span>
+   375→  1823→  1823→                                <span className="font-medium">{item.price ? `${item.price.toLocaleString()} FCFA` : ''}</span>
+   376→  1824→  1824→                              </div>
+   377→  1825→  1825→                            ))}
+   378→  1826→  1826→                          </div>
+   379→  1827→  1827→                        )
+   380→  1828→  1828→                      }
+   381→  1829→  1829→                      return <p className="text-sm">{selectedOrder.items}</p>
+   382→  1830→  1830→                    } catch {
+   383→  1831→  1831→                      return <p className="text-sm">{selectedOrder.items}</p>
+   384→  1832→  1832→                    }
+   385→  1833→  1833→                  })()}
+   386→  1834→  1834→                </div>
+   387→  1835→  1835→              </div>
+   388→  1836→  1836→
+   389→  1837→  1837→              {/* Total */}
+   390→  1838→  1838→              <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
+   391→  1839→  1839→                <span className="font-semibold">{lang === 'fr' ? 'Total' : 'Total'}</span>
+   392→  1840→  1840→                <span className="font-bold text-lg text-primary">{selectedOrder.total.toLocaleString()} FCFA</span>
+   393→  1841→  1841→              </div>
+   394→  1842→  1842→
+   395→  1843→  1843→              {/* Date */}
+   396→  1844→  1844→              <p className="text-[11px] text-muted-foreground">
+   397→  1845→  1845→                {lang === 'fr' ? `Commandé le ${new Date(selectedOrder.createdAt).toLocaleString()}` : `Ordered on ${new Date(selectedOrder.createdAt).toLocaleString()}`}
+   398→  1846→  1846→              </p>
+   399→  1847→  1847→            </div>
+   400→  1848→  1848→          )}
+   401→  1849→  1849→          <DialogFooter>
+   402→  1850→  1850→            <Button variant="outline" onClick={() => setOrderDetailOpen(false)}>{lang === 'fr' ? 'Fermer' : 'Close'}</Button>
+   403→  1851→  1851→          </DialogFooter>
+   404→  1852→  1852→        </DialogContent>
+   405→  1853→  1853→      </Dialog>
+   406→  1854→  1854→
+   407→  1855→  1855→      {/* ════════════════════ Delete Confirmation Dialog ════════════════════ */}
+   408→  1856→  1856→      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+   409→  1857→  1857→        <DialogContent className="sm:max-w-md">
+   410→  1858→  1858→          <DialogHeader>
+   411→  1859→  1859→            <DialogTitle className="text-destructive">{lang === 'fr' ? 'Confirmer la suppression' : 'Confirm Deletion'}</DialogTitle>
+   412→  1860→  1860→            <DialogDescription>
+   413→  1861→  1861→              {lang === 'fr' ? `Voulez-vous vraiment supprimer "${deleteTarget?.name}" ?` : `Are you sure you want to delete "${deleteTarget?.name}"?`}
+   414→  1862→  1862→              {deleteTarget?.type === 'category' && (lang === 'fr' ? ' Cela supprimera également tous les produits de cette catégorie.' : ' This will also delete all products in this category.')}
+   415→  1863→  1863→              {lang === 'fr' ? ' Cette action est irréversible.' : ' This action cannot be undone.'}
+   416→  1864→  1864→            </DialogDescription>
+   417→  1865→  1865→          </DialogHeader>
+   418→  1866→  1866→          <DialogFooter>
+   419→  1867→  1867→            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+   420→  1868→  1868→            <Button variant="destructive" onClick={executeDelete}>{lang === 'fr' ? 'Supprimer' : 'Delete'}</Button>
+   421→  1869→  1869→          </DialogFooter>
+   422→  1870→  1870→        </DialogContent>
+   423→  1871→  1871→      </Dialog>
+   424→  1872→  1872→    </div>
+   425→  1873→  1873→  )
+   426→  1874→  1874→}
+   427→  1875→  1875→
