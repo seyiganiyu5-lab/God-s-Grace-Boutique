@@ -1,0 +1,502 @@
+   901→
+   902→                  {/* Stats Cards */}
+   903→                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+   904→                    <Card className="overflow-hidden">
+   905→                      <CardContent className="p-4 lg:p-5">
+   906→                        <div className="flex items-start justify-between">
+   907→                          <div>
+   908→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
+   909→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
+   910→                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} in stock</p>
+   911→                          </div>
+   912→                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+   913→                            <Package className="size-5 text-primary" />
+   914→                          </div>
+   915→                        </div>
+   916→                      </CardContent>
+   917→                    </Card>
+   918→                    <Card className="overflow-hidden">
+   919→                      <CardContent className="p-4 lg:p-5">
+   920→                        <div className="flex items-start justify-between">
+   921→                          <div>
+   922→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Categories</p>
+   923→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
+   924→                            <p className="text-[11px] text-muted-foreground mt-1">Active groups</p>
+   925→                          </div>
+   926→                          <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
+   927→                            <FolderOpen className="size-5 text-chart-3" />
+   928→                          </div>
+   929→                        </div>
+   930→                      </CardContent>
+   931→                    </Card>
+   932→                    <Card className="overflow-hidden">
+   933→                      <CardContent className="p-4 lg:p-5">
+   934→                        <div className="flex items-start justify-between">
+   935→                          <div>
+   936→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Orders</p>
+   937→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
+   938→                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} pending</p>
+   939→                          </div>
+   940→                          <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
+   941→                            <ShoppingCart className="size-5 text-chart-2" />
+   942→                          </div>
+   943→                        </div>
+   944→                      </CardContent>
+   945→                    </Card>
+   946→                    <Card className="overflow-hidden">
+   947→                      <CardContent className="p-4 lg:p-5">
+   948→                        <div className="flex items-start justify-between">
+   949→                          <div>
+   950→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue</p>
+   951→                            <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
+   952→                            <p className="text-[11px] text-muted-foreground mt-1">FCFA total</p>
+   953→                          </div>
+   954→                          <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+   955→                            <TrendingUp className="size-5 text-gold" />
+   956→                          </div>
+   957→                        </div>
+   958→                      </CardContent>
+   959→                    </Card>
+   960→                  </div>
+   961→
+   962→                  {/* Quick Stats Row */}
+   963→                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   964→                    {/* Recent Orders */}
+   965→                    <Card>
+   966→                      <CardHeader className="pb-3">
+   967→                        <div className="flex items-center justify-between">
+   968→                          <CardTitle className="text-base font-elegant flex items-center gap-2">
+   969→                            <ShoppingCart className="size-4 text-primary" /> Recent Orders
+   970→                          </CardTitle>
+   971→                          {orders.length > 5 && (
+   972→                            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
+   973→                              View all <ChevronRight className="size-3" />
+   974→                            </Button>
+   975→                          )}
+   976→                        </div>
+   977→                      </CardHeader>
+   978→                      <CardContent>
+   979→                        {orders.length === 0 ? (
+   980→                          <div className="py-6 text-center">
+   981→                            <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+   982→                            <p className="text-sm text-muted-foreground">No orders yet</p>
+   983→                          </div>
+   984→                        ) : (
+   985→                          <div className="space-y-2">
+   986→                            {orders.slice(0, 5).map(order => (
+   987→                              <div key={order.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
+   988→                                <div className="flex items-center gap-3 min-w-0">
+   989→                                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+   990→                                    <span className="text-xs font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+   991→                                  </div>
+   992→                                  <div className="min-w-0">
+   993→                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+   994→                                    <p className="text-[10px] text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
+   995→                                  </div>
+   996→                                </div>
+   997→                                <div className="flex items-center gap-2 shrink-0">
+   998→                                  <span className="font-semibold text-sm">{order.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">FCFA</span></span>
+   999→                                  <Badge
+  1000→                                    variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'}
+  1001→                                    className="text-[10px] px-1.5 py-0"
+  1002→                                  >
+  1003→                                    {order.status}
+  1004→                                  </Badge>
+  1005→                                </div>
+  1006→                              </div>
+  1007→                            ))}
+  1008→                          </div>
+  1009→                        )}
+  1010→                      </CardContent>
+  1011→                    </Card>
+  1012→
+  1013→                    {/* Quick Info */}
+  1014→                    <Card>
+  1015→                      <CardHeader className="pb-3">
+  1016→                        <CardTitle className="text-base font-elegant flex items-center gap-2">
+  1017→                          <BarChart3 className="size-4 text-primary" /> Store Overview
+  1018→                        </CardTitle>
+  1019→                      </CardHeader>
+  1020→                      <CardContent>
+  1021→                        <div className="space-y-3">
+  1022→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1023→                            <div className="flex items-center gap-3">
+  1024→                              <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
+  1025→                                <Sparkles className="size-4 text-chart-3" />
+  1026→                              </div>
+  1027→                              <span className="text-sm">Featured Products</span>
+  1028→                            </div>
+  1029→                            <Badge>{featuredProducts}</Badge>
+  1030→                          </div>
+  1031→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1032→                            <div className="flex items-center gap-3">
+  1033→                              <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
+  1034→                                <CheckCircle2 className="size-4 text-chart-2" />
+  1035→                              </div>
+  1036→                              <span className="text-sm">Delivered Orders</span>
+  1037→                            </div>
+  1038→                            <Badge variant="secondary">{deliveredOrders}</Badge>
+  1039→                          </div>
+  1040→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1041→                            <div className="flex items-center gap-3">
+  1042→                              <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center">
+  1043→                                <Heart className="size-4 text-gold" />
+  1044→                              </div>
+  1045→                              <span className="text-sm">Approved Testimonies</span>
+  1046→                            </div>
+  1047→                            <Badge variant="outline">{approvedTestimonies}</Badge>
+  1048→                          </div>
+  1049→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1050→                            <div className="flex items-center gap-3">
+  1051→                              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+  1052→                                <Clock className="size-4 text-primary" />
+  1053→                              </div>
+  1054→                              <span className="text-sm">Pending Testimonies</span>
+  1055→                            </div>
+  1056→                            <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
+  1057→                          </div>
+  1058→                        </div>
+  1059→                      </CardContent>
+  1060→                    </Card>
+  1061→                  </div>
+  1062→
+  1063→                  {/* Category Breakdown */}
+  1064→                  <Card>
+  1065→                    <CardHeader className="pb-3">
+  1066→                      <CardTitle className="text-base font-elegant flex items-center gap-2">
+  1067→                        <FolderOpen className="size-4 text-primary" /> Products by Category
+  1068→                      </CardTitle>
+  1069→                    </CardHeader>
+  1070→                    <CardContent>
+  1071→                      {categories.length === 0 ? (
+  1072→                        <div className="py-6 text-center">
+  1073→                          <FolderOpen className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+  1074→                          <p className="text-sm text-muted-foreground">No categories yet</p>
+  1075→                        </div>
+  1076→                      ) : (
+  1077→                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+  1078→                          {categories.map(cat => (
+  1079→                            <div key={cat.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer" onClick={() => setActiveSection('products')}>
+  1080→                              {cat.image ? (
+  1081→                                <img src={cat.image} alt={cat.name} className="size-10 rounded-lg object-cover bg-muted shrink-0" />
+  1082→                              ) : (
+  1083→                                <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+  1084→                                  <FolderOpen className="size-4 text-primary" />
+  1085→                                </div>
+  1086→                              )}
+  1087→                              <div className="min-w-0">
+  1088→                                <p className="text-sm font-medium truncate">{cat.name}</p>
+  1089→                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} items</p>
+  1090→                              </div>
+  1091→                            </div>
+  1092→                          ))}
+  1093→                        </div>
+  1094→                      )}
+  1095→                    </CardContent>
+  1096→                  </Card>
+  1097→                </div>
+  1098→              )}
+  1099→
+  1100→              {/* ════════════════════ Products Section ════════════════════ */}
+  1101→              {activeSection === 'products' && (
+  1102→                <div className="space-y-4">
+  1103→                  {/* Header */}
+  1104→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  1105→                    <div className="relative flex-1 max-w-sm">
+  1106→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+  1107→                      <Input
+  1108→                        placeholder="Search products..."
+  1109→                        value={productSearch}
+  1110→                        onChange={e => setProductSearch(e.target.value)}
+  1111→                        className="pl-9"
+  1112→                      />
+  1113→                    </div>
+  1114→                    <Button
+  1115→                      onClick={() => { resetProductForm(); setProductDialogOpen(true) }}
+  1116→                      className="gap-2 shadow-md shadow-primary/20"
+  1117→                    >
+  1118→                      <Plus className="size-4" /> Add Product
+  1119→                    </Button>
+  1120→                  </div>
+  1121→
+  1122→                  {/* Products - Desktop Table */}
+  1123→                  {filteredProducts.length === 0 ? (
+  1124→                    <Card>
+  1125→                      <CardContent className="py-16 text-center">
+  1126→                        <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+  1127→                          <Package className="size-8 text-primary/50" />
+  1128→                        </div>
+  1129→                        <p className="font-medium text-muted-foreground">No products found</p>
+  1130→                        <p className="text-xs text-muted-foreground mt-1">Add your first product to get started</p>
+  1131→                      </CardContent>
+  1132→                    </Card>
+  1133→                  ) : (
+  1134→                    <>
+  1135→                      {/* Mobile: Card Layout */}
+  1136→                      <div className="lg:hidden space-y-3">
+  1137→                        {filteredProducts.map(product => (
+  1138→                          <Card key={product.id} className="overflow-hidden">
+  1139→                            <CardContent className="p-4">
+  1140→                              <div className="flex gap-3">
+  1141→                                <img
+  1142→                                  src={product.image}
+  1143→                                  alt={product.name}
+  1144→                                  className="size-16 rounded-lg object-cover bg-muted shrink-0"
+  1145→                                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+  1146→                                />
+  1147→                                <div className="flex-1 min-w-0">
+  1148→                                  <div className="flex items-start justify-between gap-2">
+  1149→                                    <div className="min-w-0">
+  1150→                                      <p className="font-medium text-sm truncate">{product.name}</p>
+  1151→                                      <p className="text-[11px] text-muted-foreground truncate">{product.nameFr}</p>
+  1152→                                    </div>
+  1153→                                    <div className="flex items-center gap-1 shrink-0">
+  1154→                                      <Button variant="ghost" size="icon" className="size-7" onClick={() => openEditProduct(product)}>
+  1155→                                        <Pencil className="size-3" />
+  1156→                                      </Button>
+  1157→                                      <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+  1158→                                        <Trash2 className="size-3" />
+  1159→                                      </Button>
+  1160→                                    </div>
+  1161→                                  </div>
+  1162→                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+  1163→                                    <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+  1164→                                    {product.category && (
+  1165→                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.category.name}</Badge>
+  1166→                                    )}
+  1167→                                  </div>
+  1168→                                  <div className="flex items-center gap-3 mt-2">
+  1169→                                    <div className="flex items-center gap-1.5 text-[11px]">
+  1170→                                      <Switch checked={product.inStock} onCheckedChange={() => toggleProductStock(product)} className="scale-75" />
+  1171→                                      <span className={product.inStock ? 'text-green-600' : 'text-muted-foreground'}>Stock</span>
+  1172→                                    </div>
+  1173→                                    <div className="flex items-center gap-1.5 text-[11px]">
+  1174→                                      <Switch checked={product.featured} onCheckedChange={() => toggleProductFeatured(product)} className="scale-75" />
+  1175→                                      <span className={product.featured ? 'text-gold' : 'text-muted-foreground'}>Featured</span>
+  1176→                                    </div>
+  1177→                                  </div>
+  1178→                                </div>
+  1179→                              </div>
+  1180→                            </CardContent>
+  1181→                          </Card>
+  1182→                        ))}
+  1183→                      </div>
+  1184→
+  1185→                      {/* Desktop: Table Layout */}
+  1186→                      <Card className="hidden lg:block">
+  1187→                        <CardContent className="p-0">
+  1188→                          <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+  1189→                            <Table>
+  1190→                              <TableHeader>
+  1191→                                <TableRow>
+  1192→                                  <TableHead className="w-14">Image</TableHead>
+  1193→                                  <TableHead>Name</TableHead>
+  1194→                                  <TableHead>Category</TableHead>
+  1195→                                  <TableHead>Price</TableHead>
+  1196→                                  <TableHead>Stock</TableHead>
+  1197→                                  <TableHead>Featured</TableHead>
+  1198→                                  <TableHead className="text-right">Actions</TableHead>
+  1199→                                </TableRow>
+  1200→                              </TableHeader>
+  1201→                              <TableBody>
+  1202→                                {filteredProducts.map(product => (
+  1203→                                  <TableRow key={product.id}>
+  1204→                                    <TableCell>
+  1205→                                      <img
+  1206→                                        src={product.image}
+  1207→                                        alt={product.name}
+  1208→                                        className="size-10 rounded-lg object-cover bg-muted"
+  1209→                                        onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+  1210→                                      />
+  1211→                                    </TableCell>
+  1212→                                    <TableCell>
+  1213→                                      <div className="min-w-0">
+  1214→                                        <p className="font-medium text-sm truncate max-w-[200px]">{product.name}</p>
+  1215→                                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{product.nameFr}</p>
+  1216→                                      </div>
+  1217→                                    </TableCell>
+  1218→                                    <TableCell>
+  1219→                                      <Badge variant="outline" className="text-xs">{product.category?.name || 'N/A'}</Badge>
+  1220→                                    </TableCell>
+  1221→                                    <TableCell>
+  1222→                                      <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+  1223→                                    </TableCell>
+  1224→                                    <TableCell>
+  1225→                                      <Switch
+  1226→                                        checked={product.inStock}
+  1227→                                        onCheckedChange={() => toggleProductStock(product)}
+  1228→                                      />
+  1229→                                    </TableCell>
+  1230→                                    <TableCell>
+  1231→                                      <Switch
+  1232→                                        checked={product.featured}
+  1233→                                        onCheckedChange={() => toggleProductFeatured(product)}
+  1234→                                      />
+  1235→                                    </TableCell>
+  1236→                                    <TableCell className="text-right">
+  1237→                                      <div className="flex items-center justify-end gap-1">
+  1238→                                        <Button variant="ghost" size="icon" className="size-8" onClick={() => openEditProduct(product)}>
+  1239→                                          <Pencil className="size-3.5" />
+  1240→                                        </Button>
+  1241→                                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+  1242→                                          <Trash2 className="size-3.5" />
+  1243→                                        </Button>
+  1244→                                      </div>
+  1245→                                    </TableCell>
+  1246→                                  </TableRow>
+  1247→                                ))}
+  1248→                              </TableBody>
+  1249→                            </Table>
+  1250→                          </div>
+  1251→                        </CardContent>
+  1252→                      </Card>
+  1253→                    </>
+  1254→                  )}
+  1255→                </div>
+  1256→              )}
+  1257→
+  1258→              {/* ════════════════════ Categories Section ════════════════════ */}
+  1259→              {activeSection === 'categories' && (
+  1260→                <div className="space-y-4">
+  1261→                  <div className="flex items-center justify-between">
+  1262→                    <p className="text-sm text-muted-foreground">{categories.length} categories</p>
+  1263→                    <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2 shadow-md shadow-primary/20">
+  1264→                      <Plus className="size-4" /> Add Category
+  1265→                    </Button>
+  1266→                  </div>
+  1267→
+  1268→                  {categories.length === 0 ? (
+  1269→                    <Card>
+  1270→                      <CardContent className="py-16 text-center">
+  1271→                        <div className="size-16 rounded-2xl bg-chart-3/10 flex items-center justify-center mx-auto mb-4">
+  1272→                          <FolderOpen className="size-8 text-chart-3/50" />
+  1273→                        </div>
+  1274→                        <p className="font-medium text-muted-foreground">No categories yet</p>
+  1275→                        <p className="text-xs text-muted-foreground mt-1">Add your first category to organize products</p>
+  1276→                      </CardContent>
+  1277→                    </Card>
+  1278→                  ) : (
+  1279→                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  1280→                      {categories.map(cat => (
+  1281→                        <Card key={cat.id} className="group overflow-hidden hover:shadow-lg transition-shadow duration-300">
+  1282→                          <CardContent className="p-0">
+  1283→                            {/* Category Image Banner */}
+  1284→                            <div className="h-28 bg-gradient-to-br from-primary/5 to-chart-3/5 relative overflow-hidden">
+  1285→                              {cat.image ? (
+  1286→                                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+  1287→                              ) : (
+  1288→                                <div className="flex items-center justify-center h-full">
+  1289→                                  <FolderOpen className="size-8 text-primary/20" />
+  1290→                                </div>
+  1291→                              )}
+  1292→                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+  1293→                              <div className="absolute bottom-2 left-3 right-3">
+  1294→                                <p className="font-semibold text-sm text-white drop-shadow-md truncate">{cat.name}</p>
+  1295→                              </div>
+  1296→                              {/* Delete button */}
+  1297→                              <Button
+  1298→                                variant="ghost"
+  1299→                                size="icon"
+  1300→                                className="absolute top-2 right-2 size-7 bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition-all"
+  1301→                                onClick={() => confirmDelete('category', cat.id, cat.name)}
+  1302→                              >
+  1303→                                <Trash2 className="size-3" />
+  1304→                              </Button>
+  1305→                            </div>
+  1306→                            {/* Category Info */}
+  1307→                            <div className="p-3">
+  1308→                              <p className="text-xs text-muted-foreground truncate">{cat.nameFr}</p>
+  1309→                              <div className="flex items-center gap-2 mt-2">
+  1310→                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+  1311→                                  /{cat.slug}
+  1312→                                </Badge>
+  1313→                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+  1314→                                  {cat.products?.length || 0} items
+  1315→                                </Badge>
+  1316→                              </div>
+  1317→                            </div>
+  1318→                          </CardContent>
+  1319→                        </Card>
+  1320→                      ))}
+  1321→                    </div>
+  1322→                  )}
+  1323→                </div>
+  1324→              )}
+  1325→
+  1326→              {/* ════════════════════ Orders Section ════════════════════ */}
+  1327→              {activeSection === 'orders' && (
+  1328→                <div className="space-y-4">
+  1329→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  1330→                    <div className="relative flex-1 max-w-sm">
+  1331→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+  1332→                      <Input
+  1333→                        placeholder="Search orders..."
+  1334→                        value={orderSearch}
+  1335→                        onChange={e => setOrderSearch(e.target.value)}
+  1336→                        className="pl-9"
+  1337→                      />
+  1338→                    </div>
+  1339→                    <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
+  1340→                  </div>
+  1341→
+  1342→                  {filteredOrders.length === 0 ? (
+  1343→                    <Card>
+  1344→                      <CardContent className="py-16 text-center">
+  1345→                        <div className="size-16 rounded-2xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
+  1346→                          <ShoppingCart className="size-8 text-chart-2/50" />
+  1347→                        </div>
+  1348→                        <p className="font-medium text-muted-foreground">No orders found</p>
+  1349→                      </CardContent>
+  1350→                    </Card>
+  1351→                  ) : (
+  1352→                    <>
+  1353→                      {/* Mobile: Card Layout */}
+  1354→                      <div className="lg:hidden space-y-3">
+  1355→                        {filteredOrders.map(order => (
+  1356→                          <Card key={order.id} className="overflow-hidden">
+  1357→                            <CardContent className="p-4">
+  1358→                              <div className="flex items-start justify-between gap-3">
+  1359→                                <div className="flex items-center gap-3 min-w-0">
+  1360→                                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+  1361→                                    <span className="text-sm font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+  1362→                                  </div>
+  1363→                                  <div className="min-w-0">
+  1364→                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+  1365→                                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+  1366→                                      <Phone className="size-2.5" /> {order.customerPhone || 'N/A'}
+  1367→                                    </p>
+  1368→                                  </div>
+  1369→                                </div>
+  1370→                                <Badge
+  1371→                                  variant={
+  1372→                                    order.status === 'delivered' ? 'default' :
+  1373→                                    order.status === 'pending' ? 'outline' :
+  1374→                                    order.status === 'cancelled' ? 'destructive' : 'secondary'
+  1375→                                  }
+  1376→                                  className="text-[10px] capitalize shrink-0"
+  1377→                                >
+  1378→                                  {order.status}
+  1379→                                </Badge>
+  1380→                              </div>
+  1381→                              <Separator className="my-3" />
+  1382→                              <div className="flex items-center justify-between">
+  1383→                                <div className="flex items-center gap-3">
+  1384→                                  <span className="font-bold text-sm">{order.total.toLocaleString()} FCFA</span>
+  1385→                                  <Badge variant="outline" className="text-[10px] capitalize">{order.paymentMethod}</Badge>
+  1386→                                </div>
+  1387→                                <div className="flex items-center gap-1">
+  1388→                                  <Button variant="ghost" size="icon" className="size-7" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+  1389→                                    <Eye className="size-3" />
+  1390→                                  </Button>
+  1391→                                  {order.status === 'pending' && (
+  1392→                                    <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:text-green-700" onClick={() => updateOrderStatus(order.id, 'delivered')}>
+  1393→                                      <CheckCircle2 className="size-3" />
+  1394→                                    </Button>
+  1395→                                  )}
+  1396→                                  <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+  1397→                                    <Trash2 className="size-3" />
+  1398→                                  </Button>
+  1399→                                </div>
+  1400→                              </div>
+
+[showing lines 901-1400 of 1957; use offset=1401 with limit to continue reading]

@@ -297,11 +297,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
     // Validate - be permissive with types (some browsers don't set file.type properly)
     if (file.type && !file.type.startsWith('image/')) {
-      toast.error('Invalid file type. Only images are allowed.')
+      toast.error(lang === 'fr' ? 'Type de fichier invalide. Seules les images sont autorisées.' : 'Invalid file type. Only images are allowed.')
       return
     }
     if (file.size > 50 * 1024 * 1024) {
-      toast.error('File too large. Max 50MB.')
+      toast.error(lang === 'fr' ? 'Fichier trop volumineux. Maximum 50 Mo.' : 'File too large. Max 50MB.')
       return
     }
 
@@ -314,12 +314,12 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         const data = await res.json()
         if (data.url) {
           setForm((prev: any) => ({ ...prev, image: data.url }))
-          toast.success('Image uploaded successfully')
+          toast.success(lang === 'fr' ? 'Image téléchargée avec succès' : 'Image uploaded successfully')
         } else {
-          toast.error(data.error || 'Upload failed')
+          toast.error(data.error || (lang === 'fr' ? 'Échec du téléchargement' : 'Upload failed'))
         }
       } else {
-        let errorMsg = 'Upload failed'
+        let errorMsg = lang === 'fr' ? 'Échec du téléchargement' : 'Upload failed'
         try {
           const data = await res.json()
           errorMsg = data.error || errorMsg
@@ -327,7 +327,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         toast.error(errorMsg)
       }
     } catch {
-      toast.error('Upload failed — check your connection')
+      toast.error(lang === 'fr' ? 'Échec du téléchargement — vérifiez votre connexion' : 'Upload failed — check your connection')
     } finally {
       setUploading(false)
     }
@@ -339,28 +339,28 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
     try {
       const res = await fetch('/api/products')
       if (res.ok) { const data = await res.json(); setProducts(data) }
-    } catch { toast.error('Failed to fetch products') }
+    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des produits' : 'Failed to fetch products') }
   }, [])
 
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch('/api/categories')
       if (res.ok) { const data = await res.json(); setCategories(data) }
-    } catch { toast.error('Failed to fetch categories') }
+    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des catégories' : 'Failed to fetch categories') }
   }, [])
 
   const fetchOrders = useCallback(async () => {
     try {
       const res = await fetch('/api/orders')
       if (res.ok) { const data = await res.json(); setOrders(data) }
-    } catch { toast.error('Failed to fetch orders') }
+    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des commandes' : 'Failed to fetch orders') }
   }, [])
 
   const fetchTestimonies = useCallback(async () => {
     try {
       const res = await fetch('/api/testimonies')
       if (res.ok) { const data = await res.json(); setTestimonies(data) }
-    } catch { toast.error('Failed to fetch testimonies') }
+    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des témoignages' : 'Failed to fetch testimonies') }
   }, [])
 
   useEffect(() => {
@@ -392,7 +392,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
   const handleProductSubmit = async () => {
     if (!productForm.name || !productForm.nameFr || !productForm.description || !productForm.descriptionFr || !productForm.price || !productForm.image || !productForm.categoryId) {
-      toast.error('Please fill in all required fields')
+      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill in all required fields')
       return
     }
     try {
@@ -408,8 +408,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             inStock: productForm.inStock, featured: productForm.featured,
           }),
         })
-        if (res.ok) { toast.success('Product updated successfully'); setProductDialogOpen(false); setEditingProduct(null); fetchProducts() }
-        else { toast.error('Failed to update product') }
+        if (res.ok) { toast.success(lang === 'fr' ? 'Produit mis à jour avec succès' : 'Product updated successfully'); setProductDialogOpen(false); setEditingProduct(null); fetchProducts() }
+        else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du produit' : 'Failed to update product') }
       } else {
         const res = await fetch('/api/products', {
           method: 'POST',
@@ -422,10 +422,10 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             inStock: productForm.inStock, featured: productForm.featured,
           }),
         })
-        if (res.ok) { toast.success('Product created successfully'); setProductDialogOpen(false); resetProductForm(); fetchProducts() }
-        else { const data = await res.json(); toast.error(data.error || 'Failed to create product') }
+        if (res.ok) { toast.success(lang === 'fr' ? 'Produit créé avec succès' : 'Product created successfully'); setProductDialogOpen(false); resetProductForm(); fetchProducts() }
+        else { const data = await res.json(); toast.error(data.error || (lang === 'fr' ? 'Échec de la création du produit' : 'Failed to create product')) }
       }
-    } catch { toast.error('An error occurred') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const resetProductForm = () => {
@@ -451,9 +451,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inStock: !product.inStock }),
       })
-      if (res.ok) { toast.success(`Product ${!product.inStock ? 'in stock' : 'out of stock'}`); fetchProducts() }
-      else { toast.error('Failed to update stock status') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? `Produit ${!product.inStock ? 'en stock' : 'en rupture de stock'}` : `Product ${!product.inStock ? 'in stock' : 'out of stock'}`); fetchProducts() }
+      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du statut du stock' : 'Failed to update stock status') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const toggleProductFeatured = async (product: Product) => {
@@ -463,24 +463,24 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ featured: !product.featured }),
       })
-      if (res.ok) { toast.success(`Product ${!product.featured ? 'featured' : 'unfeatured'}`); fetchProducts() }
-      else { toast.error('Failed to update featured status') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? `Produit ${!product.featured ? 'mis en vedette' : 'retiré de la vedette'}` : `Product ${!product.featured ? 'featured' : 'unfeatured'}`); fetchProducts() }
+      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du statut vedette' : 'Failed to update featured status') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const deleteProduct = async (id: string) => {
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Product deleted'); fetchProducts() }
-      else { toast.error('Failed to delete product') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? 'Produit supprimé' : 'Product deleted'); fetchProducts() }
+      else { toast.error(lang === 'fr' ? 'Échec de la suppression du produit' : 'Failed to delete product') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   // ─── Category CRUD ───────────────────────────────────────────────────────
 
   const handleCategorySubmit = async () => {
     if (!categoryForm.name || !categoryForm.nameFr || !categoryForm.slug) {
-      toast.error('Name, French name, and slug are required')
+      toast.error(lang === 'fr' ? 'Le nom, le nom français et le slug sont obligatoires' : 'Name, French name, and slug are required')
       return
     }
     try {
@@ -489,17 +489,17 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(categoryForm),
       })
-      if (res.ok) { toast.success('Category created'); setCategoryDialogOpen(false); setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); fetchCategories() }
-      else { const data = await res.json(); toast.error(data.error || 'Failed to create category') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? 'Catégorie créée' : 'Category created'); setCategoryDialogOpen(false); setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); fetchCategories() }
+      else { const data = await res.json(); toast.error(data.error || (lang === 'fr' ? 'Échec de la création de la catégorie' : 'Failed to create category')) }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const deleteCategory = async (id: string) => {
     try {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Category and its products deleted'); fetchCategories(); fetchProducts() }
-      else { toast.error('Failed to delete category') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? 'Catégorie et ses produits supprimés' : 'Category and its products deleted'); fetchCategories(); fetchProducts() }
+      else { toast.error(lang === 'fr' ? 'Échec de la suppression de la catégorie' : 'Failed to delete category') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   // ─── Order Operations ────────────────────────────────────────────────────
@@ -507,9 +507,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   const deleteOrder = async (id: string) => {
     try {
       const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Order deleted'); fetchOrders() }
-      else { toast.error('Failed to delete order') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? 'Commande supprimée' : 'Order deleted'); fetchOrders() }
+      else { toast.error(lang === 'fr' ? 'Échec de la suppression de la commande' : 'Failed to delete order') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -519,9 +519,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (res.ok) { toast.success(`Order marked as ${status}`); fetchOrders() }
-      else { toast.error('Failed to update order status') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? `Commande marquée comme ${translateStatus(status)}` : `Order marked as ${status}`); fetchOrders() }
+      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du statut de la commande' : 'Failed to update order status') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   // ─── Testimony Operations ────────────────────────────────────────────────
@@ -533,17 +533,17 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved: !testimony.approved }),
       })
-      if (res.ok) { toast.success(`Testimony ${!testimony.approved ? 'approved' : 'unapproved'}`); fetchTestimonies() }
-      else { toast.error('Failed to update testimony') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? `Témoignage ${!testimony.approved ? 'approuvé' : 'désapprouvé'}` : `Testimony ${!testimony.approved ? 'approved' : 'unapproved'}`); fetchTestimonies() }
+      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du témoignage' : 'Failed to update testimony') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   const deleteTestimony = async (id: string) => {
     try {
       const res = await fetch(`/api/testimonies/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Testimony deleted'); fetchTestimonies() }
-      else { toast.error('Failed to delete testimony') }
-    } catch { toast.error('An error occurred') }
+      if (res.ok) { toast.success(lang === 'fr' ? 'Témoignage supprimé' : 'Testimony deleted'); fetchTestimonies() }
+      else { toast.error(lang === 'fr' ? 'Échec de la suppression du témoignage' : 'Failed to delete testimony') }
+    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
   }
 
   // ─── Delete Confirmation ─────────────────────────────────────────────────
@@ -589,11 +589,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   // ─── Sidebar Navigation Items ────────────────────────────────────────────
 
   const navItems: { key: ActiveSection; label: string; icon: React.ReactNode; description: string }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: 'Overview & stats' },
-    { key: 'products', label: 'Products', icon: <Package className="size-4" />, description: `${products.length} items` },
-    { key: 'categories', label: 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} groups` },
-    { key: 'orders', label: 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} total` },
-    { key: 'testimonies', label: 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} reviews` },
+    { key: 'dashboard', label: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: lang === 'fr' ? "Vue d'ensemble" : 'Overview & stats' },
+    { key: 'products', label: lang === 'fr' ? 'Produits' : 'Products', icon: <Package className="size-4" />, description: `${products.length} ${lang === 'fr' ? 'articles' : 'items'}` },
+    { key: 'categories', label: lang === 'fr' ? 'Catégories' : 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} ${lang === 'fr' ? 'groupes' : 'groups'}` },
+    { key: 'orders', label: lang === 'fr' ? 'Commandes' : 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} total` },
+    { key: 'testimonies', label: lang === 'fr' ? 'Témoignages' : 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} ${lang === 'fr' ? 'avis' : 'reviews'}` },
   ]
 
   // ─── Sidebar Content ─────────────────────────────────────────────────────
@@ -608,7 +608,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
           </div>
           <div>
             <h1 className="font-handwriting text-primary text-xl leading-tight">God&apos;s Grace</h1>
-            <p className="text-[11px] text-muted-foreground tracking-wide uppercase">Boutique Admin</p>
+            <p className="text-[11px] text-muted-foreground tracking-wide uppercase">{lang === 'fr' ? 'Admin Boutique' : 'Boutique Admin'}</p>
           </div>
         </div>
       </div>
@@ -874,7 +874,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               <div className="flex flex-col items-center gap-4">
                 <div className="size-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
                 <div className="text-center">
-                  <p className="text-sm font-medium">Loading dashboard...</p>
+                  <p className="text-sm font-medium">{lang === 'fr' ? 'Chargement du tableau de bord...' : 'Loading dashboard...'}</p>
                   <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
                 </div>
               </div>
@@ -891,8 +891,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <CardContent className="p-6 lg:p-8 relative">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">Welcome to God&apos;s Grace</h2>
-                          <p className="text-primary-foreground/80 text-sm">Boutique Admin Dashboard — Where Elegance Meets Faith</p>
+                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">{lang === 'fr' ? "Bienvenue chez God's Grace" : "Welcome to God's Grace"}</h2>
+                          <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? "Tableau de bord Boutique — L'Élégance Rencontre la Foi" : 'Boutique Admin Dashboard — Where Elegance Meets Faith'}</p>
                         </div>
                         <Sparkles className="size-10 text-primary-foreground/30 shrink-0" />
                       </div>
@@ -905,9 +905,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Produits' : 'Products'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} in stock</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} {lang === 'fr' ? 'en stock' : 'in stock'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Package className="size-5 text-primary" />
@@ -919,9 +919,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Categories</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Catégories' : 'Categories'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">Active groups</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{lang === 'fr' ? 'Groupes actifs' : 'Active groups'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
                             <FolderOpen className="size-5 text-chart-3" />
@@ -933,9 +933,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Orders</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Commandes' : 'Orders'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} pending</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} {lang === 'fr' ? 'en attente' : 'pending'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
                             <ShoppingCart className="size-5 text-chart-2" />
@@ -947,9 +947,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Revenus' : 'Revenue'}</p>
                             <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">FCFA total</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">FCFA {lang === 'fr' ? 'total' : 'total'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
                             <TrendingUp className="size-5 text-gold" />
@@ -966,11 +966,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base font-elegant flex items-center gap-2">
-                            <ShoppingCart className="size-4 text-primary" /> Recent Orders
+                            <ShoppingCart className="size-4 text-primary" /> {lang === 'fr' ? 'Commandes récentes' : 'Recent Orders'}
                           </CardTitle>
                           {orders.length > 5 && (
                             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
-                              View all <ChevronRight className="size-3" />
+                              {lang === 'fr' ? 'Voir tout' : 'View all'} <ChevronRight className="size-3" />
                             </Button>
                           )}
                         </div>
@@ -979,7 +979,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         {orders.length === 0 ? (
                           <div className="py-6 text-center">
                             <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">No orders yet</p>
+                            <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Aucune commande' : 'No orders yet'}</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
@@ -1000,7 +1000,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                     variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'}
                                     className="text-[10px] px-1.5 py-0"
                                   >
-                                    {order.status}
+                                    {translateStatus(order.status)}
                                   </Badge>
                                 </div>
                               </div>
@@ -1014,7 +1014,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-elegant flex items-center gap-2">
-                          <BarChart3 className="size-4 text-primary" /> Store Overview
+                          <BarChart3 className="size-4 text-primary" /> {lang === 'fr' ? 'Aperçu de la boutique' : 'Store Overview'}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -1024,7 +1024,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
                                 <Sparkles className="size-4 text-chart-3" />
                               </div>
-                              <span className="text-sm">Featured Products</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Produits en vedette' : 'Featured Products'}</span>
                             </div>
                             <Badge>{featuredProducts}</Badge>
                           </div>
@@ -1033,7 +1033,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
                                 <CheckCircle2 className="size-4 text-chart-2" />
                               </div>
-                              <span className="text-sm">Delivered Orders</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Commandes livrées' : 'Delivered Orders'}</span>
                             </div>
                             <Badge variant="secondary">{deliveredOrders}</Badge>
                           </div>
@@ -1042,7 +1042,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center">
                                 <Heart className="size-4 text-gold" />
                               </div>
-                              <span className="text-sm">Approved Testimonies</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Témoignages approuvés' : 'Approved Testimonies'}</span>
                             </div>
                             <Badge variant="outline">{approvedTestimonies}</Badge>
                           </div>
@@ -1051,7 +1051,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
                                 <Clock className="size-4 text-primary" />
                               </div>
-                              <span className="text-sm">Pending Testimonies</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Témoignages en attente' : 'Pending Testimonies'}</span>
                             </div>
                             <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
                           </div>
@@ -1064,14 +1064,14 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base font-elegant flex items-center gap-2">
-                        <FolderOpen className="size-4 text-primary" /> Products by Category
+                        <FolderOpen className="size-4 text-primary" /> {lang === 'fr' ? 'Produits par catégorie' : 'Products by Category'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {categories.length === 0 ? (
                         <div className="py-6 text-center">
                           <FolderOpen className="size-8 text-muted-foreground/30 mx-auto mb-2" />
-                          <p className="text-sm text-muted-foreground">No categories yet</p>
+                          <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Aucune catégorie' : 'No categories yet'}</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1085,8 +1085,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                 </div>
                               )}
                               <div className="min-w-0">
-                                <p className="text-sm font-medium truncate">{cat.name}</p>
-                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} items</p>
+                                <p className="text-sm font-medium truncate">{lang === 'fr' ? cat.nameFr : cat.name}</p>
+                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}</p>
                               </div>
                             </div>
                           ))}
@@ -1126,8 +1126,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                           <Package className="size-8 text-primary/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No products found</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your first product to get started</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre premier produit' : 'Add your first product to get started'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1162,7 +1162,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                                     <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
                                     {product.category && (
-                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{product.category.name}</Badge>
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{lang === 'fr' ? product.category.nameFr : product.category.name}</Badge>
                                     )}
                                   </div>
                                   <div className="flex items-center gap-3 mt-2">
@@ -1189,13 +1189,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead className="w-14">Image</TableHead>
-                                  <TableHead>Name</TableHead>
-                                  <TableHead>Category</TableHead>
-                                  <TableHead>Price</TableHead>
-                                  <TableHead>Stock</TableHead>
-                                  <TableHead>Featured</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
+                                  <TableHead className="w-14">{lang === 'fr' ? 'Image' : 'Image'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Nom' : 'Name'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Catégorie' : 'Category'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Prix' : 'Price'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Stock' : 'Stock'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Vedette' : 'Featured'}</TableHead>
+                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -1216,7 +1216,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                       </div>
                                     </TableCell>
                                     <TableCell>
-                                      <Badge variant="outline" className="text-xs">{product.category?.name || 'N/A'}</Badge>
+                                      <Badge variant="outline" className="text-xs">{product.category?.nameFr || product.category?.name || 'N/A'}</Badge>
                                     </TableCell>
                                     <TableCell>
                                       <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
@@ -1271,8 +1271,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-chart-3/10 flex items-center justify-center mx-auto mb-4">
                           <FolderOpen className="size-8 text-chart-3/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No categories yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your first category to organize products</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucune catégorie' : 'No categories yet'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre première catégorie' : 'Add your first category to organize products'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1291,7 +1291,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
                               <div className="absolute bottom-2 left-3 right-3">
-                                <p className="font-semibold text-sm text-white drop-shadow-md truncate">{cat.name}</p>
+                                <p className="font-semibold text-sm text-white drop-shadow-md truncate">{lang === 'fr' ? cat.nameFr : cat.name}</p>
                               </div>
                               {/* Delete button */}
                               <Button
@@ -1311,7 +1311,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                   /{cat.slug}
                                 </Badge>
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  {cat.products?.length || 0} items
+                                  {cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}
                                 </Badge>
                               </div>
                             </div>
@@ -1345,7 +1345,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
                           <ShoppingCart className="size-8 text-chart-2/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No orders found</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucune commande trouvée' : 'No orders found'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1375,7 +1375,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                   }
                                   className="text-[10px] capitalize shrink-0"
                                 >
-                                  {order.status}
+                                  {translateStatus(order.status)}
                                 </Badge>
                               </div>
                               <Separator className="my-3" />
@@ -1411,13 +1411,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Customer</TableHead>
-                                  <TableHead>Phone</TableHead>
-                                  <TableHead>Total</TableHead>
-                                  <TableHead>Payment</TableHead>
-                                  <TableHead>Status</TableHead>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Client' : 'Customer'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Téléphone' : 'Phone'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Total' : 'Total'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Paiement' : 'Payment'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Statut' : 'Status'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Date' : 'Date'}</TableHead>
+                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -1504,7 +1504,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
                           <MessageSquareHeart className="size-8 text-gold/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No testimonies yet</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun témoignage' : 'No testimonies yet'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1884,7 +1884,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'}
                     className="capitalize mt-1"
                   >
-                    {selectedOrder.status}
+                    {translateStatus(selectedOrder.status)}
                   </Badge>
                 </div>
               </div>
@@ -1901,7 +1901,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                           <div className="space-y-2">
                             {items.map((item: { name?: string; price?: number; quantity?: number }, i: number) => (
                               <div key={i} className="flex justify-between text-sm">
-                                <span>{item.name || `Item ${i + 1}`} {item.quantity ? `x${item.quantity}` : ''}</span>
+                                <span>{item.name || `${lang === 'fr' ? 'Article' : 'Item'} ${i + 1}`} {item.quantity ? `x${item.quantity}` : ''}</span>
                                 <span className="font-medium">{item.price ? `${item.price.toLocaleString()} FCFA` : ''}</span>
                               </div>
                             ))}
