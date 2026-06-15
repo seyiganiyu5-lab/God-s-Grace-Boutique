@@ -546,11 +546,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
   // ─── Sidebar Navigation Items ────────────────────────────────────────────
 
   const navItems: { key: ActiveSection; label: string; icon: React.ReactNode; description: string }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: 'Overview & stats' },
-    { key: 'products', label: 'Products', icon: <Package className="size-4" />, description: `${products.length} items` },
-    { key: 'categories', label: 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} groups` },
-    { key: 'orders', label: 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} total` },
-    { key: 'testimonies', label: 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} reviews` },
+    { key: 'dashboard', label: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: lang === 'fr' ? 'Vue d\'ensemble' : 'Overview & stats' },
+    { key: 'products', label: lang === 'fr' ? 'Produits' : 'Products', icon: <Package className="size-4" />, description: `${products.length} ${lang === 'fr' ? 'articles' : 'items'}` },
+    { key: 'categories', label: lang === 'fr' ? 'Catégories' : 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} ${lang === 'fr' ? 'groupes' : 'groups'}` },
+    { key: 'orders', label: lang === 'fr' ? 'Commandes' : 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} ${lang === 'fr' ? 'total' : 'total'}` },
+    { key: 'testimonies', label: lang === 'fr' ? 'Témoignages' : 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} ${lang === 'fr' ? 'avis' : 'reviews'}` },
   ]
 
   // ─── Sidebar Content ─────────────────────────────────────────────────────
@@ -848,8 +848,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <CardContent className="p-6 lg:p-8 relative">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">Welcome to God&apos;s Grace</h2>
-                          <p className="text-primary-foreground/80 text-sm">Boutique Admin Dashboard — Where Elegance Meets Faith</p>
+                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">{lang === 'fr' ? "Bienvenue chez God's Grace" : "Welcome to God's Grace"}</h2>
+                          <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? 'Tableau de bord Boutique — L\'Élégance Rencontre la Foi' : 'Boutique Admin Dashboard — Where Elegance Meets Faith'}</p>
                         </div>
                         <Sparkles className="size-10 text-primary-foreground/30 shrink-0" />
                       </div>
@@ -862,9 +862,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Products</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Produits' : 'Products'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} in stock</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} {lang === 'fr' ? 'en stock' : 'in stock'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Package className="size-5 text-primary" />
@@ -876,9 +876,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Categories</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Catégories' : 'Categories'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">Active groups</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{lang === 'fr' ? 'Groupes actifs' : 'Active groups'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
                             <FolderOpen className="size-5 text-chart-3" />
@@ -890,9 +890,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Orders</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Commandes' : 'Orders'}</p>
                             <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} pending</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} {lang === 'fr' ? 'en attente' : 'pending'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
                             <ShoppingCart className="size-5 text-chart-2" />
@@ -904,9 +904,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardContent className="p-4 lg:p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Revenue</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Revenus' : 'Revenue'}</p>
                             <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
-                            <p className="text-[11px] text-muted-foreground mt-1">FCFA total</p>
+                            <p className="text-[11px] text-muted-foreground mt-1">FCFA {lang === 'fr' ? 'total' : 'total'}</p>
                           </div>
                           <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
                             <TrendingUp className="size-5 text-gold" />
@@ -923,11 +923,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base font-elegant flex items-center gap-2">
-                            <ShoppingCart className="size-4 text-primary" /> Recent Orders
+                            <ShoppingCart className="size-4 text-primary" /> {lang === 'fr' ? 'Commandes récentes' : 'Recent Orders'}
                           </CardTitle>
                           {orders.length > 5 && (
                             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
-                              View all <ChevronRight className="size-3" />
+                              {lang === 'fr' ? 'Voir tout' : 'View all'} <ChevronRight className="size-3" />
                             </Button>
                           )}
                         </div>
@@ -936,7 +936,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         {orders.length === 0 ? (
                           <div className="py-6 text-center">
                             <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">No orders yet</p>
+                            <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Aucune commande' : 'No orders yet'}</p>
                           </div>
                         ) : (
                           <div className="space-y-2">
@@ -971,7 +971,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-elegant flex items-center gap-2">
-                          <BarChart3 className="size-4 text-primary" /> Store Overview
+                          <BarChart3 className="size-4 text-primary" /> {lang === 'fr' ? 'Aperçu de la boutique' : 'Store Overview'}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -981,7 +981,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
                                 <Sparkles className="size-4 text-chart-3" />
                               </div>
-                              <span className="text-sm">Featured Products</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Produits en vedette' : 'Featured Products'}</span>
                             </div>
                             <Badge>{featuredProducts}</Badge>
                           </div>
@@ -990,7 +990,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
                                 <CheckCircle2 className="size-4 text-chart-2" />
                               </div>
-                              <span className="text-sm">Delivered Orders</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Commandes livrées' : 'Delivered Orders'}</span>
                             </div>
                             <Badge variant="secondary">{deliveredOrders}</Badge>
                           </div>
@@ -999,7 +999,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center">
                                 <Heart className="size-4 text-gold" />
                               </div>
-                              <span className="text-sm">Approved Testimonies</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Témoignages approuvés' : 'Approved Testimonies'}</span>
                             </div>
                             <Badge variant="outline">{approvedTestimonies}</Badge>
                           </div>
@@ -1008,7 +1008,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
                                 <Clock className="size-4 text-primary" />
                               </div>
-                              <span className="text-sm">Pending Testimonies</span>
+                              <span className="text-sm">{lang === 'fr' ? 'Témoignages en attente' : 'Pending Testimonies'}</span>
                             </div>
                             <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
                           </div>
@@ -1021,14 +1021,14 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base font-elegant flex items-center gap-2">
-                        <FolderOpen className="size-4 text-primary" /> Products by Category
+                        <FolderOpen className="size-4 text-primary" /> {lang === 'fr' ? 'Produits par catégorie' : 'Products by Category'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {categories.length === 0 ? (
                         <div className="py-6 text-center">
                           <FolderOpen className="size-8 text-muted-foreground/30 mx-auto mb-2" />
-                          <p className="text-sm text-muted-foreground">No categories yet</p>
+                          <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Aucune catégorie' : 'No categories yet'}</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1043,7 +1043,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               )}
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">{cat.name}</p>
-                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} items</p>
+                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}</p>
                               </div>
                             </div>
                           ))}
@@ -1062,7 +1062,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <div className="relative flex-1 max-w-sm">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search products..."
+                        placeholder={lang === 'fr' ? 'Rechercher des produits...' : 'Search products...'}
                         value={productSearch}
                         onChange={e => setProductSearch(e.target.value)}
                         className="pl-9"
@@ -1072,7 +1072,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                       onClick={() => { resetProductForm(); setProductDialogOpen(true) }}
                       className="gap-2 shadow-md shadow-primary/20"
                     >
-                      <Plus className="size-4" /> Add Product
+                      <Plus className="size-4" /> {lang === 'fr' ? 'Ajouter un produit' : 'Add Product'}
                     </Button>
                   </div>
 
@@ -1083,8 +1083,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                           <Package className="size-8 text-primary/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No products found</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your first product to get started</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre premier produit' : 'Add your first product to get started'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1125,11 +1125,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                   <div className="flex items-center gap-3 mt-2">
                                     <div className="flex items-center gap-1.5 text-[11px]">
                                       <Switch checked={product.inStock} onCheckedChange={() => toggleProductStock(product)} className="scale-75" />
-                                      <span className={product.inStock ? 'text-green-600' : 'text-muted-foreground'}>Stock</span>
+                                      <span className={product.inStock ? 'text-green-600' : 'text-muted-foreground'}>{lang === 'fr' ? 'Stock' : 'Stock'}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 text-[11px]">
                                       <Switch checked={product.featured} onCheckedChange={() => toggleProductFeatured(product)} className="scale-75" />
-                                      <span className={product.featured ? 'text-gold' : 'text-muted-foreground'}>Featured</span>
+                                      <span className={product.featured ? 'text-gold' : 'text-muted-foreground'}>{lang === 'fr' ? 'Vedette' : 'Featured'}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1146,13 +1146,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead className="w-14">Image</TableHead>
-                                  <TableHead>Name</TableHead>
-                                  <TableHead>Category</TableHead>
-                                  <TableHead>Price</TableHead>
-                                  <TableHead>Stock</TableHead>
-                                  <TableHead>Featured</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
+                                  <TableHead className="w-14">{lang === 'fr' ? 'Image' : 'Image'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Nom' : 'Name'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Catégorie' : 'Category'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Prix' : 'Price'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Stock' : 'Stock'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Vedette' : 'Featured'}</TableHead>
+                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -1216,9 +1216,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               {activeSection === 'categories' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">{categories.length} categories</p>
+                    <p className="text-sm text-muted-foreground">{categories.length} {lang === 'fr' ? 'catégories' : 'categories'}</p>
                     <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2 shadow-md shadow-primary/20">
-                      <Plus className="size-4" /> Add Category
+                      <Plus className="size-4" /> {lang === 'fr' ? 'Ajouter une catégorie' : 'Add Category'}
                     </Button>
                   </div>
 
@@ -1228,8 +1228,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-chart-3/10 flex items-center justify-center mx-auto mb-4">
                           <FolderOpen className="size-8 text-chart-3/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No categories yet</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your first category to organize products</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucune catégorie' : 'No categories yet'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre première catégorie' : 'Add your first category to organize products'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1268,7 +1268,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                   /{cat.slug}
                                 </Badge>
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  {cat.products?.length || 0} items
+                                  {cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}
                                 </Badge>
                               </div>
                             </div>
@@ -1287,13 +1287,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                     <div className="relative flex-1 max-w-sm">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search orders..."
+                        placeholder={lang === 'fr' ? 'Rechercher des commandes...' : 'Search orders...'}
                         value={orderSearch}
                         onChange={e => setOrderSearch(e.target.value)}
                         className="pl-9"
                       />
                     </div>
-                    <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
+                    <p className="text-sm text-muted-foreground">{orders.length} {lang === 'fr' ? 'commandes au total' : 'total orders'}</p>
                   </div>
 
                   {filteredOrders.length === 0 ? (
@@ -1302,7 +1302,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
                           <ShoppingCart className="size-8 text-chart-2/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No orders found</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucune commande trouvée' : 'No orders found'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1368,13 +1368,13 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Customer</TableHead>
-                                  <TableHead>Phone</TableHead>
-                                  <TableHead>Total</TableHead>
-                                  <TableHead>Payment</TableHead>
-                                  <TableHead>Status</TableHead>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Client' : 'Customer'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Téléphone' : 'Phone'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Total' : 'Total'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Paiement' : 'Payment'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Statut' : 'Status'}</TableHead>
+                                  <TableHead>{lang === 'fr' ? 'Date' : 'Date'}</TableHead>
+                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -1412,10 +1412,10 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="pending">Pending</SelectItem>
-                                          <SelectItem value="processing">Processing</SelectItem>
-                                          <SelectItem value="delivered">Delivered</SelectItem>
-                                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                                          <SelectItem value="pending">{lang === 'fr' ? 'En attente' : 'Pending'}</SelectItem>
+                                          <SelectItem value="processing">{lang === 'fr' ? 'En cours' : 'Processing'}</SelectItem>
+                                          <SelectItem value="delivered">{lang === 'fr' ? 'Livré' : 'Delivered'}</SelectItem>
+                                          <SelectItem value="cancelled">{lang === 'fr' ? 'Annulé' : 'Cancelled'}</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </TableCell>
@@ -1451,7 +1451,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                      {testimonies.length} testimonies ({approvedTestimonies} approved)
+                      {testimonies.length} {lang === 'fr' ? 'témoignages' : 'testimonies'} ({approvedTestimonies} {lang === 'fr' ? 'approuvés' : 'approved'})
                     </p>
                   </div>
 
@@ -1461,7 +1461,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                         <div className="size-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
                           <MessageSquareHeart className="size-8 text-gold/50" />
                         </div>
-                        <p className="font-medium text-muted-foreground">No testimonies yet</p>
+                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun témoignage' : 'No testimonies yet'}</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -1504,9 +1504,9 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                       className={`text-[10px] gap-1 ${testimony.approved ? 'bg-green-600 hover:bg-green-700' : 'border-yellow-500/50 text-yellow-600'}`}
                                     >
                                       {testimony.approved ? (
-                                        <><CheckCircle2 className="size-2.5" /> Approved</>
+                                        <><CheckCircle2 className="size-2.5" /> {lang === 'fr' ? 'Approuvé' : 'Approved'}</>
                                       ) : (
-                                        <><Clock className="size-2.5" /> Pending</>
+                                        <><Clock className="size-2.5" /> {lang === 'fr' ? 'En attente' : 'Pending'}</>
                                       )}
                                     </Badge>
                                     <span className="text-[10px] text-muted-foreground">
@@ -1521,7 +1521,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                                       className={`text-[11px] gap-1 h-7 ${!testimony.approved ? 'bg-green-600 hover:bg-green-700' : ''}`}
                                       onClick={() => toggleTestimonyApproval(testimony)}
                                     >
-                                      {testimony.approved ? <><StarOff className="size-3" /> Unapprove</> : <><CheckCircle2 className="size-3" /> Approve</>}
+                                      {testimony.approved ? <><StarOff className="size-3" /> {lang === 'fr' ? 'Désapprouver' : 'Unapprove'}</> : <><CheckCircle2 className="size-3" /> {lang === 'fr' ? 'Approuver' : 'Approve'}</>}
                                     </Button>
                                     <Button
                                       variant="ghost"
@@ -1551,34 +1551,34 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
       <Dialog open={productDialogOpen} onOpenChange={(open) => { setProductDialogOpen(open); if (!open) resetProductForm() }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-elegant text-lg">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogTitle className="font-elegant text-lg">{editingProduct ? (lang === 'fr' ? 'Modifier le produit' : 'Edit Product') : (lang === 'fr' ? 'Ajouter un nouveau produit' : 'Add New Product')}</DialogTitle>
             <DialogDescription>
-              {editingProduct ? 'Update product information' : 'Fill in the details to create a new product'}
+              {editingProduct ? (lang === 'fr' ? 'Mettre à jour les informations du produit' : 'Update product information') : (lang === 'fr' ? 'Remplissez les détails pour créer un nouveau produit' : 'Fill in the details to create a new product')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="prod-name">Name (English) *</Label>
-              <Input id="prod-name" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder="Product name" />
+              <Label htmlFor="prod-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+              <Input id="prod-name" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom du produit' : 'Product name'} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prod-nameFr">Name (French) *</Label>
+              <Label htmlFor="prod-nameFr">{lang === 'fr' ? 'Nom (Français) *' : 'Name (French) *'}</Label>
               <Input id="prod-nameFr" value={productForm.nameFr} onChange={e => setProductForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom du produit" />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="prod-desc">Description (English) *</Label>
-              <Textarea id="prod-desc" value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder="Product description" rows={3} />
+              <Label htmlFor="prod-desc">{lang === 'fr' ? 'Description (Anglais) *' : 'Description (English) *'}</Label>
+              <Textarea id="prod-desc" value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder={lang === 'fr' ? 'Description du produit' : 'Product description'} rows={3} />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="prod-descFr">Description (French) *</Label>
+              <Label htmlFor="prod-descFr">{lang === 'fr' ? 'Description (Français) *' : 'Description (French) *'}</Label>
               <Textarea id="prod-descFr" value={productForm.descriptionFr} onChange={e => setProductForm(f => ({ ...f, descriptionFr: e.target.value }))} placeholder="Description du produit" rows={3} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prod-price">Price (FCFA) *</Label>
+              <Label htmlFor="prod-price">{lang === 'fr' ? 'Prix (FCFA) *' : 'Price (FCFA) *'}</Label>
               <Input id="prod-price" type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="0" min="0" />
             </div>
             <div className="space-y-2">
-              <Label>Product Image *</Label>
+              <Label>{lang === 'fr' ? 'Image du produit *' : 'Product Image *'}</Label>
               <div className="space-y-3">
                 <label
                   htmlFor="prod-file-input"
@@ -1604,14 +1604,14 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   />
                   <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
                     {productUploading ? (
-                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">Uploading...</span></>
+                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
                     ) : productDragOver ? (
-                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">Drop image here</span></>
+                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
                     ) : (
                       <>
                         <Upload className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Click or drag & drop an image</span>
-                        <span className="text-[10px] text-primary font-medium mt-0.5">Browse Files</span>
+                        <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Cliquez ou glissez une image' : 'Click or drag & drop an image'}</span>
+                        <span className="text-[10px] text-primary font-medium mt-0.5">{lang === 'fr' ? 'Parcourir les fichiers' : 'Browse Files'}</span>
                       </>
                     )}
                   </div>
@@ -1620,7 +1620,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   <Input
                     value={productForm.image}
                     onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))}
-                    placeholder="Or paste image URL..."
+                    placeholder={lang === 'fr' ? 'Ou collez l\'URL de l\'image...' : 'Or paste image URL...'}
                     className="pr-8"
                   />
                   {productForm.image && (
@@ -1636,10 +1636,10 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prod-category">Category *</Label>
+              <Label htmlFor="prod-category">{lang === 'fr' ? 'Catégorie *' : 'Category *'}</Label>
               <Select value={productForm.categoryId} onValueChange={val => setProductForm(f => ({ ...f, categoryId: val }))}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner une catégorie' : 'Select category'} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(cat => (
@@ -1650,11 +1650,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>In Stock</Label>
+                <Label>{lang === 'fr' ? 'En stock' : 'In Stock'}</Label>
                 <Switch checked={productForm.inStock} onCheckedChange={val => setProductForm(f => ({ ...f, inStock: val }))} />
               </div>
               <div className="flex items-center justify-between mt-3">
-                <Label>Featured</Label>
+                <Label>{lang === 'fr' ? 'En vedette' : 'Featured'}</Label>
                 <Switch checked={productForm.featured} onCheckedChange={val => setProductForm(f => ({ ...f, featured: val }))} />
               </div>
             </div>
@@ -1662,17 +1662,17 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
           {productForm.image && (
             <div className="border rounded-xl p-4 bg-muted/30">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground">Image Preview</p>
+                <p className="text-xs text-muted-foreground">{lang === 'fr' ? 'Aperçu de l\'image' : 'Image Preview'}</p>
                 <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive" onClick={() => setProductForm(f => ({ ...f, image: '' }))}>
-                  <XIcon className="h-3 w-3 mr-1" /> Remove
+                  <XIcon className="h-3 w-3 mr-1" /> {lang === 'fr' ? 'Supprimer' : 'Remove'}
                 </Button>
               </div>
               <img src={productForm.image} alt="Preview" className="h-32 w-auto rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>Cancel</Button>
-            <Button onClick={handleProductSubmit} className="shadow-md shadow-primary/20">{editingProduct ? 'Update Product' : 'Create Product'}</Button>
+            <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+            <Button onClick={handleProductSubmit} className="shadow-md shadow-primary/20">{editingProduct ? (lang === 'fr' ? 'Mettre à jour' : 'Update Product') : (lang === 'fr' ? 'Créer le produit' : 'Create Product')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1681,24 +1681,24 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
       <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-elegant text-lg">Add New Category</DialogTitle>
-            <DialogDescription>Create a new product category</DialogDescription>
+            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Ajouter une nouvelle catégorie' : 'Add New Category'}</DialogTitle>
+            <DialogDescription>{lang === 'fr' ? 'Créer une nouvelle catégorie de produits' : 'Create a new product category'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="cat-name">Name (English) *</Label>
-              <Input id="cat-name" value={categoryForm.name} onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))} placeholder="Category name" />
+              <Label htmlFor="cat-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+              <Input id="cat-name" value={categoryForm.name} onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom de la catégorie' : 'Category name'} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-nameFr">Name (French) *</Label>
+              <Label htmlFor="cat-nameFr">{lang === 'fr' ? 'Nom (Français) *' : 'Name (French) *'}</Label>
               <Input id="cat-nameFr" value={categoryForm.nameFr} onChange={e => setCategoryForm(f => ({ ...f, nameFr: e.target.value }))} placeholder="Nom de la catégorie" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cat-slug">Slug *</Label>
+              <Label htmlFor="cat-slug">{lang === 'fr' ? 'Slug *' : 'Slug *'}</Label>
               <Input id="cat-slug" value={categoryForm.slug} onChange={e => setCategoryForm(f => ({ ...f, slug: e.target.value }))} placeholder="category-slug" />
             </div>
             <div className="space-y-2">
-              <Label>Category Image</Label>
+              <Label>{lang === 'fr' ? 'Image de la catégorie' : 'Category Image'}</Label>
               <div className="space-y-3">
                 <label
                   htmlFor="cat-file-input"
@@ -1724,14 +1724,14 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   />
                   <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
                     {categoryUploading ? (
-                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">Uploading...</span></>
+                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
                     ) : categoryDragOver ? (
-                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">Drop image here</span></>
+                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
                     ) : (
                       <>
                         <Upload className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Click or drag & drop an image</span>
-                        <span className="text-[10px] text-primary font-medium mt-0.5">Browse Files</span>
+                        <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Cliquez ou glissez une image' : 'Click or drag & drop an image'}</span>
+                        <span className="text-[10px] text-primary font-medium mt-0.5">{lang === 'fr' ? 'Parcourir les fichiers' : 'Browse Files'}</span>
                       </>
                     )}
                   </div>
@@ -1740,7 +1740,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                   <Input
                     value={categoryForm.image}
                     onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))}
-                    placeholder="Or paste image URL..."
+                    placeholder={lang === 'fr' ? 'Ou collez l\'URL de l\'image...' : 'Or paste image URL...'}
                     className="pr-8"
                   />
                   {categoryForm.image && (
@@ -1762,8 +1762,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCategorySubmit} className="shadow-md shadow-primary/20">Create Category</Button>
+            <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+            <Button onClick={handleCategorySubmit} className="shadow-md shadow-primary/20">{lang === 'fr' ? 'Créer la catégorie' : 'Create Category'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1772,8 +1772,8 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
       <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-elegant text-lg">Order Details</DialogTitle>
-            <DialogDescription>Viewing order information</DialogDescription>
+            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Détails de la commande' : 'Order Details'}</DialogTitle>
+            <DialogDescription>{lang === 'fr' ? 'Informations sur la commande' : 'Viewing order information'}</DialogDescription>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-4 py-4">
@@ -1793,11 +1793,11 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
               {/* Order Details Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-xl bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Payment</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Paiement' : 'Payment'}</p>
                   <Badge variant="outline" className="capitalize mt-1">{selectedOrder.paymentMethod}</Badge>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Status</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Statut' : 'Status'}</p>
                   <Badge
                     variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'}
                     className="capitalize mt-1"
@@ -1809,7 +1809,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
               {/* Order Items */}
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">Order Items</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">{lang === 'fr' ? 'Articles commandés' : 'Order Items'}</p>
                 <div className="bg-muted/40 rounded-xl p-3 max-h-48 overflow-y-auto">
                   {(() => {
                     try {
@@ -1836,18 +1836,18 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
 
               {/* Total */}
               <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
-                <span className="font-semibold">Total</span>
+                <span className="font-semibold">{lang === 'fr' ? 'Total' : 'Total'}</span>
                 <span className="font-bold text-lg text-primary">{selectedOrder.total.toLocaleString()} FCFA</span>
               </div>
 
               {/* Date */}
               <p className="text-[11px] text-muted-foreground">
-                Ordered on {new Date(selectedOrder.createdAt).toLocaleString()}
+                {lang === 'fr' ? `Commandé le ${new Date(selectedOrder.createdAt).toLocaleString()}` : `Ordered on ${new Date(selectedOrder.createdAt).toLocaleString()}`}
               </p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOrderDetailOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setOrderDetailOpen(false)}>{lang === 'fr' ? 'Fermer' : 'Close'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1856,16 +1856,16 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-destructive">Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-destructive">{lang === 'fr' ? 'Confirmer la suppression' : 'Confirm Deletion'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
-              {deleteTarget?.type === 'category' && ' This will also delete all products in this category.'}
-              This action cannot be undone.
+              {lang === 'fr' ? `Voulez-vous vraiment supprimer "${deleteTarget?.name}" ?` : `Are you sure you want to delete "${deleteTarget?.name}"?`}
+              {deleteTarget?.type === 'category' && (lang === 'fr' ? ' Cela supprimera également tous les produits de cette catégorie.' : ' This will also delete all products in this category.')}
+              {lang === 'fr' ? ' Cette action est irréversible.' : ' This action cannot be undone.'}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={executeDelete}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+            <Button variant="destructive" onClick={executeDelete}>{lang === 'fr' ? 'Supprimer' : 'Delete'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
