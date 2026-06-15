@@ -1290,7 +1290,7 @@ export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="absolute top-2 right-2 size-7 bg-background/60 hover:bg-destructive hover:text-destructive-foreground opacity-0 group-hover:opacity-100 transition-all"
+                                className="absolute top-2 right-2 size-7 bg-background/60 hover:bg-destructive hover:text-destructive-foreground transition-all"
                                 onClick={() => confirmDelete('category', cat.id, cat.name)}
                               >
                                 <Trash2 className="size-3" />
