@@ -1,0 +1,1502 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  ShoppingBag, Menu, X, Globe, Star, Trash2, Plus, Minus,
+     7→  Phone, MessageCircle, MapPin, CreditCard, ChevronRight,
+     8→  Heart, Sparkles, Eye, Filter, ShoppingBagIcon, Send, ArrowUp, Search
+     9→} from 'lucide-react';
+    10→import { Button } from '@/components/ui/button';
+    11→import { Card, CardContent } from '@/components/ui/card';
+    12→import { Badge } from '@/components/ui/badge';
+    13→import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+    14→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+    15→import { Input } from '@/components/ui/input';
+    16→import { Label } from '@/components/ui/label';
+    17→import { Textarea } from '@/components/ui/textarea';
+    18→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    19→import { useCartStore, CartItem } from '@/store/cart';
+    20→import { useLangStore } from '@/store/lang';
+    21→import { translations, Language } from '@/lib/i18n';
+    22→import { toast } from 'sonner';
+    23→import dynamic from 'next/dynamic';
+    24→import { WaveLogo } from '@/components/wave-logo';
+    25→import { MtnMomoLogo } from '@/components/mtn-momo-logo';
+    26→import { TikTokIcon } from '@/components/tiktok-icon';
+    27→
+    28→const AdminDashboard = dynamic(() => import('@/components/admin-dashboard'), {
+    29→  ssr: false,
+    30→});
+    31→
+    32→interface Product {
+    33→  id: string;
+    34→  name: string;
+    35→  nameFr: string;
+    36→  description: string;
+    37→  descriptionFr: string;
+    38→  price: number;
+    39→  image: string;
+    40→  categoryId: string;
+    41→  inStock: boolean;
+    42→  featured: boolean;
+    43→  category: { id: string; name: string; nameFr: string; slug: string };
+    44→}
+    45→
+    46→interface Category {
+    47→  id: string;
+    48→  name: string;
+    49→  nameFr: string;
+    50→  slug: string;
+    51→  image: string | null;
+    52→}
+    53→
+    54→interface Testimony {
+    55→  id: string;
+    56→  name: string;
+    57→  message: string;
+    58→  rating: number;
+    59→  approved: boolean;
+    60→}
+    61→
+    62→// Module-level cache so data survives component unmount/remount when toggling admin
+    63→let _pageDataCache: { products: Product[]; categories: Category[]; testimonies: Testimony[] } | null = null;
+    64→
+    65→export default function HomePage() {
+    66→  // Initialize from cache if available (avoids blank flash when returning from admin)
+    67→  const [products, setProducts] = useState<Product[]>(_pageDataCache?.products ?? []);
+    68→  const [categories, setCategories] = useState<Category[]>(_pageDataCache?.categories ?? []);
+    69→  const [testimonies, setTestimonies] = useState<Testimony[]>(_pageDataCache?.testimonies ?? []);
+    70→  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    71→  const [productSearch, setProductSearch] = useState('');
+    72→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    73→  const [showScrollTop, setShowScrollTop] = useState(false);
+    74→  const [isLoaded, setIsLoaded] = useState(() => !!_pageDataCache);
+    75→  const [hasMounted, setHasMounted] = useState(false);
+    76→  const [showAdmin, setShowAdmin] = useState(false);
+    77→  const [showProductsPage, setShowProductsPage] = useState(false);
+    78→
+    79→  const { items, addItem, removeItem, updateQuantity, clearCart, totalPrice } = useCartStore();
+    80→  const { lang, toggleLang } = useLangStore();
+    81→  const t = translations[lang];
+    82→
+    83→  const fetchData = useCallback(async () => {
+    84→    try {
+    85→      const [productsRes, categoriesRes, testimoniesRes] = await Promise.all([
+    86→        fetch('/api/products'),
+    87→        fetch('/api/categories'),
+    88→        fetch('/api/testimonies'),
+    89→      ]);
+    90→      const productsData = await productsRes.json();
+    91→      const categoriesData = await categoriesRes.json();
+    92→      const testimoniesData = await testimoniesRes.json();
+    93→      const approvedTestimonies = testimoniesData.filter((t: Testimony) => t.approved);
+    94→      setProducts(productsData);
+    95→      setCategories(categoriesData);
+    96→      setTestimonies(approvedTestimonies);
+    97→      // Save to module-level cache for instant restore when returning from admin
+    98→      _pageDataCache = { products: productsData, categories: categoriesData, testimonies: approvedTestimonies };
+    99→    } catch (error) {
+   100→      console.error('Failed to fetch data:', error);
+   101→    } finally {
+   102→      setIsLoaded(true);
+   103→    }
+   104→  }, []);
+   105→
+   106→  useEffect(() => {
+   107→    fetchData();
+   108→  }, [fetchData]);
+   109→
+   110→  useEffect(() => {
+   111→    setHasMounted(true);
+   112→  }, []);
+   113→
+   114→  useEffect(() => {
+   115→    const handleScroll = () => {
+   116→      setShowScrollTop(window.scrollY > 500);
+   117→    };
+   118→    window.addEventListener('scroll', handleScroll);
+   119→    return () => window.removeEventListener('scroll', handleScroll);
+   120→  }, []);
+   121→
+   122→  const filteredProducts = products.filter((p) => {
+   123→    const matchCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
+   124→    const matchSearch = productSearch.trim() === '' || 
+   125→      p.name.toLowerCase().includes(productSearch.toLowerCase()) || 
+   126→      p.nameFr.toLowerCase().includes(productSearch.toLowerCase()) ||
+   127→      p.description.toLowerCase().includes(productSearch.toLowerCase()) ||
+   128→      p.descriptionFr.toLowerCase().includes(productSearch.toLowerCase());
+   129→    return matchCategory && matchSearch;
+   130→  });
+   131→
+   132→  const getCategoryName = (cat: Category) => lang === 'fr' ? cat.nameFr : cat.name;
+   133→  const getProductName = (p: Product) => lang === 'fr' ? p.nameFr : p.name;
+   134→  const getProductDesc = (p: Product) => lang === 'fr' ? p.descriptionFr : p.description;
+   135→
+   136→  const handleAddToCart = (product: Product) => {
+   137→    addItem({
+   138→      id: product.id,
+   139→      name: product.name,
+   140→      nameFr: product.nameFr,
+   141→      price: product.price,
+   142→      image: product.image,
+   143→    });
+   144→    toast.success(lang === 'fr' ? 'Ajouté au panier !' : 'Added to cart!', {
+   145→      description: getProductName(product),
+   146→    });
+   147→  };
+   148→
+   149→  const handleWhatsAppOrder = () => {
+   150→    if (items.length === 0) {
+   151→      toast.error(lang === 'fr' ? 'Votre panier est vide' : 'Your cart is empty');
+   152→      return;
+   153→    }
+   154→    const phoneNumber = '22575354633';
+   155→    let message = lang === 'fr' 
+   156→      ? '🛍️ *Nouvelle Commande - God\'s Grace Boutique*\n\n'
+   157→      : '🛍️ *New Order - God\'s Grace Boutique*\n\n';
+   158→    
+   159→    items.forEach((item, index) => {
+   160→      const name = lang === 'fr' ? item.nameFr : item.name;
+   161→      message += `${index + 1}. ${name} x${item.quantity} - ${item.price * item.quantity} FCFA\n`;
+   162→    });
+   163→    
+   164→    message += `\n💰 *${t.cartTotal}: ${totalPrice()} FCFA*`;
+   165→    message += `\n\n💳 ${t.paymentInfo}:`;
+   166→    message += `\n- Wave: +225 0575354633`;
+   167→    message += `\n- MTN Money: +225 0575354633`;
+   168→    
+   169→    const encodedMessage = encodeURIComponent(message);
+   170→    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+   171→  };
+   172→
+   173→  const handleTestimonySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+   174→    e.preventDefault();
+   175→    const formData = new FormData(e.currentTarget);
+   176→    const name = formData.get('name') as string;
+   177→    const message = formData.get('message') as string;
+   178→    const rating = parseInt(formData.get('rating') as string) || 5;
+   179→
+   180→    try {
+   181→      const res = await fetch('/api/testimonies', {
+   182→        method: 'POST',
+   183→        headers: { 'Content-Type': 'application/json' },
+   184→        body: JSON.stringify({ name, message, rating }),
+   185→      });
+   186→      if (res.ok) {
+   187→        toast.success(lang === 'fr' ? 'Témoignage soumis pour approbation !' : 'Testimony submitted for approval!');
+   188→        (e.target as HTMLFormElement).reset();
+   189→      }
+   190→    } catch {
+   191→      toast.error(t.error);
+   192→    }
+   193→  };
+   194→
+   195→  // Secret admin access: keyboard shortcut Ctrl+Shift+Alt+A
+   196→  useEffect(() => {
+   197→    const handleKeyDown = (e: KeyboardEvent) => {
+   198→      if (e.ctrlKey && e.shiftKey && e.altKey && e.key === 'a') {
+   199→        e.preventDefault();
+   200→        setShowAdmin(true);
+   201→      }
+   202→    };
+   203→    window.addEventListener('keydown', handleKeyDown);
+   204→    return () => window.removeEventListener('keydown', handleKeyDown);
+   205→  }, []);
+   206→
+   207→  // Drag-to-scroll for featured carousel
+   208→  useEffect(() => {
+   209→    const container = document.getElementById('featured-scroll');
+   210→    if (!container) return;
+   211→    let isDown = false;
+   212→    let startX = 0;
+   213→    let scrollLeft = 0;
+   214→
+   215→    const onMouseDown = (e: MouseEvent) => {
+   216→      isDown = true;
+   217→      container.style.cursor = 'grabbing';
+   218→      container.style.userSelect = 'none';
+   219→      container.style.webkitUserSelect = 'none';
+   220→      startX = e.pageX - container.offsetLeft;
+   221→      scrollLeft = container.scrollLeft;
+   222→    };
+   223→    const onMouseLeave = () => { isDown = false; container.style.cursor = 'grab'; container.style.userSelect = ''; container.style.webkitUserSelect = ''; };
+   224→    const onMouseUp = () => { isDown = false; container.style.cursor = 'grab'; container.style.userSelect = ''; container.style.webkitUserSelect = ''; };
+   225→    const onMouseMove = (e: MouseEvent) => {
+   226→      if (!isDown) return;
+   227→      e.preventDefault();
+   228→      const x = e.pageX - container.offsetLeft;
+   229→      const walk = (x - startX) * 1.5;
+   230→      container.scrollLeft = scrollLeft - walk;
+   231→    };
+   232→
+   233→    container.addEventListener('mousedown', onMouseDown);
+   234→    container.addEventListener('mouseleave', onMouseLeave);
+   235→    container.addEventListener('mouseup', onMouseUp);
+   236→    container.addEventListener('mousemove', onMouseMove);
+   237→    return () => {
+   238→      container.removeEventListener('mousedown', onMouseDown);
+   239→      container.removeEventListener('mouseleave', onMouseLeave);
+   240→      container.removeEventListener('mouseup', onMouseUp);
+   241→      container.removeEventListener('mousemove', onMouseMove);
+   242→    };
+   243→  }, [isLoaded]);
+   244→
+   245→  const scrollTo = (id: string) => {
+   246→    if (id === 'products-page') {
+   247→      setShowProductsPage(true);
+   248→      setMobileMenuOpen(false);
+   249→      window.scrollTo({ top: 0, behavior: 'smooth' });
+   250→      return;
+   251→    }
+   252→    setShowProductsPage(false);
+   253→    setMobileMenuOpen(false);
+   254→    setTimeout(() => {
+   255→      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+   256→    }, 100);
+   257→  };
+   258→
+   259→  const navLinks = [
+   260→    { id: 'home', label: t.home },
+   261→    { id: 'about', label: t.about },
+   262→    { id: 'products-page', label: t.products },
+   263→    { id: 'testimony', label: t.testimony },
+   264→    { id: 'contact', label: t.contact },
+   265→  ];
+   266→
+   267→  if (!isLoaded) {
+   268→    return (
+   269→      <div className="min-h-screen flex items-center justify-center bg-background">
+   270→        <motion.div
+   271→          animate={{ rotate: 360 }}
+   272→          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+   273→          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+   274→        />
+   275→      </div>
+   276→    );
+   277→  }
+   278→
+   279→  if (showAdmin) {
+   280→    return <AdminDashboard onBackToStore={() => { setShowAdmin(false); window.scrollTo({ top: 0 }); }} />;
+   281→  }
+   282→
+   283→  // ─── Separate All Products Page ──────────────────────────────────────────
+   284→  if (showProductsPage) {
+   285→    return (
+   286→      <div className="min-h-screen flex flex-col bg-background">
+   287→        {/* Navbar */}
+   288→        <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border/50 safe-top">
+   289→          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+   290→            <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+   291→              <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setShowProductsPage(false); window.scrollTo({ top: 0 }); }}>
+   292→                <img src="/images/logo.png" alt="God's Grace Boutique" className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover" />
+   293→                <div>
+   294→                  <h1 className="text-base sm:text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
+   295→                  <p className="text-[8px] sm:text-[10px] md:text-xs text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase">Boutique</p>
+   296→                </div>
+   297→              </div>
+   298→              <div className="flex items-center gap-2">
+   299→                {/* Language Toggle */}
+   300→                <Button variant="ghost" size="sm" onClick={toggleLang} className="gap-1 text-xs">
+   301→                  <Globe className="h-3.5 w-3.5" />
+   302→                  {lang === 'en' ? 'FR' : 'EN'}
+   303→                </Button>
+   304→                {/* Cart */}
+   305→                <Sheet>
+   306→                  <SheetTrigger asChild>
+   307→                    <Button variant="outline" size="sm" className="relative gap-1.5">
+   308→                      <ShoppingBag className="h-4 w-4" />
+   309→                      <span className="hidden sm:inline text-xs">{t.cart}</span>
+   310→                      {hasMounted && items.length > 0 && (
+   311→                        <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground">
+   312→                          {items.reduce((s, i) => s + i.quantity, 0)}
+   313→                        </Badge>
+   314→                      )}
+   315→                    </Button>
+   316→                  </SheetTrigger>
+   317→                  <SheetContent className="w-full sm:w-[420px] flex flex-col p-0">
+   318→                    <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-5">
+   319→                      <SheetHeader>
+   320→                        <SheetTitle className="flex items-center gap-3 text-primary-foreground">
+   321→                          <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+   322→                            <ShoppingBag className="h-5 w-5" />
+   323→                          </div>
+   324→                          <div>
+   325→                            <div className="text-lg font-elegant">{t.cartTitle}</div>
+   326→                            {items.length > 0 && (
+   327→                              <div className="text-xs text-primary-foreground/70 font-normal">
+   328→                                {items.reduce((s, i) => s + i.quantity, 0)} {lang === 'fr' ? 'article(s)' : 'item(s)'}
+   329→                              </div>
+   330→                            )}
+   331→                          </div>
+   332→                        </SheetTitle>
+   333→                      </SheetHeader>
+   334→                    </div>
+   335→                    <div className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin' }}>
+   336→                      {items.length === 0 ? (
+   337→                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4 py-12">
+   338→                          <div className="h-24 w-24 rounded-full bg-primary/5 flex items-center justify-center">
+   339→                            <ShoppingBagIcon className="h-12 w-12 opacity-20" />
+   340→                          </div>
+   341→                          <div className="text-center">
+   342→                            <p className="font-medium text-base text-foreground/60">{t.cartEmpty}</p>
+   343→                            <p className="text-sm mt-1 text-muted-foreground/60">{lang === 'fr' ? 'Parcourez nos collections' : 'Browse our collections'}</p>
+   344→                          </div>
+   345→                        </div>
+   346→                      ) : (
+   347→                        <div className="space-y-3">
+   348→                          {items.map((item) => (
+   349→                            <div key={item.id} className="group bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+   350→                              <div className="flex gap-0">
+   351→                                <div className="relative w-28 h-28 flex-shrink-0">
+   352→                                  <img src={item.image} alt={lang === 'fr' ? item.nameFr : item.name} className="w-full h-full object-cover" />
+   353→                                  <div className="absolute top-2 left-2">
+   354→                                    <Badge className="h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary/90 text-primary-foreground backdrop-blur-sm">{item.quantity}</Badge>
+   355→                                  </div>
+   356→                                </div>
+   357→                                <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+   358→                                  <div>
+   359→                                    <h4 className="font-semibold text-sm truncate pr-6">{lang === 'fr' ? item.nameFr : item.name}</h4>
+   360→                                    <p className="text-primary font-bold text-sm mt-0.5">{item.price.toLocaleString()} {t.currency}</p>
+   361→                                  </div>
+   362→                                  <div className="flex items-center justify-between">
+   363→                                    <div className="flex items-center gap-1 bg-muted/50 rounded-full p-0.5">
+   364→                                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="h-7 w-7 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"><Minus className="h-3 w-3" /></button>
+   365→                                      <span className="text-sm font-bold w-7 text-center">{item.quantity}</span>
+   366→                                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="h-7 w-7 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"><Plus className="h-3 w-3" /></button>
+   367→                                    </div>
+   368→                                    <div className="flex items-center gap-2">
+   369→                                      <span className="text-xs font-bold text-primary">{(item.price * item.quantity).toLocaleString()} {t.currency}</span>
+   370→                                      <button onClick={() => removeItem(item.id)} className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"><Trash2 className="h-3.5 w-3.5" /></button>
+   371→                                    </div>
+   372→                                  </div>
+   373→                                </div>
+   374→                              </div>
+   375→                            </div>
+   376→                          ))}
+   377→                        </div>
+   378→                      )}
+   379→                    </div>
+   380→                    {items.length > 0 && (
+   381→                      <div className="border-t bg-muted/20">
+   382→                        <div className="px-5 pt-4 pb-2">
+   383→                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t.paymentInfo}</p>
+   384→                          <div className="flex gap-3">
+   385→                            <div className="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl px-3 py-2.5 border border-blue-100 dark:border-blue-900/50">
+   386→                              <WaveLogo size={28} className="flex-shrink-0" />
+   387→                              <div className="min-w-0"><p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Wave</p><p className="text-xs font-bold truncate">+225 0575354633</p></div>
+   388→                            </div>
+   389→                            <div className="flex-1 flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl px-3 py-2.5 border border-yellow-100 dark:border-yellow-900/50">
+   390→                              <MtnMomoLogo size={28} className="flex-shrink-0" />
+   391→                              <div className="min-w-0"><p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">MTN Money</p><p className="text-xs font-bold truncate">+225 0575354633</p></div>
+   392→                            </div>
+   393→                          </div>
+   394→                        </div>
+   395→                        <div className="px-5 pt-3 pb-5 space-y-3">
+   396→                          <div className="flex items-center justify-between bg-primary/5 rounded-xl px-4 py-3">
+   397→                            <span className="font-semibold text-sm">{t.cartTotal}</span>
+   398→                            <span className="text-primary font-bold text-lg font-elegant">{totalPrice().toLocaleString()} {t.currency}</span>
+   399→                          </div>
+   400→                          <Button onClick={handleWhatsAppOrder} className="w-full bg-green-600 hover:bg-green-700 text-white gap-2 text-base py-6 rounded-xl font-semibold shadow-lg shadow-green-600/20">
+   401→                            <MessageCircle className="h-5 w-5" />
+   402→                            {t.whatsappOrder}
+   403→                          </Button>
+   404→                          <button onClick={clearCart} className="w-full text-center text-sm text-muted-foreground hover:text-destructive transition-colors py-1">
+   405→                            {lang === 'fr' ? 'Vider le panier' : 'Clear cart'}
+   406→                          </button>
+   407→                        </div>
+   408→                      </div>
+   409→                    )}
+   410→                  </SheetContent>
+   411→                </Sheet>
+   412→              </div>
+   413→            </div>
+   414→          </div>
+   415→        </nav>
+   416→
+   417→        {/* Products Page Content */}
+   418→        <main className="flex-1">
+   419→          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+   420→            {/* Back Button & Title */}
+   421→            <div className="mb-8 sm:mb-10">
+   422→              <Button
+   423→                variant="ghost"
+   424→                onClick={() => { setShowProductsPage(false); window.scrollTo({ top: 0 }); }}
+   425→                className="gap-2 mb-4 text-muted-foreground hover:text-primary -ml-2"
+   426→              >
+   427→                <ChevronRight className="h-4 w-4 rotate-180" />
+   428→                {lang === 'fr' ? 'Retour' : 'Back'}
+   429→              </Button>
+   430→              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+   431→                <Badge variant="secondary" className="mb-3">{t.products}</Badge>
+   432→                <h2 className="text-3xl md:text-4xl font-bold mb-2 font-elegant">
+   433→                  {lang === 'fr' ? 'Tous les Produits' : 'All Products'}
+   434→                </h2>
+   435→                <p className="text-muted-foreground max-w-2xl">
+   436→                  {lang === 'fr'
+   437→                    ? 'Parcourez notre sélection complète de mode et accessoires'
+   438→                    : 'Browse our complete selection of fashion and accessories'}
+   439→                </p>
+   440→              </motion.div>
+   441→            </div>
+   442→
+   443→            {/* Search Bar */}
+   444→            <div className="relative mb-6 max-w-md mx-auto">
+   445→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+   446→              <Input
+   447→                type="text"
+   448→                value={productSearch}
+   449→                onChange={(e) => setProductSearch(e.target.value)}
+   450→                placeholder={lang === 'fr' ? 'Rechercher un produit...' : 'Search products...'}
+   451→                className="pl-9 pr-9 h-10 rounded-full border-border/50 bg-muted/30 focus:bg-background"
+   452→              />
+   453→              {productSearch && (
+   454→                <button
+   455→                  onClick={() => setProductSearch('')}
+   456→                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   457→                >
+   458→                  <X className="h-4 w-4" />
+   459→                </button>
+   460→              )}
+   461→            </div>
+   462→
+   463→            {/* Category Filter */}
+   464→            <div className="flex flex-wrap gap-2 mb-8 sm:mb-10 justify-center">
+   465→              <Button
+   466→                variant={selectedCategory === 'all' ? 'default' : 'outline'}
+   467→                size="sm"
+   468→                onClick={() => setSelectedCategory('all')}
+   469→                className="gap-1.5 text-[11px] sm:text-xs"
+   470→              >
+   471→                <Filter className="h-3.5 w-3.5" />
+   472→                {t.allCategories}
+   473→              </Button>
+   474→              {categories.map((cat) => (
+   475→                <Button
+   476→                  key={cat.id}
+   477→                  variant={selectedCategory === cat.id ? 'default' : 'outline'}
+   478→                  size="sm"
+   479→                  onClick={() => setSelectedCategory(cat.id)}
+   480→                  className="text-[11px] sm:text-xs"
+   481→                >
+   482→                  {getCategoryName(cat)}
+   483→                </Button>
+   484→              ))}
+   485→            </div>
+   486→
+   487→            {/* Results Count */}
+   488→            {(productSearch || selectedCategory !== 'all') && (
+   489→              <p className="text-xs text-muted-foreground text-center mb-4">
+   490→                {filteredProducts.length} {lang === 'fr' 
+   491→                  ? (filteredProducts.length > 1 ? 'produits trouvés' : 'produit trouvé')
+   492→                  : (filteredProducts.length !== 1 ? 'products found' : 'product found')}
+   493→              </p>
+   494→            )}
+   495→
+   496→            {/* Products Grid */}
+   497→            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+   498→              {filteredProducts.map((product, index) => (
+   499→                <motion.div
+   500→                  key={product.id}
+   501→                  initial={{ opacity: 0, y: 20 }}
+   502→                  animate={{ opacity: 1, y: 0 }}
+   503→                  transition={{ delay: index * 0.05, duration: 0.4 }}
+   504→                >
+   505→                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 h-full flex flex-col">
+   506→                    <div className="relative overflow-hidden aspect-square">
+   507→                      <img
+   508→                        src={product.image}
+   509→                        alt={getProductName(product)}
+   510→                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+   511→                      />
+   512→                      <div className="absolute top-1 left-1 sm:top-2 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
+   513→                        {product.featured && (
+   514→                          <Badge className="bg-primary text-primary-foreground text-[8px] sm:text-[10px] px-1 sm:px-2 py-0 sm:py-0.5">
+   515→                            <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5" />
+   516→                            {lang === 'fr' ? 'Vedette' : 'Featured'}
+   517→                          </Badge>
+   518→                        )}
+   519→                        {!product.inStock && (
+   520→                          <Badge variant="destructive" className="text-[8px] sm:text-[10px] px-1 sm:px-2 py-0 sm:py-0.5">
+   521→                            {t.outOfStock}
+   522→                          </Badge>
+   523→                        )}
+   524→                      </div>
+   525→                      <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+   526→                        <Badge className="bg-white/90 text-foreground shadow-sm text-[8px] sm:text-xs font-bold px-1 sm:px-2 py-0 sm:py-0.5 hidden sm:inline-flex">
+   527→                          {getCategoryName(product.category)}
+   528→                        </Badge>
+   529→                      </div>
+   530→                    </div>
+   531→                    <CardContent className="p-2 sm:p-3 md:p-4 flex-1 flex flex-col">
+   532→                      <h3 className="font-semibold text-xs sm:text-sm md:text-base mb-0.5 sm:mb-1 line-clamp-1">
+   533→                        {getProductName(product)}
+   534→                      </h3>
+   535→                      <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-1 sm:line-clamp-2 flex-1">
+   536→                        {getProductDesc(product)}
+   537→                      </p>
+   538→                      <div className="flex items-center justify-between mt-auto gap-1 min-w-0 overflow-hidden">
+   539→                        <span className="text-primary font-bold text-xs sm:text-sm md:text-base whitespace-nowrap">
+   540→                          {product.price.toLocaleString()} {t.currency}
+   541→                        </span>
+   542→                        <Button
+   543→                          size="sm"
+   544→                          onClick={() => handleAddToCart(product)}
+   545→                          disabled={!product.inStock}
+   546→                          className="gap-0.5 sm:gap-1 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink min-w-0 overflow-hidden"
+   547→                        >
+   548→                          <ShoppingBag className="h-3 w-3 flex-shrink-0" />
+   549→                          <span className="truncate max-w-[60px] sm:max-w-[80px] md:max-w-[100px]">{product.inStock ? t.addToCart : t.outOfStock}</span>
+   550→                        </Button>
+   551→                      </div>
+   552→                    </CardContent>
+   553→                  </Card>
+   554→                </motion.div>
+   555→              ))}
+   556→            </div>
+   557→
+   558→            {filteredProducts.length === 0 && (
+   559→              <div className="text-center py-16 text-muted-foreground">
+   560→                <ShoppingBagIcon className="h-16 w-16 mx-auto mb-4 opacity-30" />
+   561→                <p className="text-lg">
+   562→                  {lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}
+   563→                </p>
+   564→              </div>
+   565→            )}
+   566→          </div>
+   567→        </main>
+   568→
+   569→        {/* Footer */}
+   570→        <footer className="bg-primary text-primary-foreground mt-auto">
+   571→          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+   572→            <p className="text-xs text-primary-foreground/40 text-center">
+   573→              © {new Date().getFullYear()} God&apos;s Grace Boutique. {t.footerRights}
+   574→            </p>
+   575→          </div>
+   576→        </footer>
+   577→      </div>
+   578→    );
+   579→  }
+   580→
+   581→  return (
+   582→    <div className="min-h-screen flex flex-col bg-background">
+   583→      {/* Navbar */}
+   584→      <nav className="sticky top-0 z-50 bg-background/90 backdrop-blur-lg border-b border-border/50 safe-top">
+   585→        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+   586→          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+   587→            {/* Logo */}
+   588→            <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo('home')}>
+   589→              <img src="/images/logo.png" alt="God's Grace Boutique" className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full object-cover" />
+   590→              <div className="block sm:block">
+   591→                <h1 className="text-base sm:text-lg md:text-xl font-normal text-primary leading-tight font-handwriting">God&apos;s Grace</h1>
+   592→                <p className="text-[8px] sm:text-[10px] md:text-xs text-muted-foreground tracking-[0.15em] sm:tracking-[0.2em] uppercase">Boutique</p>
+   593→              </div>
+   594→            </div>
+   595→
+   596→            {/* Desktop Navigation */}
+   597→            <div className="hidden md:flex items-center gap-1">
+   598→              {navLinks.map((link) => (
+   599→                <button
+   600→                  key={link.id}
+   601→                  onClick={() => scrollTo(link.id)}
+   602→                  className="px-4 py-2 text-sm font-medium text-foreground/70 hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
+   603→                >
+   604→                  {link.label}
+   605→                </button>
+   606→              ))}
+   607→            </div>
+   608→
+   609→            {/* Right Actions */}
+   610→            <div className="flex items-center gap-2">
+   611→              {/* Language Toggle */}
+   612→              <Button
+   613→                variant="outline"
+   614→                size="sm"
+   615→                onClick={toggleLang}
+   616→                className="gap-1.5 text-xs font-semibold"
+   617→              >
+   618→                <Globe className="h-3.5 w-3.5" />
+   619→                {lang === 'en' ? 'FR' : 'EN'}
+   620→              </Button>
+   621→
+   622→              {/* Cart */}
+   623→              <Sheet>
+   624→                <SheetTrigger asChild>
+   625→                  <Button variant="outline" size="sm" className="relative gap-1.5">
+   626→                    <ShoppingBag className="h-4 w-4" />
+   627→                    <span className="hidden sm:inline text-xs">{t.cart}</span>
+   628→                    {hasMounted && items.length > 0 && (
+   629→                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground">
+   630→                        {items.reduce((s, i) => s + i.quantity, 0)}
+   631→                      </Badge>
+   632→                    )}
+   633→                  </Button>
+   634→                </SheetTrigger>
+   635→                <SheetContent className="w-full sm:w-[420px] flex flex-col p-0">
+   636→                  {/* Cart Header */}
+   637→                  <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-5">
+   638→                    <SheetHeader>
+   639→                      <SheetTitle className="flex items-center gap-3 text-primary-foreground">
+   640→                        <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+   641→                          <ShoppingBag className="h-5 w-5" />
+   642→                        </div>
+   643→                        <div>
+   644→                          <div className="text-lg font-elegant">{t.cartTitle}</div>
+   645→                          {items.length > 0 && (
+   646→                            <div className="text-xs text-primary-foreground/70 font-normal">
+   647→                              {items.reduce((s, i) => s + i.quantity, 0)} {lang === 'fr' ? 'article(s)' : 'item(s)'}
+   648→                            </div>
+   649→                          )}
+   650→                        </div>
+   651→                      </SheetTitle>
+   652→                    </SheetHeader>
+   653→                  </div>
+   654→
+   655→                  {/* Cart Body */}
+   656→                  <div className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin' }}>
+   657→                    {items.length === 0 ? (
+   658→                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4 py-12">
+   659→                        <div className="h-24 w-24 rounded-full bg-primary/5 flex items-center justify-center">
+   660→                          <ShoppingBagIcon className="h-12 w-12 opacity-20" />
+   661→                        </div>
+   662→                        <div className="text-center">
+   663→                          <p className="font-medium text-base text-foreground/60">{t.cartEmpty}</p>
+   664→                          <p className="text-sm mt-1 text-muted-foreground/60">
+   665→                            {lang === 'fr' ? 'Parcourez nos collections' : 'Browse our collections'}
+   666→                          </p>
+   667→                        </div>
+   668→                      </div>
+   669→                    ) : (
+   670→                      <div className="space-y-3">
+   671→                        {items.map((item) => (
+   672→                          <div key={item.id} className="group bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+   673→                            <div className="flex gap-0">
+   674→                              {/* Product Image */}
+   675→                              <div className="relative w-28 h-28 flex-shrink-0">
+   676→                                <img
+   677→                                  src={item.image}
+   678→                                  alt={lang === 'fr' ? item.nameFr : item.name}
+   679→                                  className="w-full h-full object-cover"
+   680→                                />
+   681→                                <div className="absolute top-2 left-2">
+   682→                                  <Badge className="h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary/90 text-primary-foreground backdrop-blur-sm">
+   683→                                    {item.quantity}
+   684→                                  </Badge>
+   685→                                </div>
+   686→                              </div>
+   687→                              {/* Product Info */}
+   688→                              <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+   689→                                <div>
+   690→                                  <h4 className="font-semibold text-sm truncate pr-6">{lang === 'fr' ? item.nameFr : item.name}</h4>
+   691→                                  <p className="text-primary font-bold text-sm mt-0.5">{item.price.toLocaleString()} {t.currency}</p>
+   692→                                </div>
+   693→                                <div className="flex items-center justify-between">
+   694→                                  <div className="flex items-center gap-1 bg-muted/50 rounded-full p-0.5">
+   695→                                    <button
+   696→                                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+   697→                                      className="h-7 w-7 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
+   698→                                    >
+   699→                                      <Minus className="h-3 w-3" />
+   700→                                    </button>
+   701→                                    <span className="text-sm font-bold w-7 text-center">{item.quantity}</span>
+   702→                                    <button
+   703→                                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+   704→                                      className="h-7 w-7 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200"
+   705→                                    >
+   706→                                      <Plus className="h-3 w-3" />
+   707→                                    </button>
+   708→                                  </div>
+   709→                                  <div className="flex items-center gap-2">
+   710→                                    <span className="text-xs font-bold text-primary">
+   711→                                      {(item.price * item.quantity).toLocaleString()} {t.currency}
+   712→                                    </span>
+   713→                                    <button
+   714→                                      onClick={() => removeItem(item.id)}
+   715→                                      className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+   716→                                    >
+   717→                                      <Trash2 className="h-3.5 w-3.5" />
+   718→                                    </button>
+   719→                                  </div>
+   720→                                </div>
+   721→                              </div>
+   722→                            </div>
+   723→                          </div>
+   724→                        ))}
+   725→                      </div>
+   726→                    )}
+   727→                  </div>
+   728→
+   729→                  {/* Cart Footer */}
+   730→                  {items.length > 0 && (
+   731→                    <div className="border-t bg-muted/20">
+   732→                      {/* Payment Info */}
+   733→                      <div className="px-5 pt-4 pb-2">
+   734→                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+   735→                          {t.paymentInfo}
+   736→                        </p>
+   737→                        <div className="flex gap-3">
+   738→                          <div className="flex-1 flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-xl px-3 py-2.5 border border-blue-100 dark:border-blue-900/50">
+   739→                            <WaveLogo size={28} className="flex-shrink-0" />
+   740→                            <div className="min-w-0">
+   741→                              <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Wave</p>
+   742→                              <p className="text-xs font-bold truncate">+225 0575354633</p>
+   743→                            </div>
+   744→                          </div>
+   745→                          <div className="flex-1 flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/30 rounded-xl px-3 py-2.5 border border-yellow-100 dark:border-yellow-900/50">
+   746→                            <MtnMomoLogo size={28} className="flex-shrink-0" />
+   747→                            <div className="min-w-0">
+   748→                              <p className="text-[10px] text-yellow-600 dark:text-yellow-400 font-medium">MTN Money</p>
+   749→                              <p className="text-xs font-bold truncate">+225 0575354633</p>
+   750→                            </div>
+   751→                          </div>
+   752→                        </div>
+   753→                      </div>
+   754→
+   755→                      {/* Total & Actions */}
+   756→                      <div className="px-5 pt-3 pb-5 space-y-3">
+   757→                        <div className="flex items-center justify-between bg-primary/5 rounded-xl px-4 py-3">
+   758→                          <span className="font-semibold text-sm">{t.cartTotal}</span>
+   759→                          <span className="text-primary font-bold text-lg font-elegant">{totalPrice().toLocaleString()} {t.currency}</span>
+   760→                        </div>
+   761→                        <Button onClick={handleWhatsAppOrder} className="w-full bg-green-600 hover:bg-green-700 text-white gap-2 text-base py-6 rounded-xl font-semibold shadow-lg shadow-green-600/20">
+   762→                          <MessageCircle className="h-5 w-5" />
+   763→                          {t.whatsappOrder}
+   764→                        </Button>
+   765→                        <button onClick={clearCart} className="w-full text-center text-sm text-muted-foreground hover:text-destructive transition-colors py-1">
+   766→                          {lang === 'fr' ? 'Vider le panier' : 'Clear cart'}
+   767→                        </button>
+   768→                      </div>
+   769→                    </div>
+   770→                  )}
+   771→                </SheetContent>
+   772→              </Sheet>
+   773→
+   774→              {/* Mobile Menu */}
+   775→              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+   776→                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+   777→              </Button>
+   778→            </div>
+   779→          </div>
+   780→        </div>
+   781→
+   782→        {/* Mobile Navigation */}
+   783→        <AnimatePresence>
+   784→          {mobileMenuOpen && (
+   785→            <motion.div
+   786→              initial={{ opacity: 0, height: 0 }}
+   787→              animate={{ opacity: 1, height: 'auto' }}
+   788→              exit={{ opacity: 0, height: 0 }}
+   789→              className="md:hidden bg-background border-b border-border overflow-hidden"
+   790→            >
+   791→              <div className="px-4 py-3 space-y-1">
+   792→                {navLinks.map((link) => (
+   793→                  <button
+   794→                    key={link.id}
+   795→                    onClick={() => scrollTo(link.id)}
+   796→                    className="block w-full text-left px-4 py-3 text-sm font-medium text-foreground/70 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+   797→                  >
+   798→                    {link.label}
+   799→                  </button>
+   800→                ))}
+   801→              </div>
+   802→            </motion.div>
+   803→          )}
+   804→        </AnimatePresence>
+   805→      </nav>
+   806→
+   807→      {/* Hero Section */}
+   808→      <section id="home" className="relative min-h-[85vh] sm:min-h-screen flex items-center">
+   809→        <div className="absolute inset-0 z-0">
+   810→          <img src="/images/hero.png" alt="God's Grace Boutique" className="w-full h-full object-cover" />
+   811→          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/35" />
+   812→        </div>
+   813→        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-32">
+   814→          <motion.div
+   815→            initial={{ opacity: 0, y: 30 }}
+   816→            animate={{ opacity: 1, y: 0 }}
+   817→            transition={{ duration: 0.8 }}
+   818→            className="max-w-2xl"
+   819→          >
+   820→            <Badge className="mb-3 sm:mb-4 bg-primary/90 text-primary-foreground px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
+   821→              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
+   822→              {lang === 'fr' ? 'Nouvelle Collection' : 'New Collection'}
+   823→            </Badge>
+   824→            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight font-elegant">
+   825→              {t.heroTitle}
+   826→            </h1>
+   827→            <p className="text-xl sm:text-2xl md:text-3xl text-white/80 mb-2 font-handwriting">
+   828→              {t.heroSubtitle}
+   829→            </p>
+   830→            <p className="text-sm sm:text-base md:text-lg text-white/60 mb-6 sm:mb-8 max-w-lg">
+   831→              {t.heroDescription}
+   832→            </p>
+   833→            <div className="flex flex-wrap gap-3 sm:gap-4">
+   834→              <Button onClick={() => scrollTo('products')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base gap-2">
+   835→                {t.shopNow}
+   836→                <ChevronRight className="h-4 w-4" />
+   837→              </Button>
+   838→              <Button onClick={() => scrollTo('contact')} variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20 px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base">
+   839→                {t.contact}
+   840→              </Button>
+   841→            </div>
+   842→          </motion.div>
+   843→        </div>
+   844→      </section>
+   845→
+   846→      {/* About Section */}
+   847→      <section id="about" className="py-12 sm:py-16 md:py-28 bg-background">
+   848→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   849→          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center">
+   850→            <motion.div
+   851→              initial={{ opacity: 0, x: -30 }}
+   852→              whileInView={{ opacity: 1, x: 0 }}
+   853→              viewport={{ once: true }}
+   854→              transition={{ duration: 0.6 }}
+   855→            >
+   856→              <div className="relative">
+   857→                <img src="/images/about.png" alt="About God's Grace Boutique" className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]" />
+   858→                <div className="absolute -bottom-4 -right-4 sm:-bottom-6 sm:-right-6 bg-primary text-primary-foreground rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
+   859→                  <Heart className="h-6 w-6 sm:h-8 sm:w-8" />
+   860→                  <p className="text-sm font-medium mt-2 font-handwriting">
+   861→                    {lang === 'fr' ? 'Avec Amour' : 'Made with Love'}
+   862→                  </p>
+   863→                </div>
+   864→              </div>
+   865→            </motion.div>
+   866→            <motion.div
+   867→              initial={{ opacity: 0, x: 30 }}
+   868→              whileInView={{ opacity: 1, x: 0 }}
+   869→              viewport={{ once: true }}
+   870→              transition={{ duration: 0.6 }}
+   871→              className="space-y-6"
+   872→            >
+   873→              <div>
+   874→                <Badge variant="secondary" className="mb-4">{t.about}</Badge>
+   875→                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 font-elegant">{t.aboutTitle}</h2>
+   876→              </div>
+   877→              <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+   878→                {t.aboutDescription}
+   879→              </p>
+   880→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
+   881→                <Card className="bg-primary/5 border-primary/10">
+   882→                  <CardContent className="p-5">
+   883→                    <h3 className="font-bold text-lg mb-2 text-primary font-elegant">{t.aboutMission}</h3>
+   884→                    <p className="text-sm text-muted-foreground">{t.aboutMissionText}</p>
+   885→                  </CardContent>
+   886→                </Card>
+   887→                <Card className="bg-primary/5 border-primary/10">
+   888→                  <CardContent className="p-5">
+   889→                    <h3 className="font-bold text-lg mb-2 text-primary font-elegant">{t.aboutValues}</h3>
+   890→                    <p className="text-sm text-muted-foreground">{t.aboutValuesText}</p>
+   891→                  </CardContent>
+   892→                </Card>
+   893→              </div>
+   894→            </motion.div>
+   895→          </div>
+   896→        </div>
+   897→      </section>
+   898→
+   899→      {/* Shop by Category Section */}
+   900→      {categories.length > 0 && (
+   901→        <section className="py-12 sm:py-16 md:py-20 bg-background">
+   902→          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   903→            <motion.div
+   904→              initial={{ opacity: 0, y: 20 }}
+   905→              whileInView={{ opacity: 1, y: 0 }}
+   906→              viewport={{ once: true }}
+   907→              transition={{ duration: 0.5 }}
+   908→              className="text-center mb-8 sm:mb-12"
+   909→            >
+   910→              <Badge variant="secondary" className="mb-4">
+   911→                {lang === 'fr' ? 'Catégories' : 'Categories'}
+   912→              </Badge>
+   913→              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-elegant">
+   914→                {lang === 'fr' ? 'Achetez par Catégorie' : 'Shop by Category'}
+   915→              </h2>
+   916→              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+   917→                {lang === 'fr' ? 'Parcourez notre collection par catégorie' : 'Browse our collection by category'}
+   918→              </p>
+   919→            </motion.div>
+   920→            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+   921→              {categories.map((cat, index) => (
+   922→                <motion.div
+   923→                  key={cat.id}
+   924→                  initial={{ opacity: 0, y: 20 }}
+   925→                  whileInView={{ opacity: 1, y: 0 }}
+   926→                  viewport={{ once: true }}
+   927→                  transition={{ duration: 0.4, delay: index * 0.05 }}
+   928→                  className="cursor-pointer group"
+   929→                  onClick={() => {
+   930→                    setSelectedCategory(cat.id);
+   931→                    setShowProductsPage(true);
+   932→                    setTimeout(() => {
+   933→                      document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' });
+   934→                    }, 100);
+   935→                  }}
+   936→                >
+   937→                  <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-primary/30 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/10">
+   938→                    {cat.image ? (
+   939→                      <img
+   940→                        src={cat.image}
+   941→                        alt={getCategoryName(cat)}
+   942→                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+   943→                      />
+   944→                    ) : (
+   945→                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+   946→                        <ShoppingBag className="h-8 w-8 sm:h-10 sm:w-10 text-primary/40" />
+   947→                      </div>
+   948→                    )}
+   949→                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+   950→                    <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+   951→                      <h3 className="text-white font-bold text-xs sm:text-sm md:text-base font-elegant leading-tight">
+   952→                        {getCategoryName(cat)}
+   953→                      </h3>
+   954→                      <p className="text-white/70 text-[10px] sm:text-xs mt-0.5">
+   955→                        {products.filter(p => p.categoryId === cat.id).length} {lang === 'fr' ? 'articles' : 'items'}
+   956→                      </p>
+   957→                    </div>
+   958→                  </div>
+   959→                </motion.div>
+   960→              ))}
+   961→            </div>
+   962→          </div>
+   963→        </section>
+   964→      )}
+   965→
+   966→      {/* Featured Collection - Horizontal Scroll */}
+   967→      <section id="collection" className="py-8 sm:py-12 md:py-20 bg-muted/30">
+   968→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   969→          <motion.div
+   970→            initial={{ opacity: 0, y: 20 }}
+   971→            whileInView={{ opacity: 1, y: 0 }}
+   972→            viewport={{ once: true }}
+   973→            className="text-center mb-6 sm:mb-8 md:mb-10"
+   974→          >
+   975→            <Badge variant="secondary" className="mb-2 sm:mb-3 text-[10px] sm:text-xs">
+   976→              <Sparkles className="h-3 w-3 mr-1" />
+   977→              {lang === 'fr' ? 'En Vedette' : 'Featured'}
+   978→            </Badge>
+   979→            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold mb-1.5 sm:mb-2 md:mb-3 font-elegant">
+   980→              {lang === 'fr' ? 'Notre Collection' : 'Our Collection'}
+   981→            </h2>
+   982→            <p className="text-xs sm:text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
+   983→              {lang === 'fr'
+   984→                ? 'Découvrez nos pièces les plus tendance'
+   985→                : 'Discover our trending pieces'}
+   986→            </p>
+   987→          </motion.div>
+   988→
+   989→          {/* Horizontal Scrolling Products */}
+   990→          {products.filter(p => p.featured).length > 0 ? (
+   991→            <div className="relative group/carousel">
+   992→              {/* Left Arrow */}
+   993→              <button
+   994→                onClick={() => {
+   995→                  const container = document.getElementById('featured-scroll');
+   996→                  container?.scrollBy({ left: -200, behavior: 'smooth' });
+   997→                }}
+   998→                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-background shadow-lg border border-border/50 items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground -translate-x-2"
+   999→                aria-label="Scroll left"
+  1000→              >
+  1001→                <ChevronRight className="h-4 w-4 rotate-180" />
+  1002→              </button>
+  1003→              {/* Right Arrow */}
+  1004→              <button
+  1005→                onClick={() => {
+  1006→                  const container = document.getElementById('featured-scroll');
+  1007→                  container?.scrollBy({ left: 200, behavior: 'smooth' });
+  1008→                }}
+  1009→                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-background shadow-lg border border-border/50 items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 hover:bg-primary hover:text-primary-foreground translate-x-2"
+  1010→                aria-label="Scroll right"
+  1011→              >
+  1012→                <ChevronRight className="h-4 w-4" />
+  1013→              </button>
+  1014→              {/* Scroll Container */}
+  1015→              <div
+  1016→                id="featured-scroll"
+  1017→                className="flex overflow-x-auto gap-3 sm:gap-4 md:gap-5 pb-2 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 select-none"
+  1018→                style={{
+  1019→                  scrollbarWidth: 'thin',
+  1020→                  WebkitOverflowScrolling: 'touch',
+  1021→                  cursor: 'grab',
+  1022→                  WebkitUserSelect: 'none',
+  1023→                  userSelect: 'none',
+  1024→                }}
+  1025→              >
+  1026→                {products.filter(p => p.featured).map((product, index) => (
+  1027→                  <motion.div
+  1028→                    key={product.id}
+  1029→                    initial={{ opacity: 0, x: 20 }}
+  1030→                    whileInView={{ opacity: 1, x: 0 }}
+  1031→                    viewport={{ once: true }}
+  1032→                    transition={{ delay: index * 0.08, duration: 0.4 }}
+  1033→                    className="flex-none w-[60vw] max-w-[200px] sm:w-[170px] md:w-[190px] lg:w-[210px] snap-start"
+  1034→                  >
+  1035→                    <Card className="group overflow-hidden hover:shadow-lg md:hover:shadow-xl transition-all duration-300 border-border/50 h-full flex flex-col rounded-xl sm:rounded-2xl">
+  1036→                      <div className="relative overflow-hidden aspect-[3/4]">
+  1037→                        <img
+  1038→                          src={product.image}
+  1039→                          alt={getProductName(product)}
+  1040→                          draggable={false}
+  1041→                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+  1042→                        />
+  1043→                        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
+  1044→                          <Badge className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0 sm:py-0.5">
+  1045→                            <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5" />
+  1046→                            {lang === 'fr' ? 'Vedette' : 'Featured'}
+  1047→                          </Badge>
+  1048→                          {!product.inStock && (
+  1049→                            <Badge variant="destructive" className="text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0 sm:py-0.5">
+  1050→                              {t.outOfStock}
+  1051→                            </Badge>
+  1052→                          )}
+  1053→                        </div>
+  1054→                        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+  1055→                          <Badge className="bg-white/90 backdrop-blur-sm text-foreground shadow-sm text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0 sm:py-0.5">
+  1056→                            {getCategoryName(product.category)}
+  1057→                          </Badge>
+  1058→                        </div>
+  1059→                      </div>
+  1060→                      <CardContent className="p-2 sm:p-2.5 md:p-3 flex-1 flex flex-col gap-0.5 sm:gap-1">
+  1061→                        <h3 className="font-semibold text-[11px] sm:text-xs md:text-sm line-clamp-1 leading-tight">
+  1062→                          {getProductName(product)}
+  1063→                        </h3>
+  1064→                        <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground line-clamp-1 sm:line-clamp-2 flex-1">
+  1065→                          {getProductDesc(product)}
+  1066→                        </p>
+  1067→                        <div className="flex items-center justify-between mt-1 sm:mt-1.5 gap-1 min-w-0 overflow-hidden">
+  1068→                          <span className="text-primary font-bold text-[11px] sm:text-xs md:text-sm whitespace-nowrap">
+  1069→                            {product.price.toLocaleString()} {t.currency}
+  1070→                          </span>
+  1071→                          <Button
+  1072→                            size="sm"
+  1073→                            onClick={() => handleAddToCart(product)}
+  1074→                            disabled={!product.inStock}
+  1075→                            className="gap-0.5 text-[9px] sm:text-[10px] md:text-xs h-6 sm:h-7 md:h-8 px-1.5 sm:px-2 md:px-3 shrink min-w-0 overflow-hidden"
+  1076→                          >
+  1077→                            <ShoppingBag className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+  1078→                            <span className="hidden md:inline truncate max-w-[50px] lg:max-w-[70px]">{product.inStock ? t.addToCart : t.outOfStock}</span>
+  1079→                            <span className="md:hidden">+</span>
+  1080→                          </Button>
+  1081→                        </div>
+  1082→                      </CardContent>
+  1083→                    </Card>
+  1084→                  </motion.div>
+  1085→                ))}
+  1086→              </div>
+  1087→              {/* Scroll Hint Dots */}
+  1088→              <div className="flex justify-center gap-1.5 mt-3 sm:mt-4">
+  1089→                {products.filter(p => p.featured).map((_, i) => (
+  1090→                  <button
+  1091→                    key={i}
+  1092→                    onClick={() => {
+  1093→                      const container = document.getElementById('featured-scroll');
+  1094→                      const scrollAmount = i * 200;
+  1095→                      container?.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+  1096→                    }}
+  1097→                    className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/30 hover:bg-primary transition-colors"
+  1098→                    aria-label={`Go to item ${i + 1}`}
+  1099→                  />
+  1100→                ))}
+  1101→              </div>
+  1102→            </div>
+  1103→          ) : (
+  1104→            <div className="text-center py-12 sm:py-16 text-muted-foreground">
+  1105→              <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 opacity-30" />
+  1106→              <p className="text-sm sm:text-lg">
+  1107→                {lang === 'fr' ? 'Aucun produit en vedette' : 'No featured products yet'}
+  1108→              </p>
+  1109→            </div>
+  1110→          )}
+  1111→
+  1112→          {/* View All Button */}
+  1113→          <div className="text-center mt-5 sm:mt-6 md:mt-8">
+  1114→            <Button
+  1115→              onClick={() => setShowProductsPage(true)}
+  1116→              size="sm"
+  1117→              variant="outline"
+  1118→              className="gap-1.5 px-5 sm:px-6 md:px-8 py-3 sm:py-4 md:py-5 text-xs sm:text-sm border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+  1119→            >
+  1120→              {lang === 'fr' ? 'Voir Tous les Produits' : 'View All Products'}
+  1121→              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+  1122→            </Button>
+  1123→          </div>
+  1124→        </div>
+  1125→      </section>
+  1126→
+  1127→      {/* Testimony Section */}
+  1128→      <section id="testimony" className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-primary/[0.03] via-background to-background">
+  1129→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1130→          {/* Section Header */}
+  1131→          <motion.div
+  1132→            initial={{ opacity: 0, y: 20 }}
+  1133→            whileInView={{ opacity: 1, y: 0 }}
+  1134→            viewport={{ once: true }}
+  1135→            className="text-center mb-10 sm:mb-14"
+  1136→          >
+  1137→            <Badge variant="secondary" className="mb-3 sm:mb-4">{t.testimony}</Badge>
+  1138→            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 font-elegant">{t.testimonyTitle}</h2>
+  1139→            <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">{t.testimonySubtitle}</p>
+  1140→          </motion.div>
+  1141→
+  1142→          {/* Testimonies Grid */}
+  1143→          {testimonies.length > 0 && (
+  1144→            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-10 sm:mb-14">
+  1145→              {testimonies.map((testimony, index) => (
+  1146→                <motion.div
+  1147→                  key={testimony.id}
+  1148→                  initial={{ opacity: 0, y: 20 }}
+  1149→                  whileInView={{ opacity: 1, y: 0 }}
+  1150→                  viewport={{ once: true }}
+  1151→                  transition={{ delay: index * 0.1, duration: 0.5 }}
+  1152→                >
+  1153→                  <Card className="h-full hover:shadow-lg transition-all duration-300 border-border/40 bg-background/80 backdrop-blur-sm group">
+  1154→                    <CardContent className="p-5 sm:p-6 relative">
+  1155→                      {/* Decorative Quote */}
+  1156→                      <div className="absolute top-3 right-4 text-primary/10 text-5xl sm:text-6xl font-serif leading-none select-none">&ldquo;</div>
+  1157→                      {/* Stars */}
+  1158→                      <div className="flex items-center gap-0.5 mb-3">
+  1159→                        {Array.from({ length: testimony.rating }).map((_, i) => (
+  1160→                          <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-primary text-primary" />
+  1161→                        ))}
+  1162→                        {Array.from({ length: 5 - testimony.rating }).map((_, i) => (
+  1163→                          <Star key={`empty-${i}`} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/30" />
+  1164→                        ))}
+  1165→                      </div>
+  1166→                      {/* Message */}
+  1167→                      <p className="text-sm text-foreground/80 mb-4 leading-relaxed relative z-10 line-clamp-4">
+  1168→                        {testimony.message}
+  1169→                      </p>
+  1170→                      {/* Author */}
+  1171→                      <div className="flex items-center gap-3 pt-3 border-t border-border/40">
+  1172→                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+  1173→                          <span className="text-primary-foreground font-bold text-xs sm:text-sm">{testimony.name.charAt(0).toUpperCase()}</span>
+  1174→                        </div>
+  1175→                        <div className="flex-1 min-w-0">
+  1176→                          <p className="font-semibold text-sm truncate">{testimony.name}</p>
+  1177→                          <div className="flex items-center gap-1">
+  1178→                            {Array.from({ length: testimony.rating }).map((_, i) => (
+  1179→                              <Star key={`small-${i}`} className="h-2.5 w-2.5 fill-primary text-primary" />
+  1180→                            ))}
+  1181→                          </div>
+  1182→                        </div>
+  1183→                        <Heart className="h-4 w-4 text-primary/30 group-hover:text-primary/60 transition-colors" />
+  1184→                      </div>
+  1185→                    </CardContent>
+  1186→                  </Card>
+  1187→                </motion.div>
+  1188→              ))}
+  1189→            </div>
+  1190→          )}
+  1191→
+  1192→          {/* Submit Testimony */}
+  1193→          <motion.div
+  1194→            initial={{ opacity: 0, y: 20 }}
+  1195→            whileInView={{ opacity: 1, y: 0 }}
+  1196→            viewport={{ once: true }}
+  1197→            className="max-w-lg mx-auto"
+  1198→          >
+  1199→            <Card className="border-primary/20 shadow-lg shadow-primary/5 overflow-hidden">
+  1200→              {/* Form Header */}
+  1201→              <div className="bg-gradient-to-r from-primary to-primary/80 px-5 sm:px-6 py-4 text-center">
+  1202→                <Sparkles className="h-5 w-5 text-primary-foreground/80 mx-auto mb-1.5" />
+  1203→                <h3 className="font-bold text-base sm:text-lg text-primary-foreground font-elegant">
+  1204→                  {lang === 'fr' ? 'Partagez Votre Expérience' : 'Share Your Experience'}
+  1205→                </h3>
+  1206→                <p className="text-primary-foreground/70 text-xs mt-0.5">
+  1207→                  {lang === 'fr' ? 'Nous aimons entendre vos histoires' : 'We\'d love to hear your story'}
+  1208→                </p>
+  1209→              </div>
+  1210→              {/* Form Body */}
+  1211→              <CardContent className="p-5 sm:p-6">
+  1212→                <form onSubmit={handleTestimonySubmit} className="space-y-4">
+  1213→                  <div>
+  1214→                    <Label htmlFor="testimony-name" className="text-xs font-medium text-muted-foreground mb-1.5">
+  1215→                      {lang === 'fr' ? 'Votre Nom' : 'Your Name'}
+  1216→                    </Label>
+  1217→                    <Input id="testimony-name" name="name" required placeholder={lang === 'fr' ? 'Entrez votre nom' : 'Enter your name'} className="rounded-lg border-border/60 focus:border-primary/50" />
+  1218→                  </div>
+  1219→                  <div>
+  1220→                    <Label htmlFor="testimony-message" className="text-xs font-medium text-muted-foreground mb-1.5">
+  1221→                      {lang === 'fr' ? 'Votre Message' : 'Your Message'}
+  1222→                    </Label>
+  1223→                    <Textarea id="testimony-message" name="message" required placeholder={lang === 'fr' ? 'Partagez votre expérience...' : 'Share your experience...'} rows={3} className="rounded-lg border-border/60 focus:border-primary/50 resize-none" />
+  1224→                  </div>
+  1225→                  <div>
+  1226→                    <Label htmlFor="testimony-rating" className="text-xs font-medium text-muted-foreground mb-1.5">
+  1227→                      {lang === 'fr' ? 'Note' : 'Rating'}
+  1228→                    </Label>
+  1229→                    <Select name="rating" defaultValue="5">
+  1230→                      <SelectTrigger className="rounded-lg border-border/60">
+  1231→                        <SelectValue />
+  1232→                      </SelectTrigger>
+  1233→                      <SelectContent>
+  1234→                        <SelectItem value="5">⭐⭐⭐⭐⭐ (5/5)</SelectItem>
+  1235→                        <SelectItem value="4">⭐⭐⭐⭐ (4/5)</SelectItem>
+  1236→                        <SelectItem value="3">⭐⭐⭐ (3/5)</SelectItem>
+  1237→                        <SelectItem value="2">⭐⭐ (2/5)</SelectItem>
+  1238→                        <SelectItem value="1">⭐ (1/5)</SelectItem>
+  1239→                      </SelectContent>
+  1240→                    </Select>
+  1241→                  </div>
+  1242→                  <Button type="submit" className="w-full gap-2 rounded-lg h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md shadow-primary/20 transition-all duration-300">
+  1243→                    <Send className="h-4 w-4" />
+  1244→                    {lang === 'fr' ? 'Soumettre' : 'Submit'}
+  1245→                  </Button>
+  1246→                </form>
+  1247→              </CardContent>
+  1248→            </Card>
+  1249→          </motion.div>
+  1250→        </div>
+  1251→      </section>
+  1252→
+  1253→      {/* Contact Section */}
+  1254→      <section id="contact" className="py-12 sm:py-16 md:py-28 bg-muted/30">
+  1255→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  1256→          <motion.div
+  1257→            initial={{ opacity: 0, y: 20 }}
+  1258→            whileInView={{ opacity: 1, y: 0 }}
+  1259→            viewport={{ once: true }}
+  1260→            className="text-center mb-12"
+  1261→          >
+  1262→            <Badge variant="secondary" className="mb-4">{t.contact}</Badge>
+  1263→            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-elegant">{t.contactTitle}</h2>
+  1264→            <p className="text-muted-foreground">{t.contactSubtitle}</p>
+  1265→          </motion.div>
+  1266→
+  1267→          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto">
+  1268→            <Card className="text-center hover:shadow-md transition-shadow">
+  1269→              <CardContent className="p-6">
+  1270→                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+  1271→                  <Phone className="h-7 w-7 text-primary" />
+  1272→                </div>
+  1273→                <h3 className="font-bold mb-2 font-elegant">{t.contactPhone}</h3>
+  1274→                <a href="tel:+2250575354633" className="text-primary font-medium hover:underline">+225 0575354633</a>
+  1275→                <div className="mt-3">
+  1276→                  <Button asChild size="sm" className="bg-green-600 hover:bg-green-700 text-white gap-1.5">
+  1277→                    <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer">
+  1278→                      <MessageCircle className="h-4 w-4" />
+  1279→                      WhatsApp
+  1280→                    </a>
+  1281→                  </Button>
+  1282→                </div>
+  1283→              </CardContent>
+  1284→            </Card>
+  1285→
+  1286→            <Card className="text-center hover:shadow-md transition-shadow">
+  1287→              <CardContent className="p-6">
+  1288→                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+  1289→                  <CreditCard className="h-7 w-7 text-primary" />
+  1290→                </div>
+  1291→                <h3 className="font-bold mb-2 font-elegant">{t.contactPayment}</h3>
+  1292→                <div className="space-y-3 text-sm">
+  1293→                  <div className="flex items-center justify-center gap-2">
+  1294→                    <WaveLogo size={24} />
+  1295→                    <span>{t.contactWave}: +225 0575354633</span>
+  1296→                  </div>
+  1297→                  <div className="flex items-center justify-center gap-2">
+  1298→                    <MtnMomoLogo size={24} />
+  1299→                    <span>{t.contactMtn}: +225 0575354633</span>
+  1300→                  </div>
+  1301→                </div>
+  1302→              </CardContent>
+  1303→            </Card>
+  1304→
+  1305→            <Card className="text-center hover:shadow-md transition-shadow">
+  1306→              <CardContent className="p-6">
+  1307→                <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+  1308→                  <MapPin className="h-7 w-7 text-primary" />
+  1309→                </div>
+  1310→                <h3 className="font-bold mb-2 font-elegant">{t.contactAddress}</h3>
+  1311→                <p className="text-sm text-muted-foreground">{t.contactAddressText}</p>
+  1312→              </CardContent>
+  1313→            </Card>
+  1314→
+  1315→            <Card className="text-center hover:shadow-md transition-shadow">
+  1316→              <CardContent className="p-6">
+  1317→                <div className="h-14 w-14 rounded-full bg-[#010101]/10 flex items-center justify-center mx-auto mb-4">
+  1318→                  <TikTokIcon size={28} className="text-[#010101]" />
+  1319→                </div>
+  1320→                <h3 className="font-bold mb-2 font-elegant">TikTok</h3>
+  1321→                <p className="text-sm text-muted-foreground mb-3">@rofiatganiyu683</p>
+  1322→                <Button asChild size="sm" className="bg-[#010101] hover:bg-[#010101]/80 text-white gap-1.5">
+  1323→                  <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer">
+  1324→                    <TikTokIcon size={14} />
+  1325→                    {lang === 'fr' ? 'Suivre' : 'Follow'}
+  1326→                  </a>
+  1327→                </Button>
+  1328→              </CardContent>
+  1329→            </Card>
+  1330→          </div>
+  1331→
+  1332→          {/* WhatsApp Order CTA */}
+  1333→          <motion.div
+  1334→            initial={{ opacity: 0, y: 20 }}
+  1335→            whileInView={{ opacity: 1, y: 0 }}
+  1336→            viewport={{ once: true }}
+  1337→            className="mt-16 text-center"
+  1338→          >
+  1339→            <Card className="max-w-2xl mx-auto bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+  1340→              <CardContent className="p-8">
+  1341→                <MessageCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+  1342→                <h3 className="text-2xl font-bold mb-2 font-elegant">
+  1343→                  {lang === 'fr' ? 'Commandez Facilement!' : 'Order Easily!'}
+  1344→                </h3>
+  1345→                <p className="text-muted-foreground mb-6">
+  1346→                  {lang === 'fr' 
+  1347→                    ? 'Ajoutez vos articles au panier et cliquez sur le bouton WhatsApp pour commander'
+  1348→                    : 'Add items to your cart and click the WhatsApp button to place your order'}
+  1349→                </p>
+  1350→                <Button
+  1351→                  onClick={handleWhatsAppOrder}
+  1352→                  size="lg"
+  1353→                  className="bg-green-600 hover:bg-green-700 text-white gap-2 px-8 py-6 text-base"
+  1354→                >
+  1355→                  <MessageCircle className="h-5 w-5" />
+  1356→                  {t.whatsappOrder}
+  1357→                </Button>
+  1358→              </CardContent>
+  1359→            </Card>
+  1360→          </motion.div>
+  1361→        </div>
+  1362→      </section>
+  1363→
+  1364→      {/* Footer */}
+  1365→      <footer className="bg-foreground text-background mt-auto">
+  1366→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+  1367→          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-12">
+  1368→            {/* Brand */}
+  1369→            <div className="sm:col-span-2 lg:col-span-1">
+  1370→              <div className="flex items-center gap-3 mb-4">
+  1371→                <img src="/images/logo.png" alt="God's Grace Boutique" className="h-10 w-10 rounded-full object-cover border-2 border-primary" />
+  1372→                <div>
+  1373→                  <h3 className="font-handwriting text-xl md:text-2xl text-background">God&apos;s Grace</h3>
+  1374→                  <p className="text-xs text-background/60">Boutique</p>
+  1375→                </div>
+  1376→              </div>
+  1377→              <p className="text-sm text-background/60 mb-4 font-handwriting text-base">{t.footerTagline}</p>
+  1378→              <p className="text-sm text-background/60">{t.footerMadeWith}</p>
+  1379→            </div>
+  1380→
+  1381→            {/* Quick Links */}
+  1382→            <div>
+  1383→              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerQuickLinks}</h3>
+  1384→              <div className="space-y-2">
+  1385→                {navLinks.map((link) => (
+  1386→                  <button
+  1387→                    key={link.id}
+  1388→                    onClick={() => scrollTo(link.id)}
+  1389→                    className="block text-sm text-background/60 hover:text-primary transition-colors"
+  1390→                  >
+  1391→                    {link.label}
+  1392→                  </button>
+  1393→                ))}
+  1394→              </div>
+  1395→            </div>
+  1396→
+  1397→            {/* Categories */}
+  1398→            <div>
+  1399→              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerCategories}</h3>
+  1400→              <div className="space-y-2">
+  1401→                {categories.map((cat) => (
+  1402→                  <button
+  1403→                    key={cat.id}
+  1404→                    onClick={() => {
+  1405→                      setSelectedCategory(cat.id);
+  1406→                      scrollTo('products');
+  1407→                    }}
+  1408→                    className="block text-sm text-background/60 hover:text-primary transition-colors"
+  1409→                  >
+  1410→                    {getCategoryName(cat)}
+  1411→                  </button>
+  1412→                ))}
+  1413→              </div>
+  1414→            </div>
+  1415→
+  1416→            {/* Contact */}
+  1417→            <div>
+  1418→              <h3 className="font-bold mb-4 text-sm uppercase tracking-wider font-elegant">{t.footerContact}</h3>
+  1419→              <div className="space-y-3">
+  1420→                <div className="flex items-center gap-2 text-sm text-background/60">
+  1421→                  <Phone className="h-4 w-4 text-primary" />
+  1422→                  <span>+225 0575354633</span>
+  1423→                </div>
+  1424→                <div className="flex items-center gap-2 text-sm text-background/60">
+  1425→                  <MessageCircle className="h-4 w-4 text-green-500" />
+  1426→                  <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+  1427→                    WhatsApp
+  1428→                  </a>
+  1429→                </div>
+  1430→                <div className="flex items-center gap-2 text-sm text-background/60">
+  1431→                  <WaveLogo size={16} />
+  1432→                  <MtnMomoLogo size={16} />
+  1433→                  <span>Wave & MTN MoMo</span>
+  1434→                </div>
+  1435→                <div className="flex items-center gap-2 text-sm text-background/60">
+  1436→                  <TikTokIcon size={16} className="text-background/60" />
+  1437→                  <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+  1438→                    TikTok
+  1439→                  </a>
+  1440→                </div>
+  1441→              </div>
+  1442→            </div>
+  1443→          </div>
+  1444→
+  1445→          <div className="border-t border-background/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+  1446→            <p className="text-xs text-background/40">
+  1447→              © {new Date().getFullYear()} God&apos;s Grace Boutique. {t.footerRights}
+  1448→            </p>
+  1449→            <div className="flex items-center gap-4">
+  1450→              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+  1451→                <a href="https://wa.me/22575354633" target="_blank" rel="noopener noreferrer">
+  1452→                  <MessageCircle className="h-4 w-4" />
+  1453→                </a>
+  1454→              </Button>
+  1455→              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+  1456→                <a href="https://www.tiktok.com/@rofiatganiyu683" target="_blank" rel="noopener noreferrer">
+  1457→                  <TikTokIcon size={16} />
+  1458→                </a>
+  1459→              </Button>
+  1460→              <Button asChild variant="ghost" size="sm" className="text-background/60 hover:text-primary">
+  1461→                <a href="tel:+2250575354633">
+  1462→                  <Phone className="h-4 w-4" />
+  1463→                </a>
+  1464→              </Button>
+  1465→            </div>
+  1466→          </div>
+  1467→        </div>
+  1468→      </footer>
+  1469→
+  1470→      {/* Scroll to Top */}
+  1471→      <AnimatePresence>
+  1472→        {showScrollTop && (
+  1473→          <motion.div
+  1474→            initial={{ opacity: 0, scale: 0.8 }}
+  1475→            animate={{ opacity: 1, scale: 1 }}
+  1476→            exit={{ opacity: 0, scale: 0.8 }}
+  1477→            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40"
+  1478→          >
+  1479→            <Button
+  1480→              size="icon"
+  1481→              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+  1482→              className="rounded-full shadow-lg h-10 w-10 sm:h-12 sm:w-12 bg-primary hover:bg-primary/90"
+  1483→            >
+  1484→              <ArrowUp className="h-5 w-5" />
+  1485→            </Button>
+  1486→          </motion.div>
+  1487→        )}
+  1488→      </AnimatePresence>
+  1489→
+  1490→      {/* Floating WhatsApp Button (Mobile) */}
+  1491→      <div className="fixed bottom-4 left-4 z-40 md:hidden">
+  1492→        <Button
+  1493→          onClick={handleWhatsAppOrder}
+  1494→          className="rounded-full shadow-lg h-12 w-12 bg-green-600 hover:bg-green-700 text-white p-0"
+  1495→        >
+  1496→          <MessageCircle className="h-6 w-6" />
+  1497→        </Button>
+  1498→      </div>
+  1499→    </div>
+  1500→  );
+  1501→}
+  1502→

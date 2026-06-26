@@ -1,0 +1,1973 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback } from 'react'
+     4→import { toast } from 'sonner'
+     5→import { Button } from '@/components/ui/button'
+     6→import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Label } from '@/components/ui/label'
+     9→import { Textarea } from '@/components/ui/textarea'
+    10→import { Switch } from '@/components/ui/switch'
+    11→import { Badge } from '@/components/ui/badge'
+    12→import { Separator } from '@/components/ui/separator'
+    13→import { useLangStore } from '@/store/lang'
+    14→import { translations } from '@/lib/i18n'
+    15→
+    16→import {
+    17→  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+    18→} from '@/components/ui/table'
+    19→import {
+    20→  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+    21→} from '@/components/ui/dialog'
+    22→import {
+    23→  Sheet, SheetContent, SheetHeader, SheetTitle,
+    24→} from '@/components/ui/sheet'
+    25→import {
+    26→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    27→} from '@/components/ui/select'
+    28→import {
+    29→  ShoppingCart,
+    30→  Package,
+    31→  FolderOpen,
+    32→  MessageSquareHeart,
+    33→  Plus,
+    34→  Trash2,
+    35→  Pencil,
+    36→  Star,
+    37→  StarOff,
+    38→  Menu,
+    39→  LayoutDashboard,
+    40→  CheckCircle2,
+    41→  XCircle,
+    42→  Eye,
+    43→  Phone,
+    44→  CreditCard,
+    45→  Search,
+    46→  Image as ImageIcon,
+    47→  ArrowLeft,
+    48→  TrendingUp,
+    49→  BarChart3,
+    50→  ChevronRight,
+    51→  Sparkles,
+    52→  Heart,
+    53→  Clock,
+    54→  Globe,
+    55→  LogOut,
+    56→  Lock,
+    57→  User,
+    58→  AlertCircle,
+    59→  Upload,
+    60→  X as XIcon,
+    61→  Loader2,
+    62→  Languages,
+    63→} from 'lucide-react'
+    64→
+    65→// ─── Types ───────────────────────────────────────────────────────────────────
+    66→
+    67→interface Category {
+    68→  id: string
+    69→  name: string
+    70→  nameFr: string
+    71→  slug: string
+    72→  image: string | null
+    73→  createdAt: string
+    74→  products?: Product[]
+    75→}
+    76→
+    77→interface Product {
+    78→  id: string
+    79→  name: string
+    80→  nameFr: string
+    81→  description: string
+    82→  descriptionFr: string
+    83→  price: number
+    84→  image: string
+    85→  categoryId: string
+    86→  inStock: boolean
+    87→  featured: boolean
+    88→  createdAt: string
+    89→  updatedAt: string
+    90→  category?: Category
+    91→}
+    92→
+    93→interface Order {
+    94→  id: string
+    95→  customerName: string
+    96→  customerPhone: string
+    97→  items: string
+    98→  total: number
+    99→  status: string
+   100→  paymentMethod: string
+   101→  createdAt: string
+   102→  updatedAt: string
+   103→}
+   104→
+   105→interface Testimony {
+   106→  id: string
+   107→  name: string
+   108→  message: string
+   109→  rating: number
+   110→  approved: boolean
+   111→  createdAt: string
+   112→  updatedAt: string
+   113→}
+   114→
+   115→type ActiveSection = 'dashboard' | 'products' | 'categories' | 'orders' | 'testimonies'
+   116→
+   117→// ─── Main Component ──────────────────────────────────────────────────────────
+   118→
+   119→interface AdminDashboardProps {
+   120→  onBackToStore: () => void
+   121→}
+   122→
+   123→export default function AdminDashboard({ onBackToStore }: AdminDashboardProps) {
+   124→  const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard')
+   125→  const [sidebarOpen, setSidebarOpen] = useState(false)
+   126→
+   127→  // Auth state
+   128→  const [isAuthenticated, setIsAuthenticated] = useState(false)
+   129→  const [authChecking, setAuthChecking] = useState(true)
+   130→  const [loginForm, setLoginForm] = useState({ username: '', password: '' })
+   131→  const [loginLoading, setLoginLoading] = useState(false)
+   132→  const [loginError, setLoginError] = useState('')
+   133→
+   134→  // Language
+   135→  const { lang, toggleLang } = useLangStore()
+   136→  const t = translations[lang]
+   137→
+   138→  // Translation helper
+   139→  const [translating, setTranslating] = useState<'productName' | 'productDesc' | 'categoryName' | null>(null)
+   140→
+   141→  const handleTranslate = async (text: string, source: 'en' | 'fr', target: 'en' | 'fr', field: 'productName' | 'productDesc' | 'categoryName') => {
+   142→    if (!text.trim()) return
+   143→    setTranslating(field)
+   144→    try {
+   145→      const res = await fetch('/api/translate', {
+   146→        method: 'POST',
+   147→        headers: { 'Content-Type': 'application/json' },
+   148→        body: JSON.stringify({ text, source, target }),
+   149→      })
+   150→      if (!res.ok) throw new Error('Translation failed')
+   151→      const data = await res.json()
+   152→      if (field === 'productName') {
+   153→        setProductForm(f => ({ ...f, [target === 'fr' ? 'nameFr' : 'name']: data.translation }))
+   154→      } else if (field === 'productDesc') {
+   155→        setProductForm(f => ({ ...f, [target === 'fr' ? 'descriptionFr' : 'description']: data.translation }))
+   156→      } else if (field === 'categoryName') {
+   157→        setCategoryForm(f => ({ ...f, [target === 'fr' ? 'nameFr' : 'name']: data.translation }))
+   158→      }
+   159→      if (data.fallback) {
+   160→        toast.warning(lang === 'fr' ? 'Traduction approximative - veuillez vérifier' : 'Approximate translation - please verify', {
+   161→          description: lang === 'fr' ? 'La traduction IA n\'est pas disponible' : 'AI translation is unavailable'
+   162→        })
+   163→      } else {
+   164→        toast.success(lang === 'fr' ? 'Traduction réussie!' : 'Translation successful!')
+   165→      }
+   166→    } catch {
+   167→      toast.error(lang === 'fr' ? 'Échec de la traduction - vérifiez votre connexion' : 'Translation failed - check your connection')
+   168→    } finally {
+   169→      setTranslating(null)
+   170→    }
+   171→  }
+   172→
+   173→  // Data state
+   174→  const [products, setProducts] = useState<Product[]>([])
+   175→  const [categories, setCategories] = useState<Category[]>([])
+   176→  const [orders, setOrders] = useState<Order[]>([])
+   177→  const [testimonies, setTestimonies] = useState<Testimony[]>([])
+   178→  const [loading, setLoading] = useState(true)
+   179→
+   180→  // ─── Auth Check ─────────────────────────────────────────────────────────
+   181→
+   182→  useEffect(() => {
+   183→    async function checkAuth() {
+   184→      try {
+   185→        const res = await fetch('/api/auth/verify')
+   186→        if (res.ok) {
+   187→          const data = await res.json()
+   188→          setIsAuthenticated(data.authenticated === true)
+   189→        } else {
+   190→          setIsAuthenticated(false)
+   191→        }
+   192→      } catch {
+   193→        setIsAuthenticated(false)
+   194→      } finally {
+   195→        setAuthChecking(false)
+   196→      }
+   197→    }
+   198→    checkAuth()
+   199→  }, [])
+   200→
+   201→  const handleLogin = async (e: React.FormEvent) => {
+   202→    e.preventDefault()
+   203→    setLoginLoading(true)
+   204→    setLoginError('')
+   205→    try {
+   206→      const res = await fetch('/api/auth/login', {
+   207→        method: 'POST',
+   208→        headers: { 'Content-Type': 'application/json' },
+   209→        body: JSON.stringify(loginForm),
+   210→      })
+   211→      if (res.ok) {
+   212→        setIsAuthenticated(true)
+   213→        toast.success(lang === 'fr' ? 'Connexion réussie!' : 'Login successful!')
+   214→      } else {
+   215→        const data = await res.json()
+   216→        setLoginError(data.error || (lang === 'fr' ? 'Identifiants invalides' : 'Invalid credentials'))
+   217→      }
+   218→    } catch {
+   219→      setLoginError(lang === 'fr' ? 'Erreur de connexion' : 'Connection error')
+   220→    } finally {
+   221→      setLoginLoading(false)
+   222→    }
+   223→  }
+   224→
+   225→  const handleLogout = async () => {
+   226→    try {
+   227→      await fetch('/api/auth/logout', { method: 'POST' })
+   228→      setIsAuthenticated(false)
+   229→      toast.success(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out successfully')
+   230→    } catch {
+   231→      toast.error(lang === 'fr' ? 'Erreur de déconnexion' : 'Logout failed')
+   232→    }
+   233→  }
+   234→
+   235→  // Dialog state
+   236→  const [productDialogOpen, setProductDialogOpen] = useState(false)
+   237→  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+   238→  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+   239→  const [orderDetailOpen, setOrderDetailOpen] = useState(false)
+   240→  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+   241→  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+   242→  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name: string } | null>(null)
+   243→
+   244→  // Search
+   245→  const [productSearch, setProductSearch] = useState('')
+   246→  const [orderSearch, setOrderSearch] = useState('')
+   247→
+   248→  // Form state
+   249→  const [productForm, setProductForm] = useState({
+   250→    name: '', nameFr: '', description: '', descriptionFr: '',
+   251→    price: '', image: '', categoryId: '', inStock: true, featured: false,
+   252→  })
+   253→  const [categoryForm, setCategoryForm] = useState({
+   254→    name: '', nameFr: '', slug: '', image: '',
+   255→  })
+   256→
+   257→  // Upload state
+   258→  const [productUploading, setProductUploading] = useState(false)
+   259→  const [categoryUploading, setCategoryUploading] = useState(false)
+   260→  const [productDragOver, setProductDragOver] = useState(false)
+   261→  const [categoryDragOver, setCategoryDragOver] = useState(false)
+   262→
+   263→  // Drag and drop handlers
+   264→  const handleDragOver = (e: React.DragEvent, target: 'product' | 'category') => {
+   265→    e.preventDefault()
+   266→    e.stopPropagation()
+   267→    if (target === 'product') setProductDragOver(true)
+   268→    else setCategoryDragOver(true)
+   269→  }
+   270→
+   271→  const handleDragLeave = (e: React.DragEvent, target: 'product' | 'category') => {
+   272→    e.preventDefault()
+   273→    e.stopPropagation()
+   274→    if (target === 'product') setProductDragOver(false)
+   275→    else setCategoryDragOver(false)
+   276→  }
+   277→
+   278→  const handleDrop = (e: React.DragEvent, target: 'product' | 'category') => {
+   279→    e.preventDefault()
+   280→    e.stopPropagation()
+   281→    if (target === 'product') setProductDragOver(false)
+   282→    else setCategoryDragOver(false)
+   283→    const file = e.dataTransfer.files?.[0]
+   284→    if (file) handleImageUpload(file, target)
+   285→  }
+   286→
+   287→  // Image upload handler
+   288→  const handleImageUpload = async (file: File, target: 'product' | 'category') => {
+   289→    if (!file) return
+   290→    const setUploading = target === 'product' ? setProductUploading : setCategoryUploading
+   291→    const setForm = target === 'product' ? setProductForm : setCategoryForm
+   292→
+   293→    // Validate - be permissive with types (server also validates)
+   294→    if (file.type && !file.type.startsWith('image/')) {
+   295→      toast.error(lang === 'fr' ? 'Type de fichier invalide. Seules les images sont autorisées.' : 'Invalid file type. Only images are allowed.')
+   296→      return
+   297→    }
+   298→    if (file.size > 10 * 1024 * 1024) {
+   299→      toast.error(lang === 'fr' ? 'Fichier trop volumineux. Max 10 Mo.' : 'File too large. Max 10MB.')
+   300→      return
+   301→    }
+   302→
+   303→    setUploading(true)
+   304→    try {
+   305→      const formData = new FormData()
+   306→      formData.append('file', file)
+   307→      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+   308→      if (res.ok) {
+   309→        const data = await res.json()
+   310→        if (data.url) {
+   311→          setForm((prev: any) => ({ ...prev, image: data.url }))
+   312→          toast.success(lang === 'fr' ? 'Image téléchargée avec succès' : 'Image uploaded successfully')
+   313→        } else {
+   314→          toast.error(data.error || (lang === 'fr' ? 'Échec du téléchargement' : 'Upload failed'))
+   315→        }
+   316→      } else {
+   317→        let errorMsg = lang === 'fr' ? 'Échec du téléchargement' : 'Upload failed'
+   318→        try {
+   319→          const data = await res.json()
+   320→          errorMsg = data.error || errorMsg
+   321→        } catch {}
+   322→        toast.error(errorMsg)
+   323→      }
+   324→    } catch (err) {
+   325→      console.error('Upload error:', err)
+   326→      toast.error(lang === 'fr' ? 'Échec du téléchargement — vérifiez votre connexion' : 'Upload failed — check your connection')
+   327→    } finally {
+   328→      setUploading(false)
+   329→    }
+   330→  }
+   331→
+   332→  // ─── Data Fetching ───────────────────────────────────────────────────────
+   333→
+   334→  const fetchProducts = useCallback(async () => {
+   335→    try {
+   336→      const res = await fetch('/api/products')
+   337→      if (res.ok) { const data = await res.json(); setProducts(data) }
+   338→    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des produits' : 'Failed to fetch products') }
+   339→  }, [])
+   340→
+   341→  const fetchCategories = useCallback(async () => {
+   342→    try {
+   343→      const res = await fetch('/api/categories')
+   344→      if (res.ok) { const data = await res.json(); setCategories(data) }
+   345→    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des catégories' : 'Failed to fetch categories') }
+   346→  }, [])
+   347→
+   348→  const fetchOrders = useCallback(async () => {
+   349→    try {
+   350→      const res = await fetch('/api/orders')
+   351→      if (res.ok) { const data = await res.json(); setOrders(data) }
+   352→    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des commandes' : 'Failed to fetch orders') }
+   353→  }, [])
+   354→
+   355→  const fetchTestimonies = useCallback(async () => {
+   356→    try {
+   357→      const res = await fetch('/api/testimonies')
+   358→      if (res.ok) { const data = await res.json(); setTestimonies(data) }
+   359→    } catch { toast.error(lang === 'fr' ? 'Échec du chargement des témoignages' : 'Failed to fetch testimonies') }
+   360→  }, [])
+   361→
+   362→  useEffect(() => {
+   363→    let cancelled = false
+   364→    async function loadAll() {
+   365→      try {
+   366→        const [pRes, cRes, oRes, tRes] = await Promise.all([
+   367→          fetch('/api/products'),
+   368→          fetch('/api/categories'),
+   369→          fetch('/api/orders'),
+   370→          fetch('/api/testimonies'),
+   371→        ])
+   372→        if (!cancelled) {
+   373→          if (pRes.ok) setProducts(await pRes.json())
+   374→          if (cRes.ok) setCategories(await cRes.json())
+   375→          if (oRes.ok) setOrders(await oRes.json())
+   376→          if (tRes.ok) setTestimonies(await tRes.json())
+   377→          setLoading(false)
+   378→        }
+   379→      } catch {
+   380→        if (!cancelled) setLoading(false)
+   381→      }
+   382→    }
+   383→    loadAll()
+   384→    return () => { cancelled = true }
+   385→  }, [])
+   386→
+   387→  // ─── Product CRUD ────────────────────────────────────────────────────────
+   388→
+   389→  const handleProductSubmit = async () => {
+   390→    // Auto-translate missing French fields before submission
+   391→    if (!productForm.nameFr && productForm.name) {
+   392→      try {
+   393→        const res = await fetch('/api/translate', {
+   394→          method: 'POST',
+   395→          headers: { 'Content-Type': 'application/json' },
+   396→          body: JSON.stringify({ text: productForm.name, source: 'en', target: 'fr' }),
+   397→        })
+   398→        if (res.ok) { const data = await res.json(); productForm.nameFr = data.translation }
+   399→      } catch { /* keep empty */ }
+   400→    }
+   401→    if (!productForm.descriptionFr && productForm.description) {
+   402→      try {
+   403→        const res = await fetch('/api/translate', {
+   404→          method: 'POST',
+   405→          headers: { 'Content-Type': 'application/json' },
+   406→          body: JSON.stringify({ text: productForm.description, source: 'en', target: 'fr' }),
+   407→        })
+   408→        if (res.ok) { const data = await res.json(); productForm.descriptionFr = data.translation }
+   409→      } catch { /* keep empty */ }
+   410→    }
+   411→
+   412→    if (!productForm.name || !productForm.description || !productForm.price || !productForm.image || !productForm.categoryId) {
+   413→      toast.error(lang === 'fr' ? 'Veuillez remplir tous les champs obligatoires' : 'Please fill in all required fields')
+   414→      return
+   415→    }
+   416→    try {
+   417→      if (editingProduct) {
+   418→        const res = await fetch(`/api/products/${editingProduct.id}`, {
+   419→          method: 'PUT',
+   420→          headers: { 'Content-Type': 'application/json' },
+   421→          body: JSON.stringify({
+   422→            name: productForm.name, nameFr: productForm.nameFr,
+   423→            description: productForm.description, descriptionFr: productForm.descriptionFr,
+   424→            price: parseFloat(productForm.price), image: productForm.image,
+   425→            categoryId: productForm.categoryId,
+   426→            inStock: productForm.inStock, featured: productForm.featured,
+   427→          }),
+   428→        })
+   429→        if (res.ok) { toast.success(lang === 'fr' ? 'Produit mis à jour avec succès' : 'Product updated successfully'); setProductDialogOpen(false); setEditingProduct(null); fetchProducts() }
+   430→        else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du produit' : 'Failed to update product') }
+   431→      } else {
+   432→        const res = await fetch('/api/products', {
+   433→          method: 'POST',
+   434→          headers: { 'Content-Type': 'application/json' },
+   435→          body: JSON.stringify({
+   436→            name: productForm.name, nameFr: productForm.nameFr,
+   437→            description: productForm.description, descriptionFr: productForm.descriptionFr,
+   438→            price: productForm.price, image: productForm.image,
+   439→            categoryId: productForm.categoryId,
+   440→            inStock: productForm.inStock, featured: productForm.featured,
+   441→          }),
+   442→        })
+   443→        if (res.ok) { toast.success(lang === 'fr' ? 'Produit créé avec succès' : 'Product created successfully'); setProductDialogOpen(false); resetProductForm(); fetchProducts() }
+   444→        else { const data = await res.json(); toast.error(data.error || (lang === 'fr' ? 'Échec de la création du produit' : 'Failed to create product')) }
+   445→      }
+   446→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   447→  }
+   448→
+   449→  const resetProductForm = () => {
+   450→    setProductForm({ name: '', nameFr: '', description: '', descriptionFr: '', price: '', image: '', categoryId: '', inStock: true, featured: false })
+   451→    setEditingProduct(null)
+   452→  }
+   453→
+   454→  const openEditProduct = (product: Product) => {
+   455→    setEditingProduct(product)
+   456→    setProductForm({
+   457→      name: product.name, nameFr: product.nameFr,
+   458→      description: product.description, descriptionFr: product.descriptionFr,
+   459→      price: product.price.toString(), image: product.image,
+   460→      categoryId: product.categoryId, inStock: product.inStock, featured: product.featured,
+   461→    })
+   462→    setProductDialogOpen(true)
+   463→  }
+   464→
+   465→  const toggleProductStock = async (product: Product) => {
+   466→    try {
+   467→      const res = await fetch(`/api/products/${product.id}`, {
+   468→        method: 'PUT',
+   469→        headers: { 'Content-Type': 'application/json' },
+   470→        body: JSON.stringify({ inStock: !product.inStock }),
+   471→      })
+   472→      if (res.ok) { toast.success(lang === 'fr' ? `Produit ${!product.inStock ? 'en stock' : 'en rupture de stock'}` : `Product ${!product.inStock ? 'in stock' : 'out of stock'}`); fetchProducts() }
+   473→      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du stock' : 'Failed to update stock status') }
+   474→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   475→  }
+   476→
+   477→  const toggleProductFeatured = async (product: Product) => {
+   478→    try {
+   479→      const res = await fetch(`/api/products/${product.id}`, {
+   480→        method: 'PUT',
+   481→        headers: { 'Content-Type': 'application/json' },
+   482→        body: JSON.stringify({ featured: !product.featured }),
+   483→      })
+   484→      if (res.ok) { toast.success(lang === 'fr' ? `Produit ${!product.featured ? 'en vedette' : 'retiré de la vedette'}` : `Product ${!product.featured ? 'featured' : 'unfeatured'}`); fetchProducts() }
+   485→      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour de la vedette' : 'Failed to update featured status') }
+   486→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   487→  }
+   488→
+   489→  const deleteProduct = async (id: string) => {
+   490→    try {
+   491→      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+   492→      if (res.ok) { toast.success(lang === 'fr' ? 'Produit supprimé' : 'Product deleted'); fetchProducts() }
+   493→      else { toast.error(lang === 'fr' ? 'Échec de la suppression du produit' : 'Failed to delete product') }
+   494→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   495→  }
+   496→
+   497→  // ─── Category CRUD ───────────────────────────────────────────────────────
+   498→
+   499→  const handleCategorySubmit = async () => {
+   500→    // Auto-translate missing French name before submission
+   501→    if (!categoryForm.nameFr && categoryForm.name) {
+   502→      try {
+   503→        const res = await fetch('/api/translate', {
+   504→          method: 'POST',
+   505→          headers: { 'Content-Type': 'application/json' },
+   506→          body: JSON.stringify({ text: categoryForm.name, source: 'en', target: 'fr' }),
+   507→        })
+   508→        if (res.ok) { const data = await res.json(); categoryForm.nameFr = data.translation }
+   509→      } catch { /* keep empty */ }
+   510→    }
+   511→
+   512→    if (!categoryForm.name || !categoryForm.slug) {
+   513→      toast.error(lang === 'fr' ? 'Le nom et le slug sont obligatoires' : 'Name and slug are required')
+   514→      return
+   515→    }
+   516→    try {
+   517→      const res = await fetch('/api/categories', {
+   518→        method: 'POST',
+   519→        headers: { 'Content-Type': 'application/json' },
+   520→        body: JSON.stringify(categoryForm),
+   521→      })
+   522→      if (res.ok) { toast.success(lang === 'fr' ? 'Catégorie créée' : 'Category created'); setCategoryDialogOpen(false); setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); fetchCategories() }
+   523→      else { const data = await res.json(); toast.error(data.error || (lang === 'fr' ? 'Échec de la création de la catégorie' : 'Failed to create category')) }
+   524→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   525→  }
+   526→
+   527→  const deleteCategory = async (id: string) => {
+   528→    try {
+   529→      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
+   530→      if (res.ok) { toast.success(lang === 'fr' ? 'Catégorie et ses produits supprimés' : 'Category and its products deleted'); fetchCategories(); fetchProducts() }
+   531→      else { toast.error(lang === 'fr' ? 'Échec de la suppression de la catégorie' : 'Failed to delete category') }
+   532→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   533→  }
+   534→
+   535→  // ─── Order Operations ────────────────────────────────────────────────────
+   536→
+   537→  const deleteOrder = async (id: string) => {
+   538→    try {
+   539→      const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
+   540→      if (res.ok) { toast.success(lang === 'fr' ? 'Commande supprimée' : 'Order deleted'); fetchOrders() }
+   541→      else { toast.error(lang === 'fr' ? 'Échec de la suppression de la commande' : 'Failed to delete order') }
+   542→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   543→  }
+   544→
+   545→  const updateOrderStatus = async (orderId: string, status: string) => {
+   546→    try {
+   547→      const res = await fetch(`/api/orders/${orderId}`, {
+   548→        method: 'PUT',
+   549→        headers: { 'Content-Type': 'application/json' },
+   550→        body: JSON.stringify({ status }),
+   551→      })
+   552→      if (res.ok) { toast.success(lang === 'fr' ? `Commande marquée comme ${status === 'pending' ? 'en attente' : status === 'processing' ? 'en cours' : status === 'delivered' ? 'livrée' : status === 'cancelled' ? 'annulée' : status}` : `Order marked as ${status}`); fetchOrders() }
+   553→      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du statut' : 'Failed to update order status') }
+   554→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   555→  }
+   556→
+   557→  // ─── Testimony Operations ────────────────────────────────────────────────
+   558→
+   559→  const toggleTestimonyApproval = async (testimony: Testimony) => {
+   560→    try {
+   561→      const res = await fetch(`/api/testimonies/${testimony.id}`, {
+   562→        method: 'PUT',
+   563→        headers: { 'Content-Type': 'application/json' },
+   564→        body: JSON.stringify({ approved: !testimony.approved }),
+   565→      })
+   566→      if (res.ok) { toast.success(lang === 'fr' ? `Témoignage ${!testimony.approved ? 'approuvé' : 'désapprouvé'}` : `Testimony ${!testimony.approved ? 'approved' : 'unapproved'}`); fetchTestimonies() }
+   567→      else { toast.error(lang === 'fr' ? 'Échec de la mise à jour du témoignage' : 'Failed to update testimony') }
+   568→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   569→  }
+   570→
+   571→  const deleteTestimony = async (id: string) => {
+   572→    try {
+   573→      const res = await fetch(`/api/testimonies/${id}`, { method: 'DELETE' })
+   574→      if (res.ok) { toast.success(lang === 'fr' ? 'Témoignage supprimé' : 'Testimony deleted'); fetchTestimonies() }
+   575→      else { toast.error(lang === 'fr' ? 'Échec de la suppression du témoignage' : 'Failed to delete testimony') }
+   576→    } catch { toast.error(lang === 'fr' ? 'Une erreur est survenue' : 'An error occurred') }
+   577→  }
+   578→
+   579→  // ─── Delete Confirmation ─────────────────────────────────────────────────
+   580→
+   581→  const confirmDelete = (type: string, id: string, name: string) => {
+   582→    setDeleteTarget({ type, id, name })
+   583→    setDeleteConfirmOpen(true)
+   584→  }
+   585→
+   586→  const executeDelete = async () => {
+   587→    if (!deleteTarget) return
+   588→    switch (deleteTarget.type) {
+   589→      case 'product': await deleteProduct(deleteTarget.id); break
+   590→      case 'category': await deleteCategory(deleteTarget.id); break
+   591→      case 'order': await deleteOrder(deleteTarget.id); break
+   592→      case 'testimony': await deleteTestimony(deleteTarget.id); break
+   593→    }
+   594→    setDeleteConfirmOpen(false)
+   595→    setDeleteTarget(null)
+   596→  }
+   597→
+   598→  // ─── Computed Values ─────────────────────────────────────────────────────
+   599→
+   600→  const filteredProducts = products.filter(p =>
+   601→    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+   602→    p.nameFr.toLowerCase().includes(productSearch.toLowerCase()) ||
+   603→    (p.category?.name || '').toLowerCase().includes(productSearch.toLowerCase())
+   604→  )
+   605→
+   606→  const filteredOrders = orders.filter(o =>
+   607→    o.customerName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   608→    o.customerPhone.toLowerCase().includes(orderSearch.toLowerCase()) ||
+   609→    o.id.toLowerCase().includes(orderSearch.toLowerCase())
+   610→  )
+   611→
+   612→  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0)
+   613→  const pendingOrders = orders.filter(o => o.status === 'pending').length
+   614→  const deliveredOrders = orders.filter(o => o.status === 'delivered').length
+   615→  const inStockProducts = products.filter(p => p.inStock).length
+   616→  const featuredProducts = products.filter(p => p.featured).length
+   617→  const approvedTestimonies = testimonies.filter(t => t.approved).length
+   618→
+   619→  // ─── Sidebar Navigation Items ────────────────────────────────────────────
+   620→
+   621→  const navItems: { key: ActiveSection; label: string; icon: React.ReactNode; description: string }[] = [
+   622→    { key: 'dashboard', label: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', icon: <LayoutDashboard className="size-4" />, description: lang === 'fr' ? 'Vue d\'ensemble' : 'Overview & stats' },
+   623→    { key: 'products', label: lang === 'fr' ? 'Produits' : 'Products', icon: <Package className="size-4" />, description: `${products.length} ${lang === 'fr' ? 'articles' : 'items'}` },
+   624→    { key: 'categories', label: lang === 'fr' ? 'Catégories' : 'Categories', icon: <FolderOpen className="size-4" />, description: `${categories.length} ${lang === 'fr' ? 'groupes' : 'groups'}` },
+   625→    { key: 'orders', label: lang === 'fr' ? 'Commandes' : 'Orders', icon: <ShoppingCart className="size-4" />, description: `${orders.length} ${lang === 'fr' ? 'au total' : 'total'}` },
+   626→    { key: 'testimonies', label: lang === 'fr' ? 'Témoignages' : 'Testimonies', icon: <MessageSquareHeart className="size-4" />, description: `${testimonies.length} ${lang === 'fr' ? 'avis' : 'reviews'}` },
+   627→  ]
+   628→
+   629→  // ─── Sidebar Content ─────────────────────────────────────────────────────
+   630→
+   631→  const sidebarContent = (
+   632→    <div className="flex flex-col h-full">
+   633→      {/* Brand Header */}
+   634→      <div className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+   635→        <div className="flex items-center gap-3">
+   636→          <div className="size-11 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25">
+   637→            <span className="text-primary-foreground font-bold text-lg">G</span>
+   638→          </div>
+   639→          <div>
+   640→            <h1 className="font-handwriting text-primary text-xl leading-tight">God&apos;s Grace</h1>
+   641→            <p className="text-[11px] text-muted-foreground tracking-wide uppercase">{lang === 'fr' ? 'Admin Boutique' : 'Boutique Admin'}</p>
+   642→          </div>
+   643→        </div>
+   644→      </div>
+   645→
+   646→      <Separator />
+   647→
+   648→      {/* Navigation */}
+   649→      <nav className="flex-1 p-3 space-y-1">
+   650→        <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{lang === 'fr' ? 'Navigation' : 'Navigation'}</p>
+   651→        {navItems.map(item => (
+   652→          <button
+   653→            key={item.key}
+   654→            onClick={() => { setActiveSection(item.key); setSidebarOpen(false) }}
+   655→            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+   656→              activeSection === item.key
+   657→                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+   658→                : 'text-foreground/70 hover:bg-accent hover:text-foreground'
+   659→            }`}
+   660→          >
+   661→            <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
+   662→              activeSection === item.key ? 'bg-primary-foreground/20' : 'bg-muted'
+   663→            }`}>
+   664→              {item.icon}
+   665→            </div>
+   666→            <div className="text-left flex-1 min-w-0">
+   667→              <p className="font-medium leading-tight">{item.label}</p>
+   668→              <p className={`text-[10px] leading-tight ${activeSection === item.key ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+   669→                {item.description}
+   670→              </p>
+   671→            </div>
+   672→            {activeSection === item.key && <ChevronRight className="size-4 shrink-0" />}
+   673→          </button>
+   674→        ))}
+   675→      </nav>
+   676→
+   677→      <Separator />
+   678→
+   679→      {/* Back to Store + Logout */}
+   680→      <div className="p-3 space-y-1">
+   681→        <button
+   682→          onClick={onBackToStore}
+   683→          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors w-full"
+   684→        >
+   685→          <ArrowLeft className="size-4" />
+   686→          <span>{lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}</span>
+   687→        </button>
+   688→        <button
+   689→          onClick={handleLogout}
+   690→          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
+   691→        >
+   692→          <LogOut className="size-4" />
+   693→          <span>{lang === 'fr' ? 'Déconnexion' : 'Logout'}</span>
+   694→        </button>
+   695→      </div>
+   696→
+   697→      {/* Footer */}
+   698→      <div className="p-4 border-t">
+   699→        <p className="text-[10px] text-muted-foreground text-center font-handwriting">God&apos;s Grace Boutique &copy; {new Date().getFullYear()}</p>
+   700→      </div>
+   701→    </div>
+   702→  )
+   703→
+   704→  // ─── Section Title Helper ────────────────────────────────────────────────
+   705→
+   706→  const sectionTitles: Record<ActiveSection, { title: string; subtitle: string; icon: React.ReactNode }> = {
+   707→    dashboard: { title: lang === 'fr' ? 'Tableau de bord' : 'Dashboard', subtitle: lang === 'fr' ? "Vue d'ensemble de votre boutique" : "Welcome back! Here's your store overview.", icon: <LayoutDashboard className="size-5" /> },
+   708→    products: { title: lang === 'fr' ? 'Produits' : 'Products', subtitle: lang === 'fr' ? 'Gérer votre catalogue' : 'Manage your product catalog', icon: <Package className="size-5" /> },
+   709→    categories: { title: lang === 'fr' ? 'Catégories' : 'Categories', subtitle: lang === 'fr' ? 'Organiser vos produits' : 'Organize your products', icon: <FolderOpen className="size-5" /> },
+   710→    orders: { title: lang === 'fr' ? 'Commandes' : 'Orders', subtitle: lang === 'fr' ? 'Suivre et gérer les commandes' : 'Track and manage customer orders', icon: <ShoppingCart className="size-5" /> },
+   711→    testimonies: { title: lang === 'fr' ? 'Témoignages' : 'Testimonies', subtitle: lang === 'fr' ? 'Examiner les avis clients' : 'Review customer feedback', icon: <MessageSquareHeart className="size-5" /> },
+   712→  }
+   713→
+   714→  // ─── Auth Checking State ──────────────────────────────────────────────
+   715→
+   716→  if (authChecking) {
+   717→    return (
+   718→      <div className="min-h-screen bg-background flex items-center justify-center">
+   719→        <div className="flex flex-col items-center gap-4">
+   720→          <div className="size-12 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+   721→          <div className="text-center">
+   722→            <p className="text-sm font-medium">{lang === 'fr' ? 'Vérification...' : 'Verifying...'}</p>
+   723→            <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+   724→          </div>
+   725→        </div>
+   726→      </div>
+   727→    )
+   728→  }
+   729→
+   730→  // ─── Login Page ───────────────────────────────────────────────────────
+   731→
+   732→  if (!isAuthenticated) {
+   733→    return (
+   734→      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+   735→        <div className="w-full max-w-md">
+   736→          {/* Login Card */}
+   737→          <Card className="overflow-hidden">
+   738→            {/* Header */}
+   739→            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-center text-primary-foreground">
+   740→              <div className="size-16 rounded-2xl bg-primary-foreground/20 flex items-center justify-center mx-auto mb-4 shadow-lg">
+   741→                <Lock className="size-8 text-primary-foreground" />
+   742→              </div>
+   743→              <h1 className="font-handwriting text-2xl mb-1">God&apos;s Grace</h1>
+   744→              <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? 'Administration Boutique' : 'Boutique Administration'}</p>
+   745→            </div>
+   746→
+   747→            {/* Form */}
+   748→            <CardContent className="p-6">
+   749→              <form onSubmit={handleLogin} className="space-y-4">
+   750→                {loginError && (
+   751→                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+   752→                    <AlertCircle className="size-4 shrink-0" />
+   753→                    <span>{loginError}</span>
+   754→                  </div>
+   755→                )}
+   756→
+   757→                <div className="space-y-2">
+   758→                  <Label htmlFor="username">{lang === 'fr' ? 'Nom d\'utilisateur' : 'Username'}</Label>
+   759→                  <div className="relative">
+   760→                    <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   761→                    <Input
+   762→                      id="username"
+   763→                      type="text"
+   764→                      value={loginForm.username}
+   765→                      onChange={(e) => setLoginForm(f => ({ ...f, username: e.target.value }))}
+   766→                      placeholder={lang === 'fr' ? 'Entrez votre nom d\'utilisateur' : 'Enter your username'}
+   767→                      className="pl-9"
+   768→                      required
+   769→                      autoComplete="username"
+   770→                    />
+   771→                  </div>
+   772→                </div>
+   773→
+   774→                <div className="space-y-2">
+   775→                  <Label htmlFor="password">{lang === 'fr' ? 'Mot de passe' : 'Password'}</Label>
+   776→                  <div className="relative">
+   777→                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   778→                    <Input
+   779→                      id="password"
+   780→                      type="password"
+   781→                      value={loginForm.password}
+   782→                      onChange={(e) => setLoginForm(f => ({ ...f, password: e.target.value }))}
+   783→                      placeholder={lang === 'fr' ? 'Entrez votre mot de passe' : 'Enter your password'}
+   784→                      className="pl-9"
+   785→                      required
+   786→                      autoComplete="current-password"
+   787→                    />
+   788→                  </div>
+   789→                </div>
+   790→
+   791→                <Button
+   792→                  type="submit"
+   793→                  className="w-full shadow-md shadow-primary/20"
+   794→                  disabled={loginLoading}
+   795→                >
+   796→                  {loginLoading ? (
+   797→                    <div className="flex items-center gap-2">
+   798→                      <div className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+   799→                      <span>{lang === 'fr' ? 'Connexion...' : 'Signing in...'}</span>
+   800→                    </div>
+   801→                  ) : (
+   802→                    <div className="flex items-center gap-2">
+   803→                      <Lock className="size-4" />
+   804→                      <span>{lang === 'fr' ? 'Se connecter' : 'Sign In'}</span>
+   805→                    </div>
+   806→                  )}
+   807→                </Button>
+   808→              </form>
+   809→
+   810→              <div className="mt-6 text-center">
+   811→                <button
+   812→                  onClick={onBackToStore}
+   813→                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
+   814→                >
+   815→                  <ArrowLeft className="size-3" />
+   816→                  {lang === 'fr' ? 'Retour à la Boutique' : 'Back to Store'}
+   817→                </button>
+   818→              </div>
+   819→            </CardContent>
+   820→          </Card>
+   821→
+   822→          {/* Language Toggle Below Login */}
+   823→          <div className="mt-4 text-center">
+   824→            <Button
+   825→              variant="ghost"
+   826→              size="sm"
+   827→              onClick={toggleLang}
+   828→              className="gap-1.5 text-xs text-muted-foreground"
+   829→            >
+   830→              <Globe className="size-3.5" />
+   831→              {lang === 'en' ? 'Français' : 'English'}
+   832→            </Button>
+   833→          </div>
+   834→        </div>
+   835→      </div>
+   836→    )
+   837→  }
+   838→
+   839→  // ─── Render Dashboard ──────────────────────────────────────────────
+   840→
+   841→  return (
+   842→    <div className="min-h-screen bg-background flex">
+   843→      {/* Desktop Sidebar */}
+   844→      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 bg-card border-r border-border">
+   845→        {sidebarContent}
+   846→      </aside>
+   847→
+   848→      {/* Mobile Sidebar */}
+   849→      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+   850→        <SheetContent side="left" className="p-0 w-72 bg-card">
+   851→          <SheetHeader className="sr-only">
+   852→            <SheetTitle>{lang === 'fr' ? 'Navigation' : 'Navigation'}</SheetTitle>
+   853→          </SheetHeader>
+   854→          {sidebarContent}
+   855→        </SheetContent>
+   856→      </Sheet>
+   857→
+   858→      {/* Main Content */}
+   859→      <main className="flex-1 lg:ml-72">
+   860→        {/* Top Bar */}
+   861→        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b">
+   862→          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
+   863→            <div className="flex items-center gap-4">
+   864→              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+   865→                <Menu className="size-5" />
+   866→              </Button>
+   867→              <div className="flex items-center gap-3">
+   868→                <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+   869→                  {sectionTitles[activeSection].icon}
+   870→                </div>
+   871→                <div>
+   872→                  <h2 className="font-semibold text-base font-elegant leading-tight">{sectionTitles[activeSection].title}</h2>
+   873→                  <p className="text-[11px] text-muted-foreground hidden sm:block">{sectionTitles[activeSection].subtitle}</p>
+   874→                </div>
+   875→              </div>
+   876→            </div>
+   877→            <div className="flex items-center gap-2">
+   878→              <Badge variant="secondary" className="text-xs gap-1 hidden sm:flex">
+   879→                <Package className="size-3" /> {products.length} {lang === 'fr' ? 'Produits' : 'Products'}
+   880→              </Badge>
+   881→              {pendingOrders > 0 && (
+   882→                <Badge className="text-xs gap-1">
+   883→                  <Clock className="size-3" /> {pendingOrders} {lang === 'fr' ? 'En attente' : 'Pending'}
+   884→                </Badge>
+   885→              )}
+   886→              {/* Language Toggle */}
+   887→              <Button
+   888→                variant="outline"
+   889→                size="sm"
+   890→                onClick={toggleLang}
+   891→                className="gap-1.5 text-xs font-semibold h-8"
+   892→              >
+   893→                <Globe className="size-3.5" />
+   894→                {lang === 'en' ? 'FR' : 'EN'}
+   895→              </Button>
+   896→            </div>
+   897→          </div>
+   898→        </header>
+   899→
+   900→        {/* Page Content */}
+   901→        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+   902→          {loading ? (
+   903→            <div className="flex items-center justify-center h-64">
+   904→              <div className="flex flex-col items-center gap-4">
+   905→                <div className="size-10 border-[3px] border-primary border-t-transparent rounded-full animate-spin" />
+   906→                <div className="text-center">
+   907→                  <p className="text-sm font-medium">{lang === 'fr' ? 'Chargement du tableau de bord...' : 'Loading dashboard...'}</p>
+   908→                  <p className="text-xs text-muted-foreground mt-1 font-handwriting">God&apos;s Grace Boutique</p>
+   909→                </div>
+   910→              </div>
+   911→            </div>
+   912→          ) : (
+   913→            <>
+   914→              {/* ════════════════════ Dashboard Section ════════════════════ */}
+   915→              {activeSection === 'dashboard' && (
+   916→                <div className="space-y-6">
+   917→                  {/* Welcome Banner */}
+   918→                  <Card className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground overflow-hidden relative">
+   919→                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+   920→                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-foreground/5 rounded-full translate-y-1/2 -translate-x-1/4" />
+   921→                    <CardContent className="p-6 lg:p-8 relative">
+   922→                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   923→                        <div>
+   924→                          <h2 className="font-handwriting text-2xl lg:text-3xl mb-1">{lang === 'fr' ? "Bienvenue chez God's Grace" : "Welcome to God's Grace"}</h2>
+   925→                          <p className="text-primary-foreground/80 text-sm">{lang === 'fr' ? "Tableau de bord d'administration — Où l'Élégance Rencontre la Foi" : 'Boutique Admin Dashboard — Where Elegance Meets Faith'}</p>
+   926→                        </div>
+   927→                        <Sparkles className="size-10 text-primary-foreground/30 shrink-0" />
+   928→                      </div>
+   929→                    </CardContent>
+   930→                  </Card>
+   931→
+   932→                  {/* Stats Cards */}
+   933→                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+   934→                    <Card className="overflow-hidden">
+   935→                      <CardContent className="p-4 lg:p-5">
+   936→                        <div className="flex items-start justify-between">
+   937→                          <div>
+   938→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Produits' : 'Products'}</p>
+   939→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{products.length}</p>
+   940→                            <p className="text-[11px] text-muted-foreground mt-1">{inStockProducts} {lang === 'fr' ? 'en stock' : 'in stock'}</p>
+   941→                          </div>
+   942→                          <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+   943→                            <Package className="size-5 text-primary" />
+   944→                          </div>
+   945→                        </div>
+   946→                      </CardContent>
+   947→                    </Card>
+   948→                    <Card className="overflow-hidden">
+   949→                      <CardContent className="p-4 lg:p-5">
+   950→                        <div className="flex items-start justify-between">
+   951→                          <div>
+   952→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Catégories' : 'Categories'}</p>
+   953→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{categories.length}</p>
+   954→                            <p className="text-[11px] text-muted-foreground mt-1">{lang === 'fr' ? 'Groupes actifs' : 'Active groups'}</p>
+   955→                          </div>
+   956→                          <div className="size-10 rounded-xl bg-chart-3/10 flex items-center justify-center shrink-0">
+   957→                            <FolderOpen className="size-5 text-chart-3" />
+   958→                          </div>
+   959→                        </div>
+   960→                      </CardContent>
+   961→                    </Card>
+   962→                    <Card className="overflow-hidden">
+   963→                      <CardContent className="p-4 lg:p-5">
+   964→                        <div className="flex items-start justify-between">
+   965→                          <div>
+   966→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Commandes' : 'Orders'}</p>
+   967→                            <p className="text-2xl lg:text-3xl font-bold mt-1">{orders.length}</p>
+   968→                            <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} {lang === 'fr' ? 'en attente' : 'pending'}</p>
+   969→                          </div>
+   970→                          <div className="size-10 rounded-xl bg-chart-2/10 flex items-center justify-center shrink-0">
+   971→                            <ShoppingCart className="size-5 text-chart-2" />
+   972→                          </div>
+   973→                        </div>
+   974→                      </CardContent>
+   975→                    </Card>
+   976→                    <Card className="overflow-hidden">
+   977→                      <CardContent className="p-4 lg:p-5">
+   978→                        <div className="flex items-start justify-between">
+   979→                          <div>
+   980→                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{lang === 'fr' ? 'Revenus' : 'Revenue'}</p>
+   981→                            <p className="text-xl lg:text-2xl font-bold mt-1">{totalRevenue.toLocaleString()}</p>
+   982→                            <p className="text-[11px] text-muted-foreground mt-1">{lang === 'fr' ? 'FCFA total' : 'FCFA total'}</p>
+   983→                          </div>
+   984→                          <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+   985→                            <TrendingUp className="size-5 text-gold" />
+   986→                          </div>
+   987→                        </div>
+   988→                      </CardContent>
+   989→                    </Card>
+   990→                  </div>
+   991→
+   992→                  {/* Quick Stats Row */}
+   993→                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   994→                    {/* Recent Orders */}
+   995→                    <Card>
+   996→                      <CardHeader className="pb-3">
+   997→                        <div className="flex items-center justify-between">
+   998→                          <CardTitle className="text-base font-elegant flex items-center gap-2">
+   999→                            <ShoppingCart className="size-4 text-primary" /> {lang === 'fr' ? 'Commandes récentes' : 'Recent Orders'}
+  1000→                          </CardTitle>
+  1001→                          {orders.length > 5 && (
+  1002→                            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveSection('orders')}>
+  1003→                              {lang === 'fr' ? 'Voir tout' : 'View all'} <ChevronRight className="size-3" />
+  1004→                            </Button>
+  1005→                          )}
+  1006→                        </div>
+  1007→                      </CardHeader>
+  1008→                      <CardContent>
+  1009→                        {orders.length === 0 ? (
+  1010→                          <div className="py-6 text-center">
+  1011→                            <ShoppingCart className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+  1012→                            <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Pas encore de commandes' : 'No orders yet'}</p>
+  1013→                          </div>
+  1014→                        ) : (
+  1015→                          <div className="space-y-2">
+  1016→                            {orders.slice(0, 5).map(order => (
+  1017→                              <div key={order.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors">
+  1018→                                <div className="flex items-center gap-3 min-w-0">
+  1019→                                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+  1020→                                    <span className="text-xs font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+  1021→                                  </div>
+  1022→                                  <div className="min-w-0">
+  1023→                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+  1024→                                    <p className="text-[10px] text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</p>
+  1025→                                  </div>
+  1026→                                </div>
+  1027→                                <div className="flex items-center gap-2 shrink-0">
+  1028→                                  <span className="font-semibold text-sm">{order.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">FCFA</span></span>
+  1029→                                  <Badge
+  1030→                                    variant={order.status === 'pending' ? 'outline' : order.status === 'delivered' ? 'default' : 'secondary'}
+  1031→                                    className="text-[10px] px-1.5 py-0"
+  1032→                                  >
+  1033→                                    {lang === 'fr' ? (order.status === 'pending' ? 'En attente' : order.status === 'processing' ? 'En cours' : order.status === 'delivered' ? 'Livrée' : order.status === 'cancelled' ? 'Annulée' : order.status) : order.status}
+  1034→                                  </Badge>
+  1035→                                </div>
+  1036→                              </div>
+  1037→                            ))}
+  1038→                          </div>
+  1039→                        )}
+  1040→                      </CardContent>
+  1041→                    </Card>
+  1042→
+  1043→                    {/* Quick Info */}
+  1044→                    <Card>
+  1045→                      <CardHeader className="pb-3">
+  1046→                        <CardTitle className="text-base font-elegant flex items-center gap-2">
+  1047→                          <BarChart3 className="size-4 text-primary" /> {lang === 'fr' ? 'Aperçu de la boutique' : 'Store Overview'}
+  1048→                        </CardTitle>
+  1049→                      </CardHeader>
+  1050→                      <CardContent>
+  1051→                        <div className="space-y-3">
+  1052→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1053→                            <div className="flex items-center gap-3">
+  1054→                              <div className="size-8 rounded-lg bg-chart-3/10 flex items-center justify-center">
+  1055→                                <Sparkles className="size-4 text-chart-3" />
+  1056→                              </div>
+  1057→                              <span className="text-sm">{lang === 'fr' ? 'Produits en vedette' : 'Featured Products'}</span>
+  1058→                            </div>
+  1059→                            <Badge>{featuredProducts}</Badge>
+  1060→                          </div>
+  1061→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1062→                            <div className="flex items-center gap-3">
+  1063→                              <div className="size-8 rounded-lg bg-chart-2/10 flex items-center justify-center">
+  1064→                                <CheckCircle2 className="size-4 text-chart-2" />
+  1065→                              </div>
+  1066→                              <span className="text-sm">{lang === 'fr' ? 'Commandes livrées' : 'Delivered Orders'}</span>
+  1067→                            </div>
+  1068→                            <Badge variant="secondary">{deliveredOrders}</Badge>
+  1069→                          </div>
+  1070→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1071→                            <div className="flex items-center gap-3">
+  1072→                              <div className="size-8 rounded-lg bg-gold/10 flex items-center justify-center">
+  1073→                                <Heart className="size-4 text-gold" />
+  1074→                              </div>
+  1075→                              <span className="text-sm">{lang === 'fr' ? 'Témoignages approuvés' : 'Approved Testimonies'}</span>
+  1076→                            </div>
+  1077→                            <Badge variant="outline">{approvedTestimonies}</Badge>
+  1078→                          </div>
+  1079→                          <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+  1080→                            <div className="flex items-center gap-3">
+  1081→                              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+  1082→                                <Clock className="size-4 text-primary" />
+  1083→                              </div>
+  1084→                              <span className="text-sm">{lang === 'fr' ? 'Témoignages en attente' : 'Pending Testimonies'}</span>
+  1085→                            </div>
+  1086→                            <Badge variant="outline">{testimonies.length - approvedTestimonies}</Badge>
+  1087→                          </div>
+  1088→                        </div>
+  1089→                      </CardContent>
+  1090→                    </Card>
+  1091→                  </div>
+  1092→
+  1093→                  {/* Category Breakdown */}
+  1094→                  <Card>
+  1095→                    <CardHeader className="pb-3">
+  1096→                      <CardTitle className="text-base font-elegant flex items-center gap-2">
+  1097→                        <FolderOpen className="size-4 text-primary" /> {lang === 'fr' ? 'Produits par catégorie' : 'Products by Category'}
+  1098→                      </CardTitle>
+  1099→                    </CardHeader>
+  1100→                    <CardContent>
+  1101→                      {categories.length === 0 ? (
+  1102→                        <div className="py-6 text-center">
+  1103→                          <FolderOpen className="size-8 text-muted-foreground/30 mx-auto mb-2" />
+  1104→                          <p className="text-sm text-muted-foreground">{lang === 'fr' ? 'Pas encore de catégories' : 'No categories yet'}</p>
+  1105→                        </div>
+  1106→                      ) : (
+  1107→                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+  1108→                          {categories.map(cat => (
+  1109→                            <div key={cat.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors cursor-pointer" onClick={() => setActiveSection('products')}>
+  1110→                              {cat.image ? (
+  1111→                                <img src={cat.image} alt={cat.name} className="size-10 rounded-lg object-cover bg-muted shrink-0" />
+  1112→                              ) : (
+  1113→                                <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+  1114→                                  <FolderOpen className="size-4 text-primary" />
+  1115→                                </div>
+  1116→                              )}
+  1117→                              <div className="min-w-0">
+  1118→                                <p className="text-sm font-medium truncate">{lang === 'fr' ? cat.nameFr : cat.name}</p>
+  1119→                                <p className="text-[11px] text-muted-foreground">{cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}</p>
+  1120→                              </div>
+  1121→                            </div>
+  1122→                          ))}
+  1123→                        </div>
+  1124→                      )}
+  1125→                    </CardContent>
+  1126→                  </Card>
+  1127→                </div>
+  1128→              )}
+  1129→
+  1130→              {/* ════════════════════ Products Section ════════════════════ */}
+  1131→              {activeSection === 'products' && (
+  1132→                <div className="space-y-4">
+  1133→                  {/* Header */}
+  1134→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  1135→                    <div className="relative flex-1 max-w-sm">
+  1136→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+  1137→                      <Input
+  1138→                        placeholder={lang === 'fr' ? 'Rechercher des produits...' : 'Search products...'}
+  1139→                        value={productSearch}
+  1140→                        onChange={e => setProductSearch(e.target.value)}
+  1141→                        className="pl-9"
+  1142→                      />
+  1143→                    </div>
+  1144→                    <Button
+  1145→                      onClick={() => { resetProductForm(); setProductDialogOpen(true) }}
+  1146→                      className="gap-2 shadow-md shadow-primary/20"
+  1147→                    >
+  1148→                      <Plus className="size-4" /> {lang === 'fr' ? 'Ajouter un produit' : 'Add Product'}
+  1149→                    </Button>
+  1150→                  </div>
+  1151→
+  1152→                  {/* Products - Desktop Table */}
+  1153→                  {filteredProducts.length === 0 ? (
+  1154→                    <Card>
+  1155→                      <CardContent className="py-16 text-center">
+  1156→                        <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+  1157→                          <Package className="size-8 text-primary/50" />
+  1158→                        </div>
+  1159→                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucun produit trouvé' : 'No products found'}</p>
+  1160→                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre premier produit pour commencer' : 'Add your first product to get started'}</p>
+  1161→                      </CardContent>
+  1162→                    </Card>
+  1163→                  ) : (
+  1164→                    <>
+  1165→                      {/* Mobile: Card Layout */}
+  1166→                      <div className="lg:hidden space-y-3">
+  1167→                        {filteredProducts.map(product => (
+  1168→                          <Card key={product.id} className="overflow-hidden">
+  1169→                            <CardContent className="p-4">
+  1170→                              <div className="flex gap-3">
+  1171→                                <img
+  1172→                                  src={product.image}
+  1173→                                  alt={product.name}
+  1174→                                  className="size-16 rounded-lg object-cover bg-muted shrink-0"
+  1175→                                  onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+  1176→                                />
+  1177→                                <div className="flex-1 min-w-0">
+  1178→                                  <div className="flex items-start justify-between gap-2">
+  1179→                                    <div className="min-w-0">
+  1180→                                      <p className="font-medium text-sm truncate">{lang === 'fr' ? product.nameFr : product.name}</p>
+  1181→                                      <p className="text-[11px] text-muted-foreground truncate">{lang === 'fr' ? product.name : product.nameFr}</p>
+  1182→                                    </div>
+  1183→                                    <div className="flex items-center gap-1 shrink-0">
+  1184→                                      <Button variant="ghost" size="icon" className="size-7" onClick={() => openEditProduct(product)}>
+  1185→                                        <Pencil className="size-3" />
+  1186→                                      </Button>
+  1187→                                      <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+  1188→                                        <Trash2 className="size-3" />
+  1189→                                      </Button>
+  1190→                                    </div>
+  1191→                                  </div>
+  1192→                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+  1193→                                    <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+  1194→                                    {product.category && (
+  1195→                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{lang === 'fr' ? product.category.nameFr : product.category.name}</Badge>
+  1196→                                    )}
+  1197→                                  </div>
+  1198→                                  <div className="flex items-center gap-3 mt-2">
+  1199→                                    <div className="flex items-center gap-1.5 text-[11px]">
+  1200→                                      <Switch checked={product.inStock} onCheckedChange={() => toggleProductStock(product)} className="scale-75" />
+  1201→                                      <span className={product.inStock ? 'text-green-600' : 'text-muted-foreground'}>{lang === 'fr' ? 'Stock' : 'Stock'}</span>
+  1202→                                    </div>
+  1203→                                    <div className="flex items-center gap-1.5 text-[11px]">
+  1204→                                      <Switch checked={product.featured} onCheckedChange={() => toggleProductFeatured(product)} className="scale-75" />
+  1205→                                      <span className={product.featured ? 'text-gold' : 'text-muted-foreground'}>{lang === 'fr' ? 'En vedette' : 'Featured'}</span>
+  1206→                                    </div>
+  1207→                                  </div>
+  1208→                                </div>
+  1209→                              </div>
+  1210→                            </CardContent>
+  1211→                          </Card>
+  1212→                        ))}
+  1213→                      </div>
+  1214→
+  1215→                      {/* Desktop: Table Layout */}
+  1216→                      <Card className="hidden lg:block">
+  1217→                        <CardContent className="p-0">
+  1218→                          <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+  1219→                            <Table>
+  1220→                              <TableHeader>
+  1221→                                <TableRow>
+  1222→                                  <TableHead className="w-14">{lang === 'fr' ? 'Image' : 'Image'}</TableHead>
+  1223→                                  <TableHead>{lang === 'fr' ? 'Nom' : 'Name'}</TableHead>
+  1224→                                  <TableHead>{lang === 'fr' ? 'Catégorie' : 'Category'}</TableHead>
+  1225→                                  <TableHead>{lang === 'fr' ? 'Prix' : 'Price'}</TableHead>
+  1226→                                  <TableHead>{lang === 'fr' ? 'Stock' : 'Stock'}</TableHead>
+  1227→                                  <TableHead>{lang === 'fr' ? 'En vedette' : 'Featured'}</TableHead>
+  1228→                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
+  1229→                                </TableRow>
+  1230→                              </TableHeader>
+  1231→                              <TableBody>
+  1232→                                {filteredProducts.map(product => (
+  1233→                                  <TableRow key={product.id}>
+  1234→                                    <TableCell>
+  1235→                                      <img
+  1236→                                        src={product.image}
+  1237→                                        alt={product.name}
+  1238→                                        className="size-10 rounded-lg object-cover bg-muted"
+  1239→                                        onError={(e) => { (e.target as HTMLImageElement).src = '/images/placeholder.png' }}
+  1240→                                      />
+  1241→                                    </TableCell>
+  1242→                                    <TableCell>
+  1243→                                      <div className="min-w-0">
+  1244→                                        <p className="font-medium text-sm truncate max-w-[200px]">{lang === 'fr' ? product.nameFr : product.name}</p>
+  1245→                                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{lang === 'fr' ? product.name : product.nameFr}</p>
+  1246→                                      </div>
+  1247→                                    </TableCell>
+  1248→                                    <TableCell>
+  1249→                                      <Badge variant="outline" className="text-xs">{lang === 'fr' ? (product.category?.nameFr || 'N/A') : (product.category?.name || 'N/A')}</Badge>
+  1250→                                    </TableCell>
+  1251→                                    <TableCell>
+  1252→                                      <span className="font-semibold text-sm">{product.price.toLocaleString()} FCFA</span>
+  1253→                                    </TableCell>
+  1254→                                    <TableCell>
+  1255→                                      <Switch
+  1256→                                        checked={product.inStock}
+  1257→                                        onCheckedChange={() => toggleProductStock(product)}
+  1258→                                      />
+  1259→                                    </TableCell>
+  1260→                                    <TableCell>
+  1261→                                      <Switch
+  1262→                                        checked={product.featured}
+  1263→                                        onCheckedChange={() => toggleProductFeatured(product)}
+  1264→                                      />
+  1265→                                    </TableCell>
+  1266→                                    <TableCell className="text-right">
+  1267→                                      <div className="flex items-center justify-end gap-1">
+  1268→                                        <Button variant="ghost" size="icon" className="size-8" onClick={() => openEditProduct(product)}>
+  1269→                                          <Pencil className="size-3.5" />
+  1270→                                        </Button>
+  1271→                                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('product', product.id, product.name)}>
+  1272→                                          <Trash2 className="size-3.5" />
+  1273→                                        </Button>
+  1274→                                      </div>
+  1275→                                    </TableCell>
+  1276→                                  </TableRow>
+  1277→                                ))}
+  1278→                              </TableBody>
+  1279→                            </Table>
+  1280→                          </div>
+  1281→                        </CardContent>
+  1282→                      </Card>
+  1283→                    </>
+  1284→                  )}
+  1285→                </div>
+  1286→              )}
+  1287→
+  1288→              {/* ════════════════════ Categories Section ════════════════════ */}
+  1289→              {activeSection === 'categories' && (
+  1290→                <div className="space-y-4">
+  1291→                  <div className="flex items-center justify-between">
+  1292→                    <p className="text-sm text-muted-foreground">{categories.length} {lang === 'fr' ? 'catégories' : 'categories'}</p>
+  1293→                    <Button onClick={() => { setCategoryForm({ name: '', nameFr: '', slug: '', image: '' }); setCategoryDialogOpen(true) }} className="gap-2 shadow-md shadow-primary/20">
+  1294→                      <Plus className="size-4" /> {lang === 'fr' ? 'Ajouter une catégorie' : 'Add Category'}
+  1295→                    </Button>
+  1296→                  </div>
+  1297→
+  1298→                  {categories.length === 0 ? (
+  1299→                    <Card>
+  1300→                      <CardContent className="py-16 text-center">
+  1301→                        <div className="size-16 rounded-2xl bg-chart-3/10 flex items-center justify-center mx-auto mb-4">
+  1302→                          <FolderOpen className="size-8 text-chart-3/50" />
+  1303→                        </div>
+  1304→                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Pas encore de catégories' : 'No categories yet'}</p>
+  1305→                        <p className="text-xs text-muted-foreground mt-1">{lang === 'fr' ? 'Ajoutez votre première catégorie pour organiser les produits' : 'Add your first category to organize products'}</p>
+  1306→                      </CardContent>
+  1307→                    </Card>
+  1308→                  ) : (
+  1309→                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+  1310→                      {categories.map(cat => (
+  1311→                        <Card key={cat.id} className="group overflow-hidden hover:shadow-lg transition-shadow duration-300">
+  1312→                          <CardContent className="p-0">
+  1313→                            {/* Category Image Banner */}
+  1314→                            <div className="h-28 bg-gradient-to-br from-primary/5 to-chart-3/5 relative overflow-hidden">
+  1315→                              {cat.image ? (
+  1316→                                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+  1317→                              ) : (
+  1318→                                <div className="flex items-center justify-center h-full">
+  1319→                                  <FolderOpen className="size-8 text-primary/20" />
+  1320→                                </div>
+  1321→                              )}
+  1322→                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+  1323→                              <div className="absolute bottom-2 left-3 right-3">
+  1324→                                <p className="font-semibold text-sm text-white drop-shadow-md truncate">{lang === 'fr' ? cat.nameFr : cat.name}</p>
+  1325→                              </div>
+  1326→                              {/* Delete button */}
+  1327→                              <Button
+  1328→                                variant="ghost"
+  1329→                                size="icon"
+  1330→                                className="absolute top-2 right-2 size-7 bg-background/60 hover:bg-destructive hover:text-destructive-foreground opacity-0 group-hover:opacity-100 transition-all"
+  1331→                                onClick={() => confirmDelete('category', cat.id, cat.name)}
+  1332→                              >
+  1333→                                <Trash2 className="size-3" />
+  1334→                              </Button>
+  1335→                            </div>
+  1336→                            {/* Category Info */}
+  1337→                            <div className="p-3">
+  1338→                              <p className="text-xs text-muted-foreground truncate">{lang === 'fr' ? cat.name : cat.nameFr}</p>
+  1339→                              <div className="flex items-center gap-2 mt-2">
+  1340→                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+  1341→                                  /{cat.slug}
+  1342→                                </Badge>
+  1343→                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+  1344→                                  {cat.products?.length || 0} {lang === 'fr' ? 'articles' : 'items'}
+  1345→                                </Badge>
+  1346→                              </div>
+  1347→                            </div>
+  1348→                          </CardContent>
+  1349→                        </Card>
+  1350→                      ))}
+  1351→                    </div>
+  1352→                  )}
+  1353→                </div>
+  1354→              )}
+  1355→
+  1356→              {/* ════════════════════ Orders Section ════════════════════ */}
+  1357→              {activeSection === 'orders' && (
+  1358→                <div className="space-y-4">
+  1359→                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  1360→                    <div className="relative flex-1 max-w-sm">
+  1361→                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+  1362→                      <Input
+  1363→                        placeholder={lang === 'fr' ? 'Rechercher des commandes...' : 'Search orders...'}
+  1364→                        value={orderSearch}
+  1365→                        onChange={e => setOrderSearch(e.target.value)}
+  1366→                        className="pl-9"
+  1367→                      />
+  1368→                    </div>
+  1369→                    <p className="text-sm text-muted-foreground">{orders.length} {lang === 'fr' ? 'commandes au total' : 'total orders'}</p>
+  1370→                  </div>
+  1371→
+  1372→                  {filteredOrders.length === 0 ? (
+  1373→                    <Card>
+  1374→                      <CardContent className="py-16 text-center">
+  1375→                        <div className="size-16 rounded-2xl bg-chart-2/10 flex items-center justify-center mx-auto mb-4">
+  1376→                          <ShoppingCart className="size-8 text-chart-2/50" />
+  1377→                        </div>
+  1378→                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Aucune commande trouvée' : 'No orders found'}</p>
+  1379→                      </CardContent>
+  1380→                    </Card>
+  1381→                  ) : (
+  1382→                    <>
+  1383→                      {/* Mobile: Card Layout */}
+  1384→                      <div className="lg:hidden space-y-3">
+  1385→                        {filteredOrders.map(order => (
+  1386→                          <Card key={order.id} className="overflow-hidden">
+  1387→                            <CardContent className="p-4">
+  1388→                              <div className="flex items-start justify-between gap-3">
+  1389→                                <div className="flex items-center gap-3 min-w-0">
+  1390→                                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+  1391→                                    <span className="text-sm font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+  1392→                                  </div>
+  1393→                                  <div className="min-w-0">
+  1394→                                    <p className="font-medium text-sm truncate">{order.customerName}</p>
+  1395→                                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+  1396→                                      <Phone className="size-2.5" /> {order.customerPhone || (lang === 'fr' ? 'N/D' : 'N/A')}
+  1397→                                    </p>
+  1398→                                  </div>
+  1399→                                </div>
+  1400→                                <Badge
+  1401→                                  variant={
+  1402→                                    order.status === 'delivered' ? 'default' :
+  1403→                                    order.status === 'pending' ? 'outline' :
+  1404→                                    order.status === 'cancelled' ? 'destructive' : 'secondary'
+  1405→                                  }
+  1406→                                  className="text-[10px] capitalize shrink-0"
+  1407→                                >
+  1408→                                  {lang === 'fr' ? (order.status === 'pending' ? 'En attente' : order.status === 'processing' ? 'En cours' : order.status === 'delivered' ? 'Livrée' : order.status === 'cancelled' ? 'Annulée' : order.status) : order.status}
+  1409→                                </Badge>
+  1410→                              </div>
+  1411→                              <Separator className="my-3" />
+  1412→                              <div className="flex items-center justify-between">
+  1413→                                <div className="flex items-center gap-3">
+  1414→                                  <span className="font-bold text-sm">{order.total.toLocaleString()} FCFA</span>
+  1415→                                  <Badge variant="outline" className="text-[10px] capitalize">{order.paymentMethod}</Badge>
+  1416→                                </div>
+  1417→                                <div className="flex items-center gap-1">
+  1418→                                  <Button variant="ghost" size="icon" className="size-7" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+  1419→                                    <Eye className="size-3" />
+  1420→                                  </Button>
+  1421→                                  {order.status === 'pending' && (
+  1422→                                    <Button variant="ghost" size="icon" className="size-7 text-green-600 hover:text-green-700" onClick={() => updateOrderStatus(order.id, 'delivered')}>
+  1423→                                      <CheckCircle2 className="size-3" />
+  1424→                                    </Button>
+  1425→                                  )}
+  1426→                                  <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+  1427→                                    <Trash2 className="size-3" />
+  1428→                                  </Button>
+  1429→                                </div>
+  1430→                              </div>
+  1431→                              <p className="text-[10px] text-muted-foreground mt-2">{new Date(order.createdAt).toLocaleDateString()}</p>
+  1432→                            </CardContent>
+  1433→                          </Card>
+  1434→                        ))}
+  1435→                      </div>
+  1436→
+  1437→                      {/* Desktop: Table Layout */}
+  1438→                      <Card className="hidden lg:block">
+  1439→                        <CardContent className="p-0">
+  1440→                          <div className="max-h-[calc(100vh-14rem)] overflow-y-auto">
+  1441→                            <Table>
+  1442→                              <TableHeader>
+  1443→                                <TableRow>
+  1444→                                  <TableHead>{lang === 'fr' ? 'Client' : 'Customer'}</TableHead>
+  1445→                                  <TableHead>{lang === 'fr' ? 'Téléphone' : 'Phone'}</TableHead>
+  1446→                                  <TableHead>{lang === 'fr' ? 'Total' : 'Total'}</TableHead>
+  1447→                                  <TableHead>{lang === 'fr' ? 'Paiement' : 'Payment'}</TableHead>
+  1448→                                  <TableHead>{lang === 'fr' ? 'Statut' : 'Status'}</TableHead>
+  1449→                                  <TableHead>{lang === 'fr' ? 'Date' : 'Date'}</TableHead>
+  1450→                                  <TableHead className="text-right">{lang === 'fr' ? 'Actions' : 'Actions'}</TableHead>
+  1451→                                </TableRow>
+  1452→                              </TableHeader>
+  1453→                              <TableBody>
+  1454→                                {filteredOrders.map(order => (
+  1455→                                  <TableRow key={order.id}>
+  1456→                                    <TableCell>
+  1457→                                      <div className="flex items-center gap-2">
+  1458→                                        <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+  1459→                                          <span className="text-[10px] font-bold text-primary">{order.customerName.charAt(0).toUpperCase()}</span>
+  1460→                                        </div>
+  1461→                                        <span className="font-medium text-sm">{order.customerName}</span>
+  1462→                                      </div>
+  1463→                                    </TableCell>
+  1464→                                    <TableCell>
+  1465→                                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+  1466→                                        <Phone className="size-3" /> {order.customerPhone || (lang === 'fr' ? 'N/D' : 'N/A')}
+  1467→                                      </span>
+  1468→                                    </TableCell>
+  1469→                                    <TableCell>
+  1470→                                      <span className="font-semibold text-sm">{order.total.toLocaleString()} FCFA</span>
+  1471→                                    </TableCell>
+  1472→                                    <TableCell>
+  1473→                                      <Badge variant="outline" className="text-xs capitalize">{order.paymentMethod}</Badge>
+  1474→                                    </TableCell>
+  1475→                                    <TableCell>
+  1476→                                      <Select
+  1477→                                        value={order.status}
+  1478→                                        onValueChange={(val) => updateOrderStatus(order.id, val)}
+  1479→                                      >
+  1480→                                        <SelectTrigger className={`h-7 text-xs capitalize w-[110px] ${
+  1481→                                          order.status === 'delivered' ? 'border-green-500/50 text-green-600' :
+  1482→                                          order.status === 'pending' ? 'border-yellow-500/50 text-yellow-600' :
+  1483→                                          order.status === 'cancelled' ? 'border-red-500/50 text-red-600' : ''
+  1484→                                        }`}>
+  1485→                                          <SelectValue />
+  1486→                                        </SelectTrigger>
+  1487→                                        <SelectContent>
+  1488→                                          <SelectItem value="pending">{lang === 'fr' ? 'En attente' : 'Pending'}</SelectItem>
+  1489→                                          <SelectItem value="processing">{lang === 'fr' ? 'En cours' : 'Processing'}</SelectItem>
+  1490→                                          <SelectItem value="delivered">{lang === 'fr' ? 'Livrée' : 'Delivered'}</SelectItem>
+  1491→                                          <SelectItem value="cancelled">{lang === 'fr' ? 'Annulée' : 'Cancelled'}</SelectItem>
+  1492→                                        </SelectContent>
+  1493→                                      </Select>
+  1494→                                    </TableCell>
+  1495→                                    <TableCell>
+  1496→                                      <span className="text-xs text-muted-foreground">
+  1497→                                        {new Date(order.createdAt).toLocaleDateString()}
+  1498→                                      </span>
+  1499→                                    </TableCell>
+  1500→                                    <TableCell className="text-right">
+  1501→                                      <div className="flex items-center justify-end gap-1">
+  1502→                                        <Button variant="ghost" size="icon" className="size-8" onClick={() => { setSelectedOrder(order); setOrderDetailOpen(true) }}>
+  1503→                                          <Eye className="size-3.5" />
+  1504→                                        </Button>
+  1505→                                        <Button variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive" onClick={() => confirmDelete('order', order.id, order.customerName)}>
+  1506→                                          <Trash2 className="size-3.5" />
+  1507→                                        </Button>
+  1508→                                      </div>
+  1509→                                    </TableCell>
+  1510→                                  </TableRow>
+  1511→                                ))}
+  1512→                              </TableBody>
+  1513→                            </Table>
+  1514→                          </div>
+  1515→                        </CardContent>
+  1516→                      </Card>
+  1517→                    </>
+  1518→                  )}
+  1519→                </div>
+  1520→              )}
+  1521→
+  1522→              {/* ════════════════════ Testimonies Section ════════════════════ */}
+  1523→              {activeSection === 'testimonies' && (
+  1524→                <div className="space-y-4">
+  1525→                  <div className="flex items-center justify-between">
+  1526→                    <p className="text-sm text-muted-foreground">
+  1527→                      {testimonies.length} {lang === 'fr' ? 'témoignages' : 'testimonies'} ({approvedTestimonies} {lang === 'fr' ? 'approuvés' : 'approved'})
+  1528→                    </p>
+  1529→                  </div>
+  1530→
+  1531→                  {testimonies.length === 0 ? (
+  1532→                    <Card>
+  1533→                      <CardContent className="py-16 text-center">
+  1534→                        <div className="size-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4">
+  1535→                          <MessageSquareHeart className="size-8 text-gold/50" />
+  1536→                        </div>
+  1537→                        <p className="font-medium text-muted-foreground">{lang === 'fr' ? 'Pas encore de témoignages' : 'No testimonies yet'}</p>
+  1538→                      </CardContent>
+  1539→                    </Card>
+  1540→                  ) : (
+  1541→                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1542→                      {testimonies.map(testimony => (
+  1543→                        <Card key={testimony.id} className={`group overflow-hidden transition-all duration-300 ${testimony.approved ? 'ring-1 ring-green-500/20' : 'ring-1 ring-yellow-500/20'}`}>
+  1544→                          <CardContent className="p-5">
+  1545→                            <div className="flex items-start gap-4">
+  1546→                              {/* Avatar */}
+  1547→                              <div className={`size-11 rounded-full flex items-center justify-center shrink-0 ${
+  1548→                                testimony.approved ? 'bg-green-500/10' : 'bg-yellow-500/10'
+  1549→                              }`}>
+  1550→                                <span className={`text-sm font-bold ${testimony.approved ? 'text-green-600' : 'text-yellow-600'}`}>
+  1551→                                  {testimony.name.charAt(0).toUpperCase()}
+  1552→                                </span>
+  1553→                              </div>
+  1554→
+  1555→                              <div className="flex-1 min-w-0">
+  1556→                                {/* Name & Rating */}
+  1557→                                <div className="flex items-center gap-2 mb-1">
+  1558→                                  <h3 className="font-semibold text-sm">{testimony.name}</h3>
+  1559→                                  <div className="flex items-center gap-0.5">
+  1560→                                    {Array.from({ length: 5 }).map((_, i) => (
+  1561→                                      <Star
+  1562→                                        key={i}
+  1563→                                        className={`size-3 ${i < testimony.rating ? 'text-gold fill-gold' : 'text-muted-foreground/20'}`}
+  1564→                                      />
+  1565→                                    ))}
+  1566→                                  </div>
+  1567→                                </div>
+  1568→
+  1569→                                {/* Message */}
+  1570→                                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{testimony.message}</p>
+  1571→
+  1572→                                {/* Footer */}
+  1573→                                <div className="flex items-center justify-between">
+  1574→                                  <div className="flex items-center gap-2">
+  1575→                                    <Badge
+  1576→                                      variant={testimony.approved ? 'default' : 'outline'}
+  1577→                                      className={`text-[10px] gap-1 ${testimony.approved ? 'bg-green-600 hover:bg-green-700' : 'border-yellow-500/50 text-yellow-600'}`}
+  1578→                                    >
+  1579→                                      {testimony.approved ? (
+  1580→                                        <><CheckCircle2 className="size-2.5" /> {lang === 'fr' ? 'Approuvé' : 'Approved'}</>
+  1581→                                      ) : (
+  1582→                                        <><Clock className="size-2.5" /> {lang === 'fr' ? 'En attente' : 'Pending'}</>
+  1583→                                      )}
+  1584→                                    </Badge>
+  1585→                                    <span className="text-[10px] text-muted-foreground">
+  1586→                                      {new Date(testimony.createdAt).toLocaleDateString()}
+  1587→                                    </span>
+  1588→                                  </div>
+  1589→
+  1590→                                  <div className="flex items-center gap-1">
+  1591→                                    <Button
+  1592→                                      variant={testimony.approved ? 'outline' : 'default'}
+  1593→                                      size="sm"
+  1594→                                      className={`text-[11px] gap-1 h-7 ${!testimony.approved ? 'bg-green-600 hover:bg-green-700' : ''}`}
+  1595→                                      onClick={() => toggleTestimonyApproval(testimony)}
+  1596→                                    >
+  1597→                                      {testimony.approved ? <><StarOff className="size-3" /> {lang === 'fr' ? 'Désapprouver' : 'Unapprove'}</> : <><CheckCircle2 className="size-3" /> {lang === 'fr' ? 'Approuver' : 'Approve'}</>}
+  1598→                                    </Button>
+  1599→                                    <Button
+  1600→                                      variant="ghost"
+  1601→                                      size="sm"
+  1602→                                      className="text-[11px] gap-1 h-7 text-destructive hover:text-destructive"
+  1603→                                      onClick={() => confirmDelete('testimony', testimony.id, testimony.name)}
+  1604→                                    >
+  1605→                                      <Trash2 className="size-3" />
+  1606→                                    </Button>
+  1607→                                  </div>
+  1608→                                </div>
+  1609→                              </div>
+  1610→                            </div>
+  1611→                          </CardContent>
+  1612→                        </Card>
+  1613→                      ))}
+  1614→                    </div>
+  1615→                  )}
+  1616→                </div>
+  1617→              )}
+  1618→            </>
+  1619→          )}
+  1620→        </div>
+  1621→      </main>
+  1622→
+  1623→      {/* ════════════════════ Product Dialog ════════════════════ */}
+  1624→      <Dialog open={productDialogOpen} onOpenChange={(open) => { setProductDialogOpen(open); if (!open) resetProductForm() }}>
+  1625→        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+  1626→          <DialogHeader>
+  1627→            <DialogTitle className="font-elegant text-lg">{editingProduct ? (lang === 'fr' ? 'Modifier le produit' : 'Edit Product') : (lang === 'fr' ? 'Ajouter un nouveau produit' : 'Add New Product')}</DialogTitle>
+  1628→            <DialogDescription>
+  1629→              {editingProduct ? (lang === 'fr' ? 'Mettre à jour les informations du produit' : 'Update product information') : (lang === 'fr' ? 'Remplissez les détails pour créer un nouveau produit' : 'Fill in the details to create a new product')}
+  1630→            </DialogDescription>
+  1631→          </DialogHeader>
+  1632→          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 overflow-y-auto flex-1 min-h-0">
+  1633→            <div className="space-y-2">
+  1634→              <Label htmlFor="prod-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+  1635→              <Input id="prod-name" value={productForm.name} onChange={e => setProductForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom du produit' : 'Product name'} />
+  1636→            </div>
+  1637→            <div className="space-y-2">
+  1638→              <div className="flex items-center justify-between">
+  1639→                <Label htmlFor="prod-nameFr">{lang === 'fr' ? 'Nom (Français)' : 'Name (French)'}</Label>
+  1640→                <Button
+  1641→                  type="button"
+  1642→                  variant="ghost"
+  1643→                  size="sm"
+  1644→                  className="h-6 text-[11px] gap-1 text-primary hover:text-primary"
+  1645→                  disabled={translating === 'productName' || !productForm.name.trim()}
+  1646→                  onClick={() => handleTranslate(productForm.name, 'en', 'fr', 'productName')}
+  1647→                >
+  1648→                  {translating === 'productName' ? <Loader2 className="size-3 animate-spin" /> : <Languages className="size-3" />}
+  1649→                  {lang === 'fr' ? 'Traduire' : 'Auto-translate'}
+  1650→                </Button>
+  1651→              </div>
+  1652→              <Input id="prod-nameFr" value={productForm.nameFr} onChange={e => setProductForm(f => ({ ...f, nameFr: e.target.value }))} placeholder={lang === 'fr' ? 'Traduction automatique ou saisie manuelle' : 'Auto-translated or type manually'} />
+  1653→            </div>
+  1654→            <div className="space-y-2 sm:col-span-2">
+  1655→              <Label htmlFor="prod-desc">{lang === 'fr' ? 'Description (Anglais) *' : 'Description (English) *'}</Label>
+  1656→              <Textarea id="prod-desc" value={productForm.description} onChange={e => setProductForm(f => ({ ...f, description: e.target.value }))} placeholder={lang === 'fr' ? 'Description du produit' : 'Product description'} rows={3} />
+  1657→            </div>
+  1658→            <div className="space-y-2 sm:col-span-2">
+  1659→              <div className="flex items-center justify-between">
+  1660→                <Label htmlFor="prod-descFr">{lang === 'fr' ? 'Description (Français)' : 'Description (French)'}</Label>
+  1661→                <Button
+  1662→                  type="button"
+  1663→                  variant="ghost"
+  1664→                  size="sm"
+  1665→                  className="h-6 text-[11px] gap-1 text-primary hover:text-primary"
+  1666→                  disabled={translating === 'productDesc' || !productForm.description.trim()}
+  1667→                  onClick={() => handleTranslate(productForm.description, 'en', 'fr', 'productDesc')}
+  1668→                >
+  1669→                  {translating === 'productDesc' ? <Loader2 className="size-3 animate-spin" /> : <Languages className="size-3" />}
+  1670→                  {lang === 'fr' ? 'Traduire' : 'Auto-translate'}
+  1671→                </Button>
+  1672→              </div>
+  1673→              <Textarea id="prod-descFr" value={productForm.descriptionFr} onChange={e => setProductForm(f => ({ ...f, descriptionFr: e.target.value }))} placeholder={lang === 'fr' ? 'Traduction automatique ou saisie manuelle' : 'Auto-translated or type manually'} rows={3} />
+  1674→            </div>
+  1675→            <div className="space-y-2">
+  1676→              <Label htmlFor="prod-price">{lang === 'fr' ? 'Prix (FCFA) *' : 'Price (FCFA) *'}</Label>
+  1677→              <Input id="prod-price" type="number" value={productForm.price} onChange={e => setProductForm(f => ({ ...f, price: e.target.value }))} placeholder="0" min="0" />
+  1678→            </div>
+  1679→            <div className="space-y-2">
+  1680→              <Label>{lang === 'fr' ? 'Image du produit *' : 'Product Image *'}</Label>
+  1681→              <div className="space-y-3">
+  1682→                <label
+  1683→                  onDragOver={e => handleDragOver(e, 'product')}
+  1684→                  onDragLeave={e => handleDragLeave(e, 'product')}
+  1685→                  onDrop={e => handleDrop(e, 'product')}
+  1686→                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+  1687→                    productDragOver
+  1688→                      ? 'border-primary bg-primary/10'
+  1689→                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+  1690→                  } ${productUploading ? 'opacity-50 pointer-events-none' : ''}`}
+  1691→                >
+  1692→                  <input
+  1693→                    type="file"
+  1694→                    accept="image/*"
+  1695→                    className="sr-only"
+  1696→                    onChange={e => {
+  1697→                      const file = e.target.files?.[0]
+  1698→                      if (file) handleImageUpload(file, 'product')
+  1699→                    }}
+  1700→                  />
+  1701→                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+  1702→                    {productUploading ? (
+  1703→                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
+  1704→                    ) : productDragOver ? (
+  1705→                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
+  1706→                    ) : (
+  1707→                      <><Upload className="h-5 w-5 text-muted-foreground" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? "Cliquez ou glissez-déposez une image" : 'Click or drag & drop an image'}</span></>
+  1708→                    )}
+  1709→                  </div>
+  1710→                </label>
+  1711→                <div className="relative">
+  1712→                  <Input
+  1713→                    value={productForm.image}
+  1714→                    onChange={e => setProductForm(f => ({ ...f, image: e.target.value }))}
+  1715→                    placeholder={lang === 'fr' ? "Ou coller l'URL de l'image..." : 'Or paste image URL...'}
+  1716→                    className="pr-8"
+  1717→                  />
+  1718→                  {productForm.image && (
+  1719→                    <button
+  1720→                      type="button"
+  1721→                      onClick={() => setProductForm(f => ({ ...f, image: '' }))}
+  1722→                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+  1723→                    >
+  1724→                      <XIcon className="h-3.5 w-3.5" />
+  1725→                    </button>
+  1726→                  )}
+  1727→                </div>
+  1728→              </div>
+  1729→            </div>
+  1730→            <div className="space-y-2">
+  1731→              <Label htmlFor="prod-category">{lang === 'fr' ? 'Catégorie *' : 'Category *'}</Label>
+  1732→              <Select value={productForm.categoryId} onValueChange={val => setProductForm(f => ({ ...f, categoryId: val }))}>
+  1733→                <SelectTrigger className="w-full">
+  1734→                  <SelectValue placeholder={lang === 'fr' ? 'Sélectionner une catégorie' : 'Select category'} />
+  1735→                </SelectTrigger>
+  1736→                <SelectContent>
+  1737→                  {categories.map(cat => (
+  1738→                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+  1739→                  ))}
+  1740→                </SelectContent>
+  1741→              </Select>
+  1742→            </div>
+  1743→            <div className="space-y-2">
+  1744→              <div className="flex items-center justify-between">
+  1745→                <Label>{lang === 'fr' ? 'En stock' : 'In Stock'}</Label>
+  1746→                <Switch checked={productForm.inStock} onCheckedChange={val => setProductForm(f => ({ ...f, inStock: val }))} />
+  1747→              </div>
+  1748→              <div className="flex items-center justify-between mt-3">
+  1749→                <Label>{lang === 'fr' ? 'En vedette' : 'Featured'}</Label>
+  1750→                <Switch checked={productForm.featured} onCheckedChange={val => setProductForm(f => ({ ...f, featured: val }))} />
+  1751→              </div>
+  1752→            </div>
+  1753→          </div>
+  1754→          {productForm.image && (
+  1755→            <div className="border rounded-xl p-4 bg-muted/30">
+  1756→              <div className="flex items-center justify-between mb-2">
+  1757→                <p className="text-xs text-muted-foreground">{lang === 'fr' ? "Aperçu de l'image" : 'Image Preview'}</p>
+  1758→                <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive hover:text-destructive" onClick={() => setProductForm(f => ({ ...f, image: '' }))}>
+  1759→                  <XIcon className="h-3 w-3 mr-1" /> {lang === 'fr' ? 'Supprimer' : 'Remove'}
+  1760→                </Button>
+  1761→              </div>
+  1762→              <img src={productForm.image} alt="Preview" className="h-32 w-auto rounded-lg object-cover bg-muted" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+  1763→            </div>
+  1764→          )}
+  1765→          <DialogFooter className="shrink-0 border-t pt-4">
+  1766→            <Button variant="outline" onClick={() => { setProductDialogOpen(false); resetProductForm() }}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+  1767→            <Button onClick={handleProductSubmit} className="shadow-md shadow-primary/20">{editingProduct ? (lang === 'fr' ? 'Mettre à jour' : 'Update Product') : (lang === 'fr' ? 'Créer le produit' : 'Create Product')}</Button>
+  1768→          </DialogFooter>
+  1769→        </DialogContent>
+  1770→      </Dialog>
+  1771→
+  1772→      {/* ════════════════════ Category Dialog ════════════════════ */}
+  1773→      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+  1774→        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+  1775→          <DialogHeader>
+  1776→            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Ajouter une nouvelle catégorie' : 'Add New Category'}</DialogTitle>
+  1777→            <DialogDescription>{lang === 'fr' ? 'Créer une nouvelle catégorie de produits' : 'Create a new product category'}</DialogDescription>
+  1778→          </DialogHeader>
+  1779→          <div className="space-y-4 py-4 overflow-y-auto flex-1 min-h-0">
+  1780→            <div className="space-y-2">
+  1781→              <Label htmlFor="cat-name">{lang === 'fr' ? 'Nom (Anglais) *' : 'Name (English) *'}</Label>
+  1782→              <Input id="cat-name" value={categoryForm.name} onChange={e => setCategoryForm(f => ({ ...f, name: e.target.value }))} placeholder={lang === 'fr' ? 'Nom de la catégorie' : 'Category name'} />
+  1783→            </div>
+  1784→            <div className="space-y-2">
+  1785→              <div className="flex items-center justify-between">
+  1786→                <Label htmlFor="cat-nameFr">{lang === 'fr' ? 'Nom (Français)' : 'Name (French)'}</Label>
+  1787→                <Button
+  1788→                  type="button"
+  1789→                  variant="ghost"
+  1790→                  size="sm"
+  1791→                  className="h-6 text-[11px] gap-1 text-primary hover:text-primary"
+  1792→                  disabled={translating === 'categoryName' || !categoryForm.name.trim()}
+  1793→                  onClick={() => handleTranslate(categoryForm.name, 'en', 'fr', 'categoryName')}
+  1794→                >
+  1795→                  {translating === 'categoryName' ? <Loader2 className="size-3 animate-spin" /> : <Languages className="size-3" />}
+  1796→                  {lang === 'fr' ? 'Traduire' : 'Auto-translate'}
+  1797→                </Button>
+  1798→              </div>
+  1799→              <Input id="cat-nameFr" value={categoryForm.nameFr} onChange={e => setCategoryForm(f => ({ ...f, nameFr: e.target.value }))} placeholder={lang === 'fr' ? 'Traduction automatique ou saisie manuelle' : 'Auto-translated or type manually'} />
+  1800→            </div>
+  1801→            <div className="space-y-2">
+  1802→              <Label htmlFor="cat-slug">{lang === 'fr' ? 'Slug *' : 'Slug *'}</Label>
+  1803→              <Input id="cat-slug" value={categoryForm.slug} onChange={e => setCategoryForm(f => ({ ...f, slug: e.target.value }))} placeholder="category-slug" />
+  1804→            </div>
+  1805→            <div className="space-y-2">
+  1806→              <Label>{lang === 'fr' ? 'Image de la catégorie' : 'Category Image'}</Label>
+  1807→              <div className="space-y-3">
+  1808→                <label
+  1809→                  onDragOver={e => handleDragOver(e, 'category')}
+  1810→                  onDragLeave={e => handleDragLeave(e, 'category')}
+  1811→                  onDrop={e => handleDrop(e, 'category')}
+  1812→                  className={`flex items-center justify-center gap-2 h-24 w-full rounded-lg border-2 border-dashed transition-colors cursor-pointer ${
+  1813→                    categoryDragOver
+  1814→                      ? 'border-primary bg-primary/10'
+  1815→                      : 'border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/40'
+  1816→                  } ${categoryUploading ? 'opacity-50 pointer-events-none' : ''}`}
+  1817→                >
+  1818→                  <input
+  1819→                    type="file"
+  1820→                    accept="image/*"
+  1821→                    className="sr-only"
+  1822→                    onChange={e => {
+  1823→                      const file = e.target.files?.[0]
+  1824→                      if (file) handleImageUpload(file, 'category')
+  1825→                    }}
+  1826→                  />
+  1827→                  <div className="flex flex-col items-center justify-center w-full gap-1 pointer-events-none">
+  1828→                    {categoryUploading ? (
+  1829→                      <><Loader2 className="h-5 w-5 animate-spin text-primary" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? 'Téléchargement...' : 'Uploading...'}</span></>
+  1830→                    ) : categoryDragOver ? (
+  1831→                      <><Upload className="h-5 w-5 text-primary" /> <span className="text-xs text-primary font-medium">{lang === 'fr' ? 'Déposez l\'image ici' : 'Drop image here'}</span></>
+  1832→                    ) : (
+  1833→                      <><Upload className="h-5 w-5 text-muted-foreground" /> <span className="text-xs text-muted-foreground">{lang === 'fr' ? "Cliquez ou glissez-déposez une image" : 'Click or drag & drop an image'}</span></>
+  1834→                    )}
+  1835→                  </div>
+  1836→                </label>
+  1837→                <div className="relative">
+  1838→                  <Input
+  1839→                    value={categoryForm.image}
+  1840→                    onChange={e => setCategoryForm(f => ({ ...f, image: e.target.value }))}
+  1841→                    placeholder={lang === 'fr' ? "Ou coller l'URL de l'image..." : 'Or paste image URL...'}
+  1842→                    className="pr-8"
+  1843→                  />
+  1844→                  {categoryForm.image && (
+  1845→                    <button
+  1846→                      type="button"
+  1847→                      onClick={() => setCategoryForm(f => ({ ...f, image: '' }))}
+  1848→                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+  1849→                    >
+  1850→                      <XIcon className="h-3.5 w-3.5" />
+  1851→                    </button>
+  1852→                  )}
+  1853→                </div>
+  1854→              </div>
+  1855→              {categoryForm.image && (
+  1856→                <div className="mt-2 rounded-lg overflow-hidden border bg-muted/30 p-2">
+  1857→                  <img src={categoryForm.image} alt="Preview" className="h-24 w-auto rounded-lg object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+  1858→                </div>
+  1859→              )}
+  1860→            </div>
+  1861→          </div>
+  1862→          <DialogFooter className="shrink-0 border-t pt-4">
+  1863→            <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+  1864→            <Button onClick={handleCategorySubmit} className="shadow-md shadow-primary/20">{lang === 'fr' ? 'Créer la catégorie' : 'Create Category'}</Button>
+  1865→          </DialogFooter>
+  1866→        </DialogContent>
+  1867→      </Dialog>
+  1868→
+  1869→      {/* ════════════════════ Order Detail Dialog ════════════════════ */}
+  1870→      <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+  1871→        <DialogContent className="sm:max-w-lg">
+  1872→          <DialogHeader>
+  1873→            <DialogTitle className="font-elegant text-lg">{lang === 'fr' ? 'Détails de la commande' : 'Order Details'}</DialogTitle>
+  1874→            <DialogDescription>{lang === 'fr' ? 'Affichage des informations de la commande' : 'Viewing order information'}</DialogDescription>
+  1875→          </DialogHeader>
+  1876→          {selectedOrder && (
+  1877→            <div className="space-y-4 py-4">
+  1878→              {/* Customer Info Header */}
+  1879→              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+  1880→                <div className="size-11 rounded-full bg-primary/10 flex items-center justify-center">
+  1881→                  <span className="text-sm font-bold text-primary">{selectedOrder.customerName.charAt(0).toUpperCase()}</span>
+  1882→                </div>
+  1883→                <div>
+  1884→                  <p className="font-semibold">{selectedOrder.customerName}</p>
+  1885→                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+  1886→                    <Phone className="size-3" /> {selectedOrder.customerPhone || (lang === 'fr' ? 'N/D' : 'N/A')}
+  1887→                  </p>
+  1888→                </div>
+  1889→              </div>
+  1890→
+  1891→              {/* Order Details Grid */}
+  1892→              <div className="grid grid-cols-2 gap-3">
+  1893→                <div className="p-3 rounded-xl bg-muted/30">
+  1894→                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Paiement' : 'Payment'}</p>
+  1895→                  <Badge variant="outline" className="capitalize mt-1">{selectedOrder.paymentMethod}</Badge>
+  1896→                </div>
+  1897→                <div className="p-3 rounded-xl bg-muted/30">
+  1898→                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{lang === 'fr' ? 'Statut' : 'Status'}</p>
+  1899→                  <Badge
+  1900→                    variant={selectedOrder.status === 'pending' ? 'outline' : selectedOrder.status === 'delivered' ? 'default' : 'secondary'}
+  1901→                    className="capitalize mt-1"
+  1902→                  >
+  1903→                    {lang === 'fr' ? (selectedOrder.status === 'pending' ? 'En attente' : selectedOrder.status === 'processing' ? 'En cours' : selectedOrder.status === 'delivered' ? 'Livrée' : selectedOrder.status === 'cancelled' ? 'Annulée' : selectedOrder.status) : selectedOrder.status}
+  1904→                  </Badge>
+  1905→                </div>
+  1906→              </div>
+  1907→
+  1908→              {/* Order Items */}
+  1909→              <div>
+  1910→                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">{lang === 'fr' ? 'Articles commandés' : 'Order Items'}</p>
+  1911→                <div className="bg-muted/40 rounded-xl p-3 max-h-48 overflow-y-auto">
+  1912→                  {(() => {
+  1913→                    try {
+  1914→                      const items = JSON.parse(selectedOrder.items)
+  1915→                      if (Array.isArray(items)) {
+  1916→                        return (
+  1917→                          <div className="space-y-2">
+  1918→                            {items.map((item: { name?: string; price?: number; quantity?: number }, i: number) => (
+  1919→                              <div key={i} className="flex justify-between text-sm">
+  1920→                                <span>{item.name || `${lang === 'fr' ? 'Article' : 'Item'} ${i + 1}`} {item.quantity ? `x${item.quantity}` : ''}</span>
+  1921→                                <span className="font-medium">{item.price ? `${item.price.toLocaleString()} FCFA` : ''}</span>
+  1922→                              </div>
+  1923→                            ))}
+  1924→                          </div>
+  1925→                        )
+  1926→                      }
+  1927→                      return <p className="text-sm">{selectedOrder.items}</p>
+  1928→                    } catch {
+  1929→                      return <p className="text-sm">{selectedOrder.items}</p>
+  1930→                    }
+  1931→                  })()}
+  1932→                </div>
+  1933→              </div>
+  1934→
+  1935→              {/* Total */}
+  1936→              <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
+  1937→                <span className="font-semibold">{lang === 'fr' ? 'Total' : 'Total'}</span>
+  1938→                <span className="font-bold text-lg text-primary">{selectedOrder.total.toLocaleString()} FCFA</span>
+  1939→              </div>
+  1940→
+  1941→              {/* Date */}
+  1942→              <p className="text-[11px] text-muted-foreground">
+  1943→                {lang === 'fr' ? 'Commandé le' : 'Ordered on'} {new Date(selectedOrder.createdAt).toLocaleString()}
+  1944→              </p>
+  1945→            </div>
+  1946→          )}
+  1947→          <DialogFooter>
+  1948→            <Button variant="outline" onClick={() => setOrderDetailOpen(false)}>{lang === 'fr' ? 'Fermer' : 'Close'}</Button>
+  1949→          </DialogFooter>
+  1950→        </DialogContent>
+  1951→      </Dialog>
+  1952→
+  1953→      {/* ════════════════════ Delete Confirmation Dialog ════════════════════ */}
+  1954→      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+  1955→        <DialogContent className="sm:max-w-md">
+  1956→          <DialogHeader>
+  1957→            <DialogTitle className="text-destructive">{lang === 'fr' ? 'Confirmer la suppression' : 'Confirm Deletion'}</DialogTitle>
+  1958→            <DialogDescription>
+  1959→              {lang === 'fr' ? `Êtes-vous sûr de vouloir supprimer "${deleteTarget?.name}"?` : `Are you sure you want to delete "${deleteTarget?.name}"?`}
+  1960→              {deleteTarget?.type === 'category' && (lang === 'fr' ? ' Cela supprimera également tous les produits de cette catégorie.' : ' This will also delete all products in this category.')}
+  1961→              {lang === 'fr' ? ' Cette action est irréversible.' : ' This action cannot be undone.'}
+  1962→            </DialogDescription>
+  1963→          </DialogHeader>
+  1964→          <DialogFooter>
+  1965→            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>{lang === 'fr' ? 'Annuler' : 'Cancel'}</Button>
+  1966→            <Button variant="destructive" onClick={executeDelete}>{lang === 'fr' ? 'Supprimer' : 'Delete'}</Button>
+  1967→          </DialogFooter>
+  1968→        </DialogContent>
+  1969→      </Dialog>
+  1970→    </div>
+  1971→  )
+  1972→}
+  1973→
