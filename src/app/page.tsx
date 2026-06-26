@@ -831,7 +831,7 @@ export default function HomePage() {
               {t.heroDescription}
             </p>
             <div className="flex flex-wrap gap-3 sm:gap-4">
-              <Button onClick={() => scrollTo('products')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base gap-2">
+              <Button onClick={() => scrollTo('products-page')} size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base gap-2">
                 {t.shopNow}
                 <ChevronRight className="h-4 w-4" />
               </Button>

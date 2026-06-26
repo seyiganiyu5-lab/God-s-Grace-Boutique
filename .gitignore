@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+<<<<<<< HEAD
+=======
+!.env.example
+>>>>>>> df9f4f52378e57caa8056c7542592eba6c07b80c
 
 # vercel
 .vercel
@@ -51,4 +55,24 @@ prompt
 
 server.log
 # Skills directory
-/skills/
+/skills/tool-results/
+*.tmp
+
+# Sandbox artifacts
+.zscripts/
+Caddyfile
+examples/
+*.db
+db/*.db
+prisma/*.db
+tablet-layout.png
+admin-test.png
+cart-test.png
+desktop-final.png
+mobile-*.png
+hero-screenshot.png
+fonts-*.png
+products-screenshot*.png
+carousel-*.png
+purple-*.png
+download/
