@@ -55,7 +55,7 @@ export const siteConfig = {
   defaultLocale: "en",
   // Optional: paste your Google Search Console verification token here
   // (Google gives you something like: <meta name="google-site-verification" content="ABC123..." />)
-  googleSiteVerification: "",
+  googleSiteVerification: "Y-HPLuSf95-dZAD8",
 } as const;
 
 export type SiteConfig = typeof siteConfig;
