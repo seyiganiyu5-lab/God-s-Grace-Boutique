@@ -95,7 +95,7 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [
       {
-        url: "/images/logo.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: `${siteConfig.name} - ${siteConfig.tagline}`,
@@ -107,17 +107,17 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
-    images: ["/images/logo.png"],
+    images: ["/og-image.png"],
     creator: "@godsgraceboutique",
     site: "@godsgraceboutique",
   },
-  // Icons & PWA
+  // Icons & PWA — favicon + apple-touch-icon for browser tabs and mobile home screen
   icons: {
     icon: [
-      { url: "/images/logo.png" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/images/logo.png", sizes: "1080x1080", type: "image/png" },
     ],
-    apple: [{ url: "/images/logo.png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     shortcut: ["/favicon.ico"],
   },
   manifest: "/manifest.webmanifest",
