@@ -111,11 +111,13 @@ export const metadata: Metadata = {
     creator: "@godsgraceboutique",
     site: "@godsgraceboutique",
   },
-  // Icons & PWA — favicon + apple-touch-icon for browser tabs and mobile home screen
+  // Icons & PWA — comprehensive favicon set for all platforms
+  // Google requires at least 48x48 for search results
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/images/logo.png", sizes: "1080x1080", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     shortcut: ["/favicon.ico"],
